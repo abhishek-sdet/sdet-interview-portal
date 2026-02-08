@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Login Test</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 2rem;
+        }
+
+        #portal {
+            display: none;
+            color: green;
+            margin-top: 1rem;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        input,
+        button {
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div id="login">
+            <h2>Enter Portal</h2>
+            <input type="text" id="username" placeholder="Enter your name" />
+            <button onclick="enterPortal()">Enter</button>
+        </div>
+        <div id="portal">
+            <h2>Welcome to the Portal!</h2>
+            <p>Data saved successfully.</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const supabaseUrl = "https://glkxyflalplqixfefexf.supabase.co";
+        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdsa3h5ZmxhbHBscWl4ZmVmZXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA1NTQyMDgsImV4cCI6MjA4NjEzMDIwOH0.Ul-wp51Mx3SwV-FwxRm3mZrisoGfUTb_HmGgm25Eajc";
+
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        async function enterPortal() {
+            const name = document.getElementById("username").value.trim();
+
+            if (!name) {
+                alert("Please enter your name");
+                return;
+            }
+
+            const { error } = await supabase
+                .from("candidates")
+                .insert([{ full_name: name }]); // Changed 'name' to 'full_name' to match schema
+
+            if (error) {
+                console.error(error);
+                alert("Failed to save data: " + error.message);
+                return;
+            }
+
+            document.getElementById("login").style.display = "none";
+            document.getElementById("portal").style.display = "block";
+        }
+    </script>
+</body>
+
+</html>
