@@ -1,0 +1,4 @@
+/* SPA Routing Configuration for Netlify */
+/*    /admin/*    /index.html   200
+/*    /dashboard/*    /index.html   200
+/*    /    /index.html   200
