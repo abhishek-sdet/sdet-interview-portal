@@ -167,11 +167,7 @@ export default function CriteriaSelection() {
                             <p className="text-slate-400 text-sm mb-4">
                                 {item.description}
                             </p>
-                            <div className="flex items-center gap-2 text-sm">
-                                <span className="px-3 py-1 bg-white/10 rounded-full text-cyan-400 font-medium">
-                                    Passing: {item.passing_percentage}%
-                                </span>
-                            </div>
+
                         </button>
                     ))}
                 </div>
