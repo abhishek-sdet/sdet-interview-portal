@@ -136,7 +136,7 @@ export function parseQuestionsInSection(section, importData) {
         }
 
         // Detect question start (1., 2., Q1., etc.)
-        const questionMatch = line.match(/^(?:Q\.?\s*)?(\d+)[\.)\s*(.+)/);
+        const questionMatch = line.match(/^(?:Q\.?\s*)?(\d+)[\.)\s]+(.+)/);
         if (questionMatch) {
             // Save previous question if it has 4 options (valid MCQ)
             if (currentQuestion && currentOptions.length === 4) {
@@ -174,7 +174,7 @@ export function parseQuestionsInSection(section, importData) {
 
         // Detect options - TWO FORMATS:
         // Format 1: "A. Option text" or "A) Option text"
-        const optionMatch = line.match(/^([A-Da-d])[\.)\s*(.+)/);
+        const optionMatch = line.match(/^([A-Da-d])[\.)\s]+(.+)/);
         if (optionMatch && currentOptions.length < 4) {
             currentOptions.push(optionMatch[2].trim());
             continue;
