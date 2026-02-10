@@ -1,0 +1,149 @@
+[CONSOLE] Verifying SET A.docx...
+[CONSOLE] --- Raw Text Start ---
+[CONSOLE] SET A
+
+📊 Total Marks: 30🕒 Time Allowed: 30 Minutes
+
+Section A: Generic Multiple-Choice Questions (15 × 1 = 15 Marks)
+
+Select the correct option. Each question carries 1 mark.
+
+1. What does a 500 status code in REST indicate? A. Success B. Redirection C. Server Error D. Client Timeout
+
+2. Which HTTP method is used to update an existing resource? A. GET B. POST C. PUT D. DELETE
+
+3. Which status code indicates the successful creation of a resource in a REST API? A. 200 B. 201 C. 204 D. 400
+
+4. What is verification in software testing? A. Ensuring the product meets user needs B. Evaluating intermediate work products C. Executing test cases D. Reporting bugs
+
+5. Which testing ensures that recent changes have not adversely affected existing features? A. Unit Testing B. Regression Testing C. System Testing D. Alpha Testing
+
+
+
+
+
+
+
+6. Which type of testing checks system robustness under extreme load conditions? A. Load Testing B. Stress Testing C. Functional Testing D. Regression Testing
+
+7. What type of performance testing checks how a system handles sudden, sharp load changes? A. Load Testing B. Endurance Testing C. Spike Testing D. Unit Testing
+
+8. Which performance test evaluates system behavior under continuous load over an extended period? A. Smoke Testing B. Spike Testing C. Endurance Testing D. Usability Testing
+
+9. What does CRUD stand for in databases? A. Create, Run, Undo, Delete B. Create, Read, Update, Delete C. Compile, Read, Update, Delete D. Copy, Refresh, Update, Drop
+
+10. Which clause is used to filter grouped data after aggregation? A. GROUP BY B. WHERE C. HAVING D. ORDER BY
+
+11. Which SQL command is used to modify existing records? A. SELECT B. INSERT C. UPDATE D. DELETE
+
+12. Which of the following is a framework under Agile methodology? A. V-Model B. Scrum C. Spiral D. Prototype
+
+13. Which programming language are you most comfortable with? A. Java B. Python
+
+Java-Based Questions
+
+
+
+1. What will the following code print?String s1 = "hello";String s2 = new String("hello");System.out.println(s1 == s2);
+
+ A. true B. false C. Compilation error D. Runtime error
+
+2. What will be the output of the following code?public class Test {   public static void main(String[] args) {       int[] arr = new int[5];       System.out.println(arr[2]);   }}
+
+ A. 0 B. null C. Compilation error D. ArrayIndexOutOfBoundsException
+
+3. What is the output of this code?System.out.println('D' - 'A');
+
+ A. 3 B. 68 C. A D. Error
+
+Python-Based Questions
+
+[Python] What is the output of the following list comprehension?[x for x in range(5) if x % 2 == 0]
+
+ A. [1, 3, 5] B. [0, 2, 4] C. [2, 4, 6] D. [0, 1, 2, 3, 4]
+
+
+
+Which of the following will raise a TypeError?
+
+ A. "2" + "3" B. 2 + 3.0 C. "2" + 3 D. int("3") + 4
+
+
+
+What will be the output of the following function call?def foo(a, b, c=5):    print(a, b, c)foo(1, *(2,))
+
+ A. 1 2 5 B. 1 5 2 C. 1 2 TypeError D. SyntaxError
+
+
+
+
+
+Section A: Generic MCQs (15 × 1 = 15 Marks)
+
+C. Server Error
+
+C. PUT
+
+B. 201
+
+B. Evaluating i
+[CONSOLE] --- Raw Text End ---
+[CONSOLE] Text extracted. Parsing...
+[CONSOLE]    🔍 Detected potential section header: "Section A: Generic Multiple-Choice Questions (15 × 1 = 15 Marks)"
+[CONSOLE]    🔍 Detected potential section header: "Java-Based Questions"
+[CONSOLE]    🔍 Detected potential section header: "Python-Based Questions"
+[CONSOLE]    🔍 Detected potential section header: "Section A: Generic MCQs (15 × 1 = 15 Marks)"
+[CONSOLE]    🔍 Detected potential section header: "Java-Based Questions"
+[CONSOLE]    🔍 Detected potential section header: "Python-Based Questions"
+[CONSOLE]       ⚠ (No answer) Q1: What does a 500 status code in REST indicate?...
+[CONSOLE]       ⚠ (No answer) Q2: Which HTTP method is used to update an existing re...
+[CONSOLE]       ⚠ (No answer) Q3: Which status code indicates the successful creatio...
+[CONSOLE]       ⚠ (No answer) Q4: What is verification in software testing?...
+[CONSOLE]       ⚠ (No answer) Q5: Which testing ensures that recent changes have not...
+[CONSOLE]       ⚠ (No answer) Q6: Which type of testing checks system robustness und...
+[CONSOLE]       ⚠ (No answer) Q7: What type of performance testing checks how a syst...
+[CONSOLE]       ⚠ (No answer) Q8: Which performance test evaluates system behavior u...
+[CONSOLE]       ⚠ (No answer) Q9: What does CRU...
+[CONSOLE]       ⚠ (No answer) Q10: Which clause is used to filter grouped data after ...
+[CONSOLE]       ⚠ (No answer) Q11: Which SQL command is used to modify existing recor...
+[CONSOLE]       ⚠ (No answer) Q12: Which of the following is a framework under Agile ...
+[CONSOLE]       ✗ Skipped incomplete last question: Which programming language are you most ... (only 2 options)
+[CONSOLE]       ⚠ (No answer) Q1: What will the following code print?String s1 = "he...
+[CONSOLE]       ⚠ (No answer) Q2: What will be the output of the following code?publ...
+[CONSOLE]       ⚠ (No answer) Q3: What is the output of this code?System.out.println...
+[CONSOLE] [DEBUG] Attempting Fallback for line: "Which of the following will raise a TypeError?"
+[CONSOLE] [DEBUG] currentQuestion: true
+[CONSOLE] [DEBUG] currentOptions.length: 4
+[CONSOLE] [DEBUG] Matches Answer/Correct? false
+[CONSOLE] [DEBUG] Matches Option Pattern? false
+[CONSOLE] [DEBUG] Line Length: 46
+[CONSOLE]       ⚠ (No answer) Q1: What is the output of the following list comprehen... (Fallback)
+[CONSOLE]       ⚠ (No answer) Q2: Which of the following will raise a TypeError?... (Fallback)
+[CONSOLE]       ⚠ (No answer) Q3: What will be the output of the following function ...
+[CONSOLE] Matching Answer Key "Section A: Generic MCQs (15 × 1 = 15 Marks)" to Question Section "Python-Based Questions"
+[CONSOLE] Total questions parsed: 18
+[CONSOLE] 
+--- Section Analysis ---
+[CONSOLE] Set: "Section A: Generic Multiple-Choice Questions (15 × 1 = 15 Marks)" - Count: 12
+[CONSOLE] Set: "Java-Based Questions" - Count: 3
+[CONSOLE] Set: "Python-Based Questions" - Count: 3
+[CONSOLE] 
+--- Details ---
+[CONSOLE] 1. [Section A: Generic Multiple-Choice Questions (15 × 1 = 15 Marks)] What does a 500 status code in REST indicate?...
+[CONSOLE] 2. [Section A: Generic Multiple-Choice Questions (15 × 1 = 15 Marks)] Which HTTP method is used to update an existing re...
+[CONSOLE] 3. [Section A: Generic Multiple-Choice Questions (15 × 1 = 15 Marks)] Which status code indicates the successful creatio...
+[CONSOLE] 4. [Section A: Generic Multiple-Choice Questions (15 × 1 = 15 Marks)] What is verification in software testing?...
+[CONSOLE] 5. [Section A: Generic Multiple-Choice Questions (15 × 1 = 15 Marks)] Which testing ensures that recent changes have not...
+[CONSOLE] 6. [Section A: Generic Multiple-Choice Questions (15 × 1 = 15 Marks)] Which type of testing checks system robustness und...
+[CONSOLE] 7. [Section A: Generic Multiple-Choice Questions (15 × 1 = 15 Marks)] What type of performance testing checks how a syst...
+[CONSOLE] 8. [Section A: Generic Multiple-Choice Questions (15 × 1 = 15 Marks)] Which performance test evaluates system behavior u...
+[CONSOLE] 9. [Section A: Generic Multiple-Choice Questions (15 × 1 = 15 Marks)] What does CRU...
+[CONSOLE] 10. [Section A: Generic Multiple-Choice Questions (15 × 1 = 15 Marks)] Which clause is used to filter grouped data after ...
+[CONSOLE] 11. [Section A: Generic Multiple-Choice Questions (15 × 1 = 15 Marks)] Which SQL command is used to modify existing recor...
+[CONSOLE] 12. [Section A: Generic Multiple-Choice Questions (15 × 1 = 15 Marks)] Which of the following is a framework under Agile ...
+[CONSOLE] 13. [Java-Based Questions] What will the following code print?String s1 = "he...
+[CONSOLE] 14. [Java-Based Questions] What will be the output of the following code?publ...
+[CONSOLE] 15. [Java-Based Questions] What is the output of this code?System.out.println...
+[CONSOLE] 16. [Python-Based Questions] What is the output of the following list comprehen...
+[CONSOLE] 17. [Python-Based Questions] Which of the following will raise a TypeError?...
+[CONSOLE] 18. [Python-Based Questions] What will be the output of the following function ...

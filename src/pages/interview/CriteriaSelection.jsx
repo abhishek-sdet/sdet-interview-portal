@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { Loader2, CheckCircle2, Circle } from 'lucide-react';
 
 export default function CriteriaSelection() {
     const navigate = useNavigate();
@@ -9,8 +10,10 @@ export default function CriteriaSelection() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [candidateName, setCandidateName] = useState('');
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        setMounted(true);
         // Check if candidate is registered
         const candidateId = sessionStorage.getItem('candidateId');
         const name = sessionStorage.getItem('candidateName');
@@ -74,8 +77,8 @@ export default function CriteriaSelection() {
             sessionStorage.setItem('criteriaId', selectedCriteria.id);
             sessionStorage.setItem('passingPercentage', selectedCriteria.passing_percentage);
 
-            // Navigate to category selection
-            navigate('/category-selection', {
+            // Navigate to set selection
+            navigate('/set-selection', {
                 state: {
                     candidateData: {
                         id: candidateId,
@@ -93,114 +96,124 @@ export default function CriteriaSelection() {
 
     if (loading && criteria.length === 0) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+            <div className="min-h-screen w-full bg-universe flex items-center justify-center font-sans text-slate-100">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-                    <p className="text-slate-400">Loading interview categories...</p>
+                    <Loader2 className="w-10 h-10 text-brand-blue animate-spin mx-auto mb-4" />
+                    <p className="text-slate-400">Loading experience levels...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-            {/* Animated Background */}
-            <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl top-10 left-10 animate-pulse"></div>
-                <div className="absolute w-96 h-96 bg-blue-500/20 rounded-full blur-3xl bottom-10 right-10 animate-pulse delay-1000"></div>
+        <div className="min-h-screen w-full bg-universe flex items-center justify-center p-4 lg:p-8 relative font-sans text-slate-100 selection:bg-brand-orange selection:text-white">
+
+            {/* Active Background Animation */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                <div className="orb orb-1"></div>
+                <div className="orb orb-2"></div>
+                <div className="orb orb-3"></div>
+                <div className="grid-texture"></div>
             </div>
 
-            {/* Grid Overlay */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_100%)]"></div>
+            {/* Main Content */}
+            <div className={`relative z-10 w-full max-w-4xl mx-auto transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
 
-            {/* Content */}
-            <div className="relative z-10 max-w-4xl mx-auto px-4 py-12">
                 {/* Header */}
-                <div className="text-center mb-12">
-                    <h1 className="text-4xl font-bold text-white mb-2 font-display">
-                        Welcome, {candidateName}!
+                <div className="text-center mb-12 sm:mb-16">
+                    <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-4">
+                        <span className="block text-white">Welcome, {candidateName}!</span>
                     </h1>
-                    <p className="text-slate-400">Select your interview category to begin</p>
+                    <p className="text-lg text-slate-400 font-light">
+                        Select your experience level to customize your interview.
+                    </p>
                 </div>
 
                 {/* Error Message */}
                 {error && (
-                    <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-center">
+                    <div className="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-center flex items-center justify-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
                         {error}
                     </div>
                 )}
 
-                {/* Criteria Cards */}
-                <div className="grid md:grid-cols-2 gap-6 mb-8">
-                    {criteria.map((item) => (
-                        <button
-                            key={item.id}
-                            onClick={() => setSelectedCriteria(item)}
-                            disabled={loading}
-                            className={`
-                relative p-6 rounded-2xl border-2 transition-all text-left
-                ${selectedCriteria?.id === item.id
-                                    ? 'bg-cyan-500/20 border-cyan-400 shadow-lg shadow-cyan-500/50'
-                                    : 'bg-white/5 border-white/10 hover:border-white/30 hover:bg-white/10'
-                                }
-                disabled:opacity-50 disabled:cursor-not-allowed
-              `}
-                        >
-                            {/* Selection Indicator */}
-                            <div className={`
-                absolute top-4 right-4 w-6 h-6 rounded-full border-2 transition-all
-                ${selectedCriteria?.id === item.id
-                                    ? 'bg-cyan-400 border-cyan-400'
-                                    : 'border-white/30'
-                                }
-              `}>
-                                {selectedCriteria?.id === item.id && (
-                                    <svg className="w-full h-full text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                    </svg>
+                {/* Criteria Selection Grid */}
+                <div className="grid md:grid-cols-2 gap-6 mb-12">
+                    {criteria.map((item) => {
+                        const isSelected = selectedCriteria?.id === item.id;
+                        return (
+                            <button
+                                key={item.id}
+                                onClick={() => setSelectedCriteria(item)}
+                                disabled={loading}
+                                className={`
+                                    relative p-8 rounded-3xl border text-left group transition-all duration-500 overflow-hidden
+                                    ${isSelected
+                                        ? 'bg-brand-blue/10 border-brand-blue shadow-2xl shadow-brand-blue/20 scale-[1.02]'
+                                        : 'bg-white/5 border-white/10 hover:border-brand-blue/30 hover:bg-white/10 hover:scale-[1.01]'
+                                    }
+                                `}
+                            >
+                                {/* Glow Effect */}
+                                {isSelected && (
+                                    <div className="absolute inset-0 bg-brand-blue/5 animate-pulse"></div>
                                 )}
-                            </div>
 
-                            <h3 className="text-xl font-semibold text-white mb-2 pr-8">
-                                {item.name}
-                            </h3>
-                            <p className="text-slate-400 text-sm mb-4">
-                                {item.description}
-                            </p>
+                                <div className="relative z-10 flex items-start justify-between gap-4">
+                                    <div className="space-y-4">
+                                        <h3 className={`text-xl font-bold transition-colors ${isSelected ? 'text-white' : 'text-slate-200 group-hover:text-white'}`}>
+                                            {item.name}
+                                        </h3>
+                                        <p className="text-slate-400 text-sm leading-relaxed max-w-xs">
+                                            {item.description || 'Suitable for this experience level.'}
+                                        </p>
+                                    </div>
 
-                        </button>
-                    ))}
+                                    {/* Selection Radio */}
+                                    <div className={`
+                                        w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300
+                                        ${isSelected
+                                            ? 'border-brand-blue bg-brand-blue'
+                                            : 'border-slate-600 group-hover:border-slate-400'
+                                        }
+                                    `}>
+                                        {isSelected && <CheckCircle2 className="w-4 h-4 text-white" />}
+                                        {!isSelected && <Circle className="w-4 h-4 text-transparent" />}
+                                    </div>
+                                </div>
+                            </button>
+                        );
+                    })}
                 </div>
 
-                {/* No Criteria Available */}
-                {criteria.length === 0 && !loading && (
-                    <div className="text-center py-12">
-                        <div className="inline-block p-4 bg-white/5 rounded-full mb-4">
-                            <svg className="w-12 h-12 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <p className="text-slate-400">No interview categories available at the moment.</p>
-                    </div>
-                )}
-
-                {/* Start Button */}
-                {criteria.length > 0 && (
-                    <div className="text-center">
-                        <button
-                            onClick={handleStartInterview}
-                            disabled={!selectedCriteria || loading}
-                            className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold rounded-xl shadow-lg shadow-cyan-500/50 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                        >
-                            {loading ? 'Starting Interview...' : 'Start Interview'}
-                        </button>
-                    </div>
-                )}
-            </div>
-
-            {/* Signature */}
-            <div className="fixed bottom-4 left-4 font-script text-white/10 text-sm pointer-events-none select-none">
-                AJ
+                {/* Action Button */}
+                <div className="flex justify-center">
+                    <button
+                        onClick={handleStartInterview}
+                        disabled={loading || !selectedCriteria}
+                        className={`
+                            group relative overflow-hidden rounded-xl py-4 px-12 transition-all duration-300 shadow-lg
+                            ${loading || !selectedCriteria
+                                ? 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-50'
+                                : 'bg-gradient-to-r from-brand-blue to-[#004282] hover:to-brand-blue text-white shadow-brand-blue/20 hover:shadow-brand-blue/40 transform hover:-translate-y-0.5'
+                            }
+                        `}
+                    >
+                        {!loading && selectedCriteria && (
+                            <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
+                        )}
+                        <span className="relative flex items-center justify-center gap-2 font-bold text-lg tracking-wide">
+                            {loading ? (
+                                <>
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                    Starting Interview...
+                                </>
+                            ) : (
+                                'Start Interview'
+                            )}
+                        </span>
+                    </button>
+                </div>
             </div>
         </div>
     );

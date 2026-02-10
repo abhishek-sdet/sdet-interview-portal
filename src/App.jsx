@@ -1,10 +1,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ToastProvider } from './components/Toast';
+import { Toaster } from 'react-hot-toast';
+import AppSignature from '@/components/AppSignature';
 
 // Interview Portal Pages
 import LandingPage from './pages/interview/LandingPage';
 import CriteriaSelection from './pages/interview/CriteriaSelection';
+import SetSelection from './pages/interview/SetSelection';
 import CategorySelection from './pages/interview/CategorySelection';
 import QuizInterface from './pages/interview/QuizInterface';
 import ThankYou from './pages/interview/ThankYou';
@@ -22,12 +24,15 @@ import ResultsDashboard from './pages/dashboard/ResultsDashboard';
 
 function App() {
     return (
-        <ToastProvider>
+        <>
+            <Toaster position="top-right" />
             <Router>
+                <AppSignature />
                 <Routes>
                     {/* Interview Portal Routes */}
                     <Route path="/" element={<LandingPage />} />
                     <Route path="/criteria-selection" element={<CriteriaSelection />} />
+                    <Route path="/set-selection" element={<SetSelection />} />
                     <Route path="/category-selection" element={<CategorySelection />} />
                     <Route path="/quiz" element={<QuizInterface />} />
                     <Route path="/thank-you" element={<ThankYou />} />
@@ -50,7 +55,7 @@ function App() {
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
             </Router>
-        </ToastProvider>
+        </>
     );
 }
 

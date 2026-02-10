@@ -9,6 +9,11 @@ export default {
             colors: {
                 background: "hsl(var(--background))",
                 foreground: "hsl(var(--foreground))",
+                brand: {
+                    blue: "#0054a5",
+                    orange: "#ff6b35",
+                    dark: "#020617",
+                },
                 primary: {
                     DEFAULT: "hsl(var(--primary))",
                     foreground: "hsl(var(--primary-foreground))",

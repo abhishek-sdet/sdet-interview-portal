@@ -1,0 +1,17 @@
+Verifying Answer Key Parsing...
+Parsed 18 questions.
+[Section A: Generic Multiple-Choice Questions (15 × 1 = 15 Marks)] Q: What does a 500 status code in... Ans: Server Error
+[Section A: Generic Multiple-Choice Questions (15 × 1 = 15 Marks)] Q: Which HTTP method is used to u... Ans: PUT
+[Section A: Generic Multiple-Choice Questions (15 × 1 = 15 Marks)] Q: Which status code indicates th... Ans: 201
+[Java-Based Questions] Q: What will be the output of the... Ans: 0
+[Java-Based Questions] Q: What is the output of this cod... Ans: 3
+[Python-Based Questions] Q: What is the output of the foll... Ans: [0, 2, 4]
+[Python-Based Questions] Q: Which of the following will ra... Ans: "2" + 3
+[Python-Based Questions] Q: What will be the output of the... Ans: 1 2 5
+
+--- Summary ---
+Set: Section A: Generic Multiple-Choice Questions (15 × 1 = 15 Marks) - Total: 12, Answered: 12
+Set: Java-Based Questions - Total: 3, Answered: 3
+Set: Python-Based Questions - Total: 3, Answered: 3
+
+✅ ALL questions have answers!

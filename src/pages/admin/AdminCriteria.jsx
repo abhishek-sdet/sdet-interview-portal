@@ -12,6 +12,7 @@ export default function AdminCriteria() {
         name: '',
         description: '',
         passing_percentage: 70,
+        timer_duration: null,
         is_active: true,
         is_enabled: true
     });
@@ -78,6 +79,7 @@ export default function AdminCriteria() {
             name: item.name,
             description: item.description,
             passing_percentage: item.passing_percentage,
+            timer_duration: item.timer_duration,
             is_active: item.is_active,
             is_enabled: item.is_enabled ?? true
         });
@@ -108,6 +110,7 @@ export default function AdminCriteria() {
             name: '',
             description: '',
             passing_percentage: 70,
+            timer_duration: null,
             is_active: true,
             is_enabled: true
         });
@@ -210,6 +213,26 @@ export default function AdminCriteria() {
                             />
                         </div>
 
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-2">
+                                Interview Duration (minutes)
+                            </label>
+                            <input
+                                type="number"
+                                min="1"
+                                value={formData.timer_duration || ''}
+                                onChange={(e) => setFormData({
+                                    ...formData,
+                                    timer_duration: e.target.value ? parseInt(e.target.value) : null
+                                })}
+                                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                                placeholder="Leave empty for no time limit"
+                            />
+                            <p className="mt-1 text-xs text-slate-400">
+                                Set interview time limit in minutes. Leave empty for unlimited time.
+                            </p>
+                        </div>
+
                         <div className="flex items-center gap-2">
                             <input
                                 type="checkbox"
@@ -283,6 +306,9 @@ export default function AdminCriteria() {
                                         Passing %
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                                        Duration
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">
                                         Status
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">
@@ -307,6 +333,11 @@ export default function AdminCriteria() {
                                         <td className="px-6 py-4">
                                             <div className="text-cyan-400 font-semibold">
                                                 {item.passing_percentage}%
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="text-slate-300 text-sm">
+                                                {item.timer_duration ? `${item.timer_duration} min` : 'No limit'}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">

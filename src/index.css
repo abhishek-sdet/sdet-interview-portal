@@ -4,8 +4,16 @@
 
 @layer base {
   :root {
+    /* Base Colors */
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
+
+    /* SDET Brand Identity */
+    --brand-blue: #0054a5;
+    --brand-orange: #ff6b35;
+    --brand-dark: #020617;
+
+    /* UI Variables */
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
@@ -27,58 +35,215 @@
   }
 }
 
-@layer base {
-  body {
-    @apply bg-background text-foreground;
+@layer components {
+
+  /* 
+   * ==========================================
+   *  WORLD-CLASS BACKGROUND ANIMATION
+   * ==========================================
+   */
+  .bg-universe {
+    background-color: #020617;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Animated Orbs */
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    z-index: 0;
+    opacity: 0.6;
+    animation: float-orb 15s infinite ease-in-out;
+  }
+
+  .orb-1 {
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, var(--brand-blue), transparent 70%);
+    top: -10%;
+    left: -10%;
+    animation-delay: 0s;
+  }
+
+  .orb-2 {
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, var(--brand-orange), transparent 70%);
+    bottom: -10%;
+    right: -10%;
+    animation-delay: -5s;
+    opacity: 0.4;
+  }
+
+  .orb-3 {
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, #4f46e5, transparent 70%);
+    /* Indigo accent */
+    top: 40%;
+    left: 40%;
+    animation-delay: -10s;
+    opacity: 0.3;
+  }
+
+  /* Grid Overlay - Subtle Texture */
+  .grid-texture {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* 
+   * ==========================================
+   *  PREMIUM GLASS CARD
+   * ==========================================
+   */
+  .glass-card-ultra {
+    background: rgba(15, 23, 42, 0.65);
+    /* Darker, more opaque */
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.2),
+      /* Subtle inner border */
+      0 20px 50px -12px rgba(0, 0, 0, 0.7);
+    /* Deep shadow */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .glass-card-ultra:hover {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.1),
+      0 30px 60px -12px rgba(0, 84, 165, 0.15);
+    /* Blue glow on hover */
+  }
+
+  /* 
+   * ==========================================
+   *  TYPOGRAPHY & BRANDING
+   * ==========================================
+   */
+  .text-brand-gradient {
+    background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .text-glow {
+    text-shadow: 0 0 30px rgba(0, 84, 165, 0.4);
+  }
+
+  /* GPTW Badge Highlight */
+  .badge-container {
+    position: relative;
+    border-radius: 1rem;
+    padding: 2px;
+    /* For border gradient */
+    background: linear-gradient(135deg, #ffffff30, transparent);
+    overflow: hidden;
+  }
+
+  .badge-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.5s;
+  }
+
+  .badge-container:hover::before {
+    transform: translateX(100%);
+    transition: transform 1s;
   }
 }
 
-/* Ensure 100% zoom and prevent browser zoom issues */
-html {
-  zoom: 100%;
-  -webkit-text-size-adjust: 100%;
-  -moz-text-size-adjust: 100%;
-  -ms-text-size-adjust: 100%;
-  text-size-adjust: 100%;
+/* 
+ * ==========================================
+ *  KEYFRAME ANIMATIONS
+ * ==========================================
+ */
+@keyframes float-orb {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
 }
 
+@keyframes slide-up-hero {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-delay {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-soft {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Utilities */
+.animate-hero {
+  animation: slide-up-hero 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-hero-delay-1 {
+  animation: slide-up-hero 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+  opacity: 0;
+}
+
+.animate-hero-delay-2 {
+  animation: slide-up-hero 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+  opacity: 0;
+}
+
+.animate-pulse-slow {
+  animation: pulse-soft 4s infinite ease-in-out;
+}
+
+/* Base Styles */
 body {
-  zoom: 100%;
-  -webkit-text-size-adjust: 100%;
-  -moz-text-size-adjust: 100%;
-  -ms-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-  min-height: 100vh;
-  min-height: -webkit-fill-available;
-}
-
-/* Prevent zoom on input focus (mobile) */
-input,
-select,
-textarea {
-  font-size: 16px !important;
-}
-
-/* Ensure consistent box-sizing */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-/* Fix dropdown option visibility - ensure options are readable */
-select option {
-  background-color: #1e293b !important;
-  color: white !important;
-  padding: 8px !important;
-}
-
-/* Alternative fix for browsers that don't support option styling */
-select {
-  background-color: rgba(255, 255, 255, 0.05);
-}
-
-select:focus option {
-  background-color: #1e293b;
-  color: white;
+  @apply bg-slate-950 text-slate-100;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
