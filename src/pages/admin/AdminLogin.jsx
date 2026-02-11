@@ -2,16 +2,16 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import CommandLogo from '@/components/CommandLogo';
+import { Lock, Mail, ArrowRight, Loader2 } from 'lucide-react';
+import { showToast } from '@/components/Toast';
 
 export default function AdminLogin() {
     const navigate = useNavigate();
     const [credentials, setCredentials] = useState({ email: '', password: '' });
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        setError('');
         setLoading(true);
 
         try {
@@ -22,145 +22,114 @@ export default function AdminLogin() {
 
             if (signInError) throw signInError;
 
-            // Navigate to admin dashboard
+            showToast.success('Welcome back, Admin');
             navigate('/admin/dashboard');
         } catch (err) {
             console.error('Login error:', err);
-            setError(err.message || 'Invalid credentials. Please try again.');
+            showToast.error(err.message || 'Invalid credentials');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
-            {/* Animated Background - Orbs */}
-            <div className="orb orb1"></div>
-            <div className="orb orb2"></div>
-            <div className="orb orb3"></div>
+        <div className="min-h-screen relative flex items-center justify-center overflow-hidden bg-universe">
+            {/* Animated Background */}
+            <div className="fixed inset-0 z-0 pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-500/20 blur-[120px] rounded-full mix-blend-screen animate-orb-float"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-cyan-500/20 blur-[120px] rounded-full mix-blend-screen animate-orb-float-delayed"></div>
+                <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:radial-gradient(ellipse_at_center,white,transparent)] opacity-20"></div>
+            </div>
 
-            {/* Grid Background */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,229,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,229,0.03)_1px,transparent_1px)] bg-[size:50px_50px] animate-gridMove"></div>
-
-            {/* Content */}
-            <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
-                <div className="w-full max-w-md">
-                    <div className="bg-white/5 backdrop-blur-xl border-2 border-white/10 rounded-3xl p-12 shadow-2xl">
-                        {/* Logo/Icon */}
-                        <div className="text-center mb-8">
-                            <div className="inline-block mb-4">
-                                <CommandLogo size={120} />
-                            </div>
-                            <h2 className="text-3xl font-bold mb-2 uppercase tracking-wider font-display">
-                                <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                                    SDET COMMAND
-                                </span>
-                            </h2>
-                            <p className="text-slate-400 text-sm uppercase tracking-wide">Admin Control Center</p>
-                        </div>
-
-                        {/* Form */}
-                        <form onSubmit={handleLogin} className="space-y-5">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2 uppercase tracking-wide">
-                                    Email
-                                </label>
-                                <input
-                                    type="email"
-                                    value={credentials.email}
-                                    onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all font-mono"
-                                    placeholder="admin@sdet.com"
-                                    required
-                                    disabled={loading}
+            {/* Content Card */}
+            <div className="relative z-10 w-full max-w-md p-6 animate-fade-in-up">
+                <div className="glass-panel border-white/10 rounded-3xl p-10 shadow-2xl backdrop-blur-xl">
+                    {/* Header */}
+                    <div className="text-center mb-10">
+                        <div className="inline-flex justify-center mb-6 relative group">
+                            <div className="absolute inset-0 bg-cyan-500/20 blur-xl rounded-full group-hover:bg-cyan-500/30 transition-all duration-500"></div>
+                            <div className="relative transform group-hover:scale-105 transition-transform duration-500">
+                                <img
+                                    src="/logo_new.png"
+                                    alt="Company Logo"
+                                    className="h-24 w-auto rounded-xl shadow-lg shadow-black/50 bg-white p-2"
                                 />
                             </div>
+                        </div>
+                        <h2 className="text-3xl font-bold font-display tracking-tight mb-2">
+                            <span className="bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
+                                SDET COMMAND
+                            </span>
+                        </h2>
+                        <p className="text-slate-400 text-sm tracking-wide uppercase font-medium">Admin Access Portal</p>
+                    </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2 uppercase tracking-wide">
+                    {/* Form */}
+                    <form onSubmit={handleLogin} className="space-y-6">
+                        <div className="space-y-4">
+                            <div className="group">
+                                <label className="block text-xs font-bold text-slate-400 mb-1 uppercase tracking-wider ml-1">
+                                    Email Address
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <Mail className="h-5 w-5 text-slate-500 group-focus-within:text-cyan-400 transition-colors" />
+                                    </div>
+                                    <input
+                                        type="email"
+                                        value={credentials.email}
+                                        onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
+                                        className="glass-input pl-14 py-3.5"
+                                        placeholder="admin@sdet.com"
+                                        required
+                                        disabled={loading}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="group">
+                                <label className="block text-xs font-bold text-slate-400 mb-1 uppercase tracking-wider ml-1">
                                     Password
                                 </label>
-                                <input
-                                    type="password"
-                                    value={credentials.password}
-                                    onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/15 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all font-mono"
-                                    placeholder="••••••••"
-                                    required
-                                    disabled={loading}
-                                />
-                            </div>
-
-                            {error && (
-                                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
-                                    {error}
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <Lock className="h-5 w-5 text-slate-500 group-focus-within:text-cyan-400 transition-colors" />
+                                    </div>
+                                    <input
+                                        type="password"
+                                        value={credentials.password}
+                                        onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                                        className="glass-input pl-14 py-3.5"
+                                        placeholder="••••••••"
+                                        required
+                                        disabled={loading}
+                                    />
                                 </div>
-                            )}
+                            </div>
+                        </div>
 
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full py-3 px-6 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-black font-bold rounded-xl shadow-lg shadow-cyan-500/50 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none uppercase tracking-wider"
-                            >
-                                {loading ? 'Authenticating...' : 'Login'}
-                            </button>
-                        </form>
-                    </div>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full group glass-button-primary py-3.5 mt-2 flex items-center justify-center gap-2 text-base shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40"
+                        >
+                            {loading ? (
+                                <Loader2 className="animate-spin" size={20} />
+                            ) : (
+                                <>
+                                    <span>Access Dashboard</span>
+                                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                </>
+                            )}
+                        </button>
+                    </form>
+                </div>
+
+                {/* Footer Signature */}
+                <div className="mt-8 text-center">
+                    <p className="font-script text-white/20 text-lg select-none">AJ</p>
                 </div>
             </div>
-
-            {/* Signature */}
-            <div className="fixed bottom-4 left-4 font-script text-white/10 text-sm pointer-events-none select-none">
-                AJ
-            </div>
-
-            <style jsx>{`
-        .orb {
-          position: fixed;
-          border-radius: 50%;
-          filter: blur(60px);
-          opacity: 0.3;
-          animation: float 15s ease-in-out infinite;
-          pointer-events: none;
-          z-index: 0;
-        }
-        .orb1 {
-          width: 300px;
-          height: 300px;
-          background: #00ffe5;
-          top: 10%;
-          left: 10%;
-          animation-delay: 0s;
-        }
-        .orb2 {
-          width: 400px;
-          height: 400px;
-          background: #0054a5;
-          bottom: 10%;
-          right: 10%;
-          animation-delay: 5s;
-        }
-        .orb3 {
-          width: 250px;
-          height: 250px;
-          background: #ff6b35;
-          top: 50%;
-          right: 20%;
-          animation-delay: 10s;
-        }
-        @keyframes float {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(30px, -30px) scale(1.1); }
-          66% { transform: translate(-30px, 30px) scale(0.9); }
-        }
-        @keyframes gridMove {
-          0% { transform: translate(0, 0); }
-          100% { transform: translate(50px, 50px); }
-        }
-        .animate-gridMove {
-          animation: gridMove 20s linear infinite;
-        }
-      `}</style>
         </div>
     );
 }

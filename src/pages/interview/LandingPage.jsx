@@ -96,15 +96,15 @@ export default function LandingPage() {
                     <div className="space-y-4 animate-hero">
                         <div className="inline-block p-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl shadow-2xl mb-4 hover:border-brand-blue/50 transition-colors duration-500 group">
                             <img
-                                src="/logo.jpg"
+                                src="/logo_new.png"
                                 alt="SDET Logo"
-                                className="h-14 md:h-16 w-auto object-contain brightness-110 group-hover:scale-105 transition-transform duration-500"
+                                className="h-16 md:h-20 w-auto object-contain brightness-110 group-hover:scale-105 transition-transform duration-500"
                             />
                         </div>
 
                         <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight">
                             <span className="block text-white">Software Quality</span>
-                            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-brand-blue to-cyan-400">Enthusiast</span>
+                            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-brand-blue to-cyan-400">Testing Company</span>
                         </h1>
 
                         <p className="text-base md:text-lg text-slate-400 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-light">

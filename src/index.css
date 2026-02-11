@@ -8,6 +8,25 @@
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
+    /* THEME VARIABLES (From index.html) - Default Dark */
+    --bg-body: #050511;
+    --bg-gradient-1: rgba(76, 29, 149, 0.15);
+    --bg-gradient-2: rgba(56, 189, 248, 0.15);
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --text-main: #ffffff;
+    --text-muted: rgba(255, 255, 255, 0.5);
+    --card-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    --input-bg: rgba(0, 0, 0, 0.3);
+    --chart-grid: rgba(255, 255, 255, 0.1);
+    --chart-text: rgba(255, 255, 255, 0.7);
+
+    --neon-blue: #4facfe;
+    --success: #00f260;
+    --danger: #ff5e62;
+    --success-bg: rgba(0, 242, 96, 0.1);
+    --danger-bg: rgba(255, 94, 98, 0.1);
+
     /* SDET Brand Identity */
     --brand-blue: #0054a5;
     --brand-orange: #ff6b35;
@@ -33,6 +52,27 @@
     --ring: 212.7 26.8% 83.9%;
     --radius: 0.5rem;
   }
+
+  [data-theme="light"] {
+    /* LIGHT THEME OVERRIDES */
+    --bg-body: #f3f4f6;
+    --bg-gradient-1: rgba(79, 172, 254, 0.1);
+    --bg-gradient-2: rgba(161, 140, 209, 0.1);
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(209, 213, 219, 0.8);
+    --text-main: #111827;
+    --text-muted: #6b7280;
+    --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    --input-bg: #ffffff;
+    --chart-grid: rgba(0, 0, 0, 0.05);
+    --chart-text: #374151;
+
+    --neon-blue: #2563eb;
+    --success: #059669;
+    --danger: #dc2626;
+    --success-bg: #d1fae5;
+    --danger-bg: #fee2e2;
+  }
 }
 
 @layer components {
@@ -43,7 +83,8 @@
    * ==========================================
    */
   .bg-universe {
-    background-color: #020617;
+    background-color: var(--bg-body);
+    transition: background-color 0.3s ease;
     position: relative;
     overflow: hidden;
   }
@@ -242,8 +283,43 @@
   animation: pulse-soft 4s infinite ease-in-out;
 }
 
+/* 
+   * ==========================================
+   *  SHARED GLASS UTILITIES (Admin & Aspirant)
+   * ==========================================
+   */
+.glass-panel {
+  @apply bg-[var(--glass-bg)] backdrop-blur-xl border border-[var(--glass-border)] shadow-2xl;
+}
+
+.glass-input {
+  @apply w-full py-3 bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-xl text-[var(--text-main)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-cyan-400/50 transition-all;
+}
+
+.glass-input option {
+  background-color: #1e293b;
+  color: #e2e8f0;
+  padding: 8px;
+}
+
+.glass-input option:hover {
+  background-color: #334155;
+}
+
+.glass-button {
+  @apply px-4 py-2 bg-[var(--glass-bg)] hover:bg-[var(--glass-border)] border border-[var(--glass-border)] rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all backdrop-blur-sm;
+}
+
+.glass-button-primary {
+  @apply px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold rounded-lg shadow-lg shadow-cyan-500/20 transition-all;
+}
+
+.glass-button-danger {
+  @apply px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-lg transition-all;
+}
+
 /* Base Styles */
 body {
-  @apply bg-slate-950 text-slate-100;
+  @apply bg-[var(--bg-body)] text-[var(--text-main)];
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }

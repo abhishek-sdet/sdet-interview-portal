@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { Calendar, X } from 'lucide-react';
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState({
@@ -12,17 +14,42 @@ export default function AdminDashboard() {
     });
     const [recentResults, setRecentResults] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedDate, setSelectedDate] = useState(null);
+    const [upcomingSchedules, setUpcomingSchedules] = useState([]);
 
     useEffect(() => {
         fetchDashboardData();
-    }, []);
+    }, [selectedDate]);
 
     const fetchDashboardData = async () => {
         try {
             // Fetch stats
-            const { data: interviews, error: interviewsError } = await supabase
-                .from('interviews')
-                .select('*');
+            let interviewsQuery = supabase.from('interviews').select('*');
+
+            // Apply date filter if selected
+            if (selectedDate) {
+                // Use local string comparison to avoid timezone issues
+                // We filter in memory or we need a robust DB query.
+                // Since Supabase filtering by date string on timestampz is tricky with timezones,
+                // let's try to filter by range roughly or exact string match if possible.
+                // Actually, the previous 'gte/lte' was correct IF selectedDate was correct.
+                // But let's align with AdminResults logic if possible?
+                // AdminResults filters IN MEMORY. Here we query DB.
+                // For DB query, we need start/end of day in UTC.
+                // If user selects "2023-10-27" (Local), we want 00:00 to 23:59 LOCAL.
+                // So we construct Local Date, then toISOString?
+                // new Date("2023-10-27") -> UTC 00:00.
+                // new Date("2023-10-27T00:00:00") -> Local 00:00.
+                // So:
+                const startLocal = new Date(`${selectedDate}T00:00:00`);
+                const endLocal = new Date(`${selectedDate}T23:59:59.999`);
+
+                interviewsQuery = interviewsQuery
+                    .gte('started_at', startLocal.toISOString())
+                    .lte('started_at', endLocal.toISOString());
+            }
+
+            const { data: interviews, error: interviewsError } = await interviewsQuery;
 
             if (interviewsError) throw interviewsError;
 
@@ -44,15 +71,42 @@ export default function AdminDashboard() {
                 inProgress
             });
 
-            // Fetch recent results
-            const { data: results, error: resultsError } = await supabase
+            // Fetch recent results with date filter
+            let resultsQuery = supabase
                 .from('results')
                 .select('*')
                 .order('started_at', { ascending: false })
                 .limit(10);
 
+            if (selectedDate) {
+                const startLocal = new Date(`${selectedDate}T00:00:00`);
+                const endLocal = new Date(`${selectedDate}T23:59:59.999`);
+
+                resultsQuery = resultsQuery
+                    .gte('started_at', startLocal.toISOString())
+                    .lte('started_at', endLocal.toISOString());
+            }
+
+            const { data: results, error: resultsError } = await resultsQuery;
+
             if (resultsError) throw resultsError;
             setRecentResults(results || []);
+
+            // Fetch upcoming schedules (only if no date filter)
+            if (!selectedDate) {
+                const today = new Date().toISOString().split('T')[0];
+                const { data: schedules, error: schedulesError } = await supabase
+                    .from('scheduled_interviews_view')
+                    .select('*')
+                    .gte('scheduled_date', today)
+                    .eq('is_active', true)
+                    .order('scheduled_date')
+                    .limit(5);
+
+                if (!schedulesError) {
+                    setUpcomingSchedules(schedules || []);
+                }
+            }
         } catch (err) {
             console.error('Error fetching dashboard data:', err);
         } finally {
@@ -62,14 +116,101 @@ export default function AdminDashboard() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center py-20">
-                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-cyan-400"></div>
+            <div className="flex items-center justify-center py-20 min-h-[60vh]">
+                <div className="relative">
+                    <div className="absolute inset-0 bg-cyan-500 blur-xl opacity-20 animate-pulse"></div>
+                    <div className="relative animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-cyan-400"></div>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 animate-fade-in">
+            {/* Header Section */}
+            <div className="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                    <h2 className="text-3xl font-bold text-white tracking-tight mb-2">Dashboard Overview</h2>
+                    <p className="text-slate-400">
+                        {selectedDate
+                            ? `Showing data for ${new Date(selectedDate).toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`
+                            : 'Real-time insights and recruitment metrics.'}
+                    </p>
+                </div>
+                <div className="flex gap-3">
+                    {/* Date Filter */}
+                    <div className="flex items-center gap-2 glass-panel px-4 py-2 rounded-xl">
+                        <Calendar size={18} className="text-cyan-400" />
+                        <input
+                            type="date"
+                            value={selectedDate || ''}
+                            onChange={(e) => setSelectedDate(e.target.value || null)}
+                            className="bg-transparent border-none text-white text-sm focus:outline-none cursor-pointer"
+                        />
+                    </div>
+                    {selectedDate && (
+                        <button
+                            onClick={() => setSelectedDate(null)}
+                            className="glass-button flex items-center gap-2"
+                        >
+                            <X size={18} />
+                            Clear Filter
+                        </button>
+                    )}
+                    <button
+                        onClick={fetchDashboardData}
+                        className="glass-button flex items-center gap-2 hover:bg-cyan-500/10 hover:text-cyan-400"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                        Refresh
+                    </button>
+                    <button className="glass-button-primary flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        Download Report
+                    </button>
+                </div>
+            </div>
+
+            {/* Quick Actions Section */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Link to="/admin/schedule" className="glass-panel p-4 rounded-xl flex items-center gap-3 hover:bg-cyan-500/10 transition-colors group">
+                    <div className="p-2 bg-cyan-500/20 rounded-lg group-hover:scale-110 transition-transform">
+                        <span className="text-xl">📅</span>
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-white text-sm">Schedule Interview</h3>
+                        <p className="text-xs text-slate-400">Create new sessions</p>
+                    </div>
+                </Link>
+                <Link to="/admin/results" className="glass-panel p-4 rounded-xl flex items-center gap-3 hover:bg-emerald-500/10 transition-colors group">
+                    <div className="p-2 bg-emerald-500/20 rounded-lg group-hover:scale-110 transition-transform">
+                        <span className="text-xl">📈</span>
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-white text-sm">View Results</h3>
+                        <p className="text-xs text-slate-400">Analyze performance</p>
+                    </div>
+                </Link>
+                <Link to="/admin/questions" className="glass-panel p-4 rounded-xl flex items-center gap-3 hover:bg-purple-500/10 transition-colors group">
+                    <div className="p-2 bg-purple-500/20 rounded-lg group-hover:scale-110 transition-transform">
+                        <span className="text-xl">❓</span>
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-white text-sm">Manage Questions</h3>
+                        <p className="text-xs text-slate-400">Update question bank</p>
+                    </div>
+                </Link>
+                <Link to="/admin/criteria" className="glass-panel p-4 rounded-xl flex items-center gap-3 hover:bg-orange-500/10 transition-colors group">
+                    <div className="p-2 bg-orange-500/20 rounded-lg group-hover:scale-110 transition-transform">
+                        <span className="text-xl">📋</span>
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-white text-sm">Update Criteria</h3>
+                        <p className="text-xs text-slate-400">Set passing marks</p>
+                    </div>
+                </Link>
+            </div>
+
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
@@ -77,67 +218,133 @@ export default function AdminDashboard() {
                     value={stats.totalCandidates}
                     icon="👥"
                     color="cyan"
+                    trend="+12%"
                 />
                 <StatCard
                     label="Qualified"
                     value={stats.qualified}
                     icon="✅"
                     color="green"
+                    trend="+5%"
                 />
                 <StatCard
                     label="Not Qualified"
                     value={stats.notQualified}
                     icon="❌"
                     color="red"
+                    trend="-2%"
                 />
                 <StatCard
                     label="Success Rate"
                     value={`${stats.successRate}%`}
                     icon="📊"
                     color="blue"
+                    subtext="Based on completed interviews"
                 />
             </div>
 
+            {/* Upcoming Schedules Section */}
+            {!selectedDate && upcomingSchedules.length > 0 && (
+                <div className="glass-panel rounded-2xl p-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                            <Calendar size={20} className="text-cyan-400" />
+                            Upcoming Scheduled Interviews
+                        </h3>
+                        <Link to="/admin/schedule" className="text-cyan-400 hover:text-cyan-300 text-sm flex items-center gap-1">
+                            View All →
+                        </Link>
+                    </div>
+                    <div className="space-y-3">
+                        {upcomingSchedules.length > 0 ? (
+                            upcomingSchedules.map((schedule) => (
+                                <div key={schedule.id} className="glass-panel p-4 rounded-xl flex items-center justify-between hover:bg-white/10 transition-all">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-2 bg-cyan-500/20 rounded-lg">
+                                            <Calendar size={18} className="text-cyan-400" />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-white font-medium">{schedule.criteria_name}</h4>
+                                            <p className="text-sm text-slate-400">
+                                                {new Date(schedule.scheduled_date).toLocaleDateString('en-IN', {
+                                                    weekday: 'short',
+                                                    month: 'short',
+                                                    day: 'numeric'
+                                                })} • {schedule.time_limit_minutes} min
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-white font-medium">{schedule.total_interviews} / {schedule.max_candidates || '∞'}</div>
+                                        <div className="text-xs text-slate-400">candidates</div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="text-center text-slate-400 py-4">No upcoming schedules</div>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {/* Recent Results Table */}
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+            <div className="glass-panel rounded-2xl p-6 overflow-hidden">
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold text-cyan-400 uppercase tracking-wide">Recent Results</h2>
-                    <span className="text-sm text-slate-400">{recentResults.length} results</span>
+                    <div>
+                        <h2 className="text-xl font-bold text-white mb-1">Recent Results</h2>
+                        <p className="text-sm text-slate-400">Latest candidate submissions</p>
+                    </div>
+                    <Link to="/admin/results" className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors">
+                        View All Results &rarr;
+                    </Link>
                 </div>
 
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
-                            <tr className="border-b border-white/10">
-                                <th className="text-left py-3 px-4 text-xs uppercase text-cyan-400 font-semibold">Candidate</th>
-                                <th className="text-left py-3 px-4 text-xs uppercase text-cyan-400 font-semibold">Criteria</th>
-                                <th className="text-left py-3 px-4 text-xs uppercase text-cyan-400 font-semibold">Score</th>
-                                <th className="text-left py-3 px-4 text-xs uppercase text-cyan-400 font-semibold">Percentage</th>
-                                <th className="text-left py-3 px-4 text-xs uppercase text-cyan-400 font-semibold">Status</th>
-                                <th className="text-left py-3 px-4 text-xs uppercase text-cyan-400 font-semibold">Date</th>
+                            <tr className="border-b border-white/5">
+                                <th className="text-left py-4 px-4 text-xs uppercase text-slate-500 font-bold tracking-wider">Candidate</th>
+                                <th className="text-left py-4 px-4 text-xs uppercase text-slate-500 font-bold tracking-wider">Criteria</th>
+                                <th className="text-left py-4 px-4 text-xs uppercase text-slate-500 font-bold tracking-wider">Score</th>
+                                <th className="text-left py-4 px-4 text-xs uppercase text-slate-500 font-bold tracking-wider">Percentage</th>
+                                <th className="text-left py-4 px-4 text-xs uppercase text-slate-500 font-bold tracking-wider">Status</th>
+                                <th className="text-left py-4 px-4 text-xs uppercase text-slate-500 font-bold tracking-wider">Date</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody className="divide-y divide-white/5">
                             {recentResults.map((result) => (
-                                <tr key={result.interview_id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                    <td className="py-3 px-4 text-white">{result.full_name}</td>
-                                    <td className="py-3 px-4 text-slate-300">{result.criteria_name}</td>
-                                    <td className="py-3 px-4 text-white font-mono">{result.score}/{result.total_questions}</td>
-                                    <td className="py-3 px-4">
-                                        <span className={`font-semibold ${result.passed ? 'text-green-400' : 'text-red-400'}`}>
+                                <tr key={result.interview_id} className="hover:bg-white/5 transition-colors group">
+                                    <td className="py-4 px-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-cyan-400 border border-white/10 group-hover:border-cyan-500/50 transition-colors">
+                                                {result.full_name?.charAt(0)}
+                                            </div>
+                                            <span className="text-white font-medium group-hover:text-cyan-400 transition-colors">{result.full_name}</span>
+                                        </div>
+                                    </td>
+                                    <td className="py-4 px-4 text-slate-400 text-sm">{result.criteria_name}</td>
+                                    <td className="py-4 px-4 text-white font-mono text-sm">{result.score}/{result.total_questions}</td>
+                                    <td className="py-4 px-4">
+                                        <div className="w-full bg-slate-800 rounded-full h-1.5 w-24 mb-1">
+                                            <div
+                                                className={`h-1.5 rounded-full ${result.passed ? 'bg-green-500' : 'bg-red-500'}`}
+                                                style={{ width: `${result.percentage}%` }}
+                                            ></div>
+                                        </div>
+                                        <span className={`text-xs font-bold ${result.passed ? 'text-green-400' : 'text-red-400'}`}>
                                             {result.percentage}%
                                         </span>
                                     </td>
-                                    <td className="py-3 px-4">
-                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${result.passed
-                                                ? 'bg-green-500/20 text-green-400 border border-green-500/50'
-                                                : 'bg-red-500/20 text-red-400 border border-red-500/50'
+                                    <td className="py-4 px-4">
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${result.passed
+                                            ? 'bg-green-500/10 text-green-400 border-green-500/20'
+                                            : 'bg-red-500/10 text-red-400 border-red-500/20'
                                             }`}>
                                             {result.passed ? 'QUALIFIED' : 'NOT QUALIFIED'}
                                         </span>
                                     </td>
-                                    <td className="py-3 px-4 text-slate-400 text-sm">
-                                        {new Date(result.completed_at).toLocaleDateString()}
+                                    <td className="py-4 px-4 text-slate-500 text-sm">
+                                        {new Date(result.completed_at).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                                     </td>
                                 </tr>
                             ))}
@@ -146,7 +353,7 @@ export default function AdminDashboard() {
 
                     {recentResults.length === 0 && (
                         <div className="text-center py-12 text-slate-400">
-                            No results available yet
+                            No recent results found
                         </div>
                     )}
                 </div>
@@ -155,20 +362,35 @@ export default function AdminDashboard() {
     );
 }
 
-function StatCard({ label, value, icon, color }) {
-    const colorClasses = {
-        cyan: 'from-cyan-500/20 to-cyan-600/20 border-cyan-500/30',
-        green: 'from-green-500/20 to-green-600/20 border-green-500/30',
-        red: 'from-red-500/20 to-red-600/20 border-red-500/30',
-        blue: 'from-blue-500/20 to-blue-600/20 border-blue-500/30',
+function StatCard({ label, value, icon, color, trend, subtext }) {
+    const colorStyles = {
+        cyan: { bg: 'from-cyan-500/10 to-blue-500/10', border: 'border-cyan-500/20', text: 'text-cyan-400', shadow: 'shadow-cyan-500/10' },
+        green: { bg: 'from-emerald-500/10 to-green-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400', shadow: 'shadow-emerald-500/10' },
+        red: { bg: 'from-red-500/10 to-orange-500/10', border: 'border-red-500/20', text: 'text-red-400', shadow: 'shadow-red-500/10' },
+        blue: { bg: 'from-blue-500/10 to-indigo-500/10', border: 'border-blue-500/20', text: 'text-blue-400', shadow: 'shadow-blue-500/10' },
     };
 
+    const style = colorStyles[color];
+
     return (
-        <div className={`bg-gradient-to-br ${colorClasses[color]} backdrop-blur-xl border rounded-2xl p-6 relative overflow-hidden`}>
-            <div className="absolute top-0 right-0 text-6xl opacity-10">{icon}</div>
-            <div className="relative z-10">
-                <p className="text-sm text-slate-400 uppercase tracking-wide mb-2">{label}</p>
-                <p className="text-4xl font-bold text-white font-mono">{value}</p>
+        <div className={`relative overflow-hidden rounded-2xl border ${style.border} bg-gradient-to-br ${style.bg} p-6 transition-all hover:scale-[1.02] hover:shadow-xl ${style.shadow} group`}>
+            {/* Background Glow */}
+            <div className={`absolute -right-6 -top-6 h-24 w-24 rounded-full ${style.text} opacity-10 blur-2xl group-hover:opacity-20 transition-opacity`}></div>
+
+            <div className="relative">
+                <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm font-medium text-slate-400 tracking-wide uppercase">{label}</p>
+                    <span className={`text-2xl opacity-80 group-hover:scale-110 transition-transform duration-300`}>{icon}</span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                    <h3 className="text-3xl font-bold text-white tracking-tight">{value}</h3>
+                    {trend && (
+                        <span className={`text-xs font-medium ${trend.startsWith('+') ? 'text-emerald-400' : 'text-red-400'}`}>
+                            {trend}
+                        </span>
+                    )}
+                </div>
+                {subtext && <p className="mt-1 text-xs text-slate-500">{subtext}</p>}
             </div>
         </div>
     );

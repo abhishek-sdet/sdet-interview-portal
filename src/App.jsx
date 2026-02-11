@@ -7,7 +7,7 @@ import AppSignature from '@/components/AppSignature';
 import LandingPage from './pages/interview/LandingPage';
 import CriteriaSelection from './pages/interview/CriteriaSelection';
 import SetSelection from './pages/interview/SetSelection';
-import CategorySelection from './pages/interview/CategorySelection';
+import ExamSetup from './pages/interview/ExamSetup';
 import QuizInterface from './pages/interview/QuizInterface';
 import ThankYou from './pages/interview/ThankYou';
 
@@ -15,12 +15,14 @@ import ThankYou from './pages/interview/ThankYou';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminSchedule from './pages/admin/AdminSchedule';
 import AdminCriteria from './pages/admin/AdminCriteria';
 import AdminQuestions from './pages/admin/AdminQuestions';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Results Dashboard
-import ResultsDashboard from './pages/dashboard/ResultsDashboard';
+import AdminResults from './pages/admin/AdminResults';
+import HRDashboard from './pages/dashboard/HRDashboard';
 
 function App() {
     return (
@@ -33,7 +35,7 @@ function App() {
                     <Route path="/" element={<LandingPage />} />
                     <Route path="/criteria-selection" element={<CriteriaSelection />} />
                     <Route path="/set-selection" element={<SetSelection />} />
-                    <Route path="/category-selection" element={<CategorySelection />} />
+                    <Route path="/exam-setup" element={<ExamSetup />} />
                     <Route path="/quiz" element={<QuizInterface />} />
                     <Route path="/thank-you" element={<ThankYou />} />
 
@@ -42,14 +44,16 @@ function App() {
                     <Route element={<ProtectedRoute />}>
                         <Route path="/admin" element={<AdminLayout />}>
                             <Route path="dashboard" element={<AdminDashboard />} />
+                            <Route path="schedule" element={<AdminSchedule />} />
                             <Route path="criteria" element={<AdminCriteria />} />
                             <Route path="questions" element={<AdminQuestions />} />
-                            <Route path="results" element={<PlaceholderPage title="Results Management" />} />
+                            <Route path="results" element={<AdminResults />} />
                         </Route>
                     </Route>
 
                     {/* Results Dashboard Route */}
-                    <Route path="/dashboard" element={<ResultsDashboard />} />
+                    {/* HR Dashboard Route (Public/Read-Only) */}
+                    <Route path="/dashboard" element={<HRDashboard />} />
 
                     {/* Fallback */}
                     <Route path="*" element={<Navigate to="/" replace />} />

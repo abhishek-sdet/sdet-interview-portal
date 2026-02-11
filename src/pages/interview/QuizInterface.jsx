@@ -55,7 +55,12 @@ export default function QuizInterface() {
 
     const fetchQuestions = async (criteriaId) => {
         try {
-            const selectedSet = sessionStorage.getItem('selectedSet');
+            // Get exam configuration from session (set by ExamSetup.jsx)
+            const examConfigStr = sessionStorage.getItem('examConfig');
+            const examConfig = examConfigStr ? JSON.parse(examConfigStr) : null;
+
+            const selectedSet = examConfig?.set || sessionStorage.getItem('selectedSet');
+            const selectedSubject = examConfig?.subject; // e.g., 'java', 'python'
 
             let query = supabase
                 .from('questions')
@@ -64,7 +69,7 @@ export default function QuizInterface() {
                 .eq('is_active', true);
 
             if (selectedSet) {
-                query = query.eq('set_name', selectedSet);
+                query = query.eq('category', selectedSet); // category = Set Name (Set A, Set B)
             }
 
             const { data, error: fetchError } = await query.order('created_at');
@@ -76,27 +81,36 @@ export default function QuizInterface() {
                 return;
             }
 
-            // Categorize Questions
-            const javaQs = [];
-            const pythonQs = [];
-            const generalQs = [];
+            // Categorize Questions by NEW structure: section + subsection
+            const generalQs = data.filter(q => q.section === 'general' || !q.section); // General/Aptitude
+            const electiveQs = data.filter(q => q.section === 'elective');
 
-            data.forEach(q => {
-                const cat = q.category ? q.category.toLowerCase() : '';
-                if (cat.includes('java') && !cat.includes('script')) { // Simple check for Java
-                    javaQs.push(q);
-                } else if (cat.includes('python')) {
-                    pythonQs.push(q);
-                } else {
-                    generalQs.push(q);
-                }
-            });
+            // Filter elective questions by selected subject
+            const selectedElectiveQs = selectedSubject
+                ? electiveQs.filter(q => q.subsection === selectedSubject)
+                : [];
 
             // Store in refs
-            // We take first 12 general questions
+            // Take first 12 general questions
             generalQuestionsRef.current = generalQs.slice(0, 12);
-            javaQuestionsRef.current = javaQs.slice(0, 3); // Take top 3
-            pythonQuestionsRef.current = pythonQs.slice(0, 3); // Take top 3
+
+            // For backward compatibility with old specialization flow, store by subject
+            // But now we use the selected subject directly
+            if (selectedSubject) {
+                // Store selected elective questions (take top 3)
+                if (selectedSubject === 'java') {
+                    javaQuestionsRef.current = selectedElectiveQs.slice(0, 3);
+                } else if (selectedSubject === 'python') {
+                    pythonQuestionsRef.current = selectedElectiveQs.slice(0, 3);
+                }
+                // Auto-set specialization since user already chose in ExamSetup
+                setSpecialization(selectedSubject.charAt(0).toUpperCase() + selectedSubject.slice(1));
+            } else {
+                // Fallback: if no exam config, populate both for old flow
+                javaQuestionsRef.current = electiveQs.filter(q => q.subsection === 'java').slice(0, 3);
+                pythonQuestionsRef.current = electiveQs.filter(q => q.subsection === 'python').slice(0, 3);
+            }
+
 
             // Initial State: Show General Questions
             setQuestions(generalQuestionsRef.current);
@@ -106,16 +120,49 @@ export default function QuizInterface() {
                 setError('Insufficient general questions configured.');
             }
 
-            // Fetch timer duration from criteria
-            const { data: criteriaData, error: criteriaError } = await supabase
-                .from('criteria')
-                .select('timer_duration')
-                .eq('id', criteriaId)
+            // Check for scheduled interview for today
+            const today = new Date().toISOString().split('T')[0];
+            const { data: scheduledInterview, error: scheduleError } = await supabase
+                .from('scheduled_interviews')
+                .select('id, time_limit_minutes')
+                .eq('criteria_id', criteriaId)
+                .eq('scheduled_date', today)
+                .eq('is_active', true)
                 .single();
 
-            if (!criteriaError && criteriaData?.timer_duration) {
+            let timeLimitMinutes = null;
+            let scheduledInterviewId = null;
+
+            if (!scheduleError && scheduledInterview) {
+                // Use scheduled interview's time limit
+                timeLimitMinutes = scheduledInterview.time_limit_minutes;
+                scheduledInterviewId = scheduledInterview.id;
+
+                // Update interview record with scheduled_interview_id and time_limit
+                const interviewId = sessionStorage.getItem('interviewId');
+                await supabase
+                    .from('interviews')
+                    .update({
+                        scheduled_interview_id: scheduledInterviewId,
+                        time_limit_minutes: timeLimitMinutes
+                    })
+                    .eq('id', interviewId);
+            } else {
+                // Fall back to criteria's default timer_duration
+                const { data: criteriaData, error: criteriaError } = await supabase
+                    .from('criteria')
+                    .select('timer_duration')
+                    .eq('id', criteriaId)
+                    .single();
+
+                if (!criteriaError && criteriaData?.timer_duration) {
+                    timeLimitMinutes = criteriaData.timer_duration;
+                }
+            }
+
+            if (timeLimitMinutes) {
                 // Convert minutes to seconds
-                setTimeRemaining(criteriaData.timer_duration * 60);
+                setTimeRemaining(timeLimitMinutes * 60);
             }
 
         } catch (err) {
