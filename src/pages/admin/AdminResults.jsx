@@ -25,20 +25,24 @@ export default function AdminResults() {
         fetchResults();
 
         // Subscribe to real-time changes
-        const subscription = supabase
-            .channel('admin-results-channel')
+        console.log('Setting up real-time subscription for results...');
+        const channel = supabase
+            .channel('admin-results-changes')
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'interviews' },
                 (payload) => {
-                    console.log('Real-time update:', payload);
+                    console.log('Real-time update received:', payload);
                     fetchResults();
                 }
             )
-            .subscribe();
+            .subscribe((status) => {
+                console.log('Subscription status:', status);
+            });
 
         return () => {
-            subscription.unsubscribe();
+            console.log('Cleaning up subscription...');
+            supabase.removeChannel(channel);
         };
     }, [dateFilter]);
 
@@ -63,7 +67,7 @@ export default function AdminResults() {
                     candidates(full_name, email, phone),
                     criteria(name)
                 `)
-                .order('completed_at', { ascending: false });
+                .order('started_at', { ascending: false });
 
             // Apply date filter
             if (dateFilter === 'today') {
@@ -111,7 +115,7 @@ export default function AdminResults() {
             r.total_questions || 0,
             r.total_questions ? ((r.score / r.total_questions) * 100).toFixed(1) : '0',
             r.passed ? 'PASSED' : 'FAILED',
-            new Date(r.completed_at).toLocaleString()
+            r.completed_at ? new Date(r.completed_at).toLocaleString() : new Date(r.started_at).toLocaleString()
         ]);
 
         const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
@@ -456,10 +460,10 @@ export default function AdminResults() {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="text-sm text-slate-300">
-                                                        {new Date(result.completed_at).toLocaleDateString()}
+                                                        {result.completed_at ? new Date(result.completed_at).toLocaleDateString() : new Date(result.started_at).toLocaleDateString()}
                                                     </div>
                                                     <div className="text-xs text-slate-500">
-                                                        {new Date(result.completed_at).toLocaleTimeString()}
+                                                        {result.completed_at ? new Date(result.completed_at).toLocaleTimeString() : new Date(result.started_at).toLocaleTimeString()}
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-center">

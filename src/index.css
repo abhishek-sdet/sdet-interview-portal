@@ -14,31 +14,40 @@
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
-    /* THEME VARIABLES - PREMIUM LIGHT */
-    --bg-body: #f8fafc;
-    /* Slate 50 */
-    --bg-gradient-1: rgba(56, 189, 248, 0.1);
-    /* Soft Blue */
-    --bg-gradient-2: rgba(168, 85, 247, 0.05);
-    /* Soft Purple */
+    /* THEME VARIABLES - PREMIUM LIGHT - VIBRANT & CLEAN */
+    --bg-body: #f0f9ff;
+    /* Premium Alice Blue / Sky 50 mix */
+    --bg-gradient-1: rgba(14, 165, 233, 0.15);
+    /* Vivid Sky Blue */
+    --bg-gradient-2: rgba(139, 92, 246, 0.1);
+    /* Vivid Purple */
 
-    /* GLASS THEME - LIGHT & CLEAN */
-    --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-border: rgba(226, 232, 240, 0.8);
-    /* Slate 200 */
+    /* GLASS THEME - CRYSTAL CLEAR & DEFINED */
+    --glass-bg: rgba(255, 255, 255, 0.65);
+    /* Slightly more transparent for depth */
+    --glass-border: rgba(203, 213, 225, 0.6);
+    /* Slate 300 - Crisp */
+    --glass-bg-strong: rgba(255, 255, 255, 0.85);
+    /* Frosted finish */
+    --glass-border-strong: rgba(148, 163, 184, 0.8);
+    /* Slate 400 - Stronger definition */
 
-    /* Text - HIGH CONTRAST */
+    /* Text - HIGH CONTRAST & MODERN */
     --text-main: #0f172a;
-    /* Slate 900 */
-    --text-muted: #64748b;
-    /* Slate 500 */
+    /* Slate 900 - Deepest Blue-Black */
+    --text-muted: #475569;
+    /* Slate 600 - High legibility */
 
-    --card-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+    /* Premium Shadows for "Floating" Feel */
+    --card-shadow:
+      0 20px 40px -5px rgba(50, 60, 90, 0.1),
+      0 5px 15px -3px rgba(0, 0, 0, 0.05),
+      inset 0 1px 1px rgba(255, 255, 255, 0.8);
 
-    --input-bg: rgba(255, 255, 255, 0.8);
-    --chart-grid: rgba(0, 0, 0, 0.05);
-    --chart-text: #475569;
-    /* Slate 600 */
+    --input-bg: rgba(255, 255, 255, 0.7);
+    --chart-grid: rgba(0, 0, 0, 0.06);
+    --chart-text: #334155;
+    /* Slate 700 */
 
     --neon-blue: #0ea5e9;
     /* Sky 500 */
@@ -95,6 +104,8 @@
     /* Slate 800 with high opacity */
     --glass-border: rgba(148, 163, 184, 0.2);
     /* Slate 400 border */
+    --glass-bg-strong: rgba(15, 23, 42, 0.85);
+    --glass-border-strong: rgba(148, 163, 184, 0.3);
 
     /* Text - HIGH CONTRAST */
     --text-main: #f8fafc;
@@ -155,6 +166,11 @@
    */
   .bg-universe {
     background-color: var(--bg-body);
+    /* Subtle Mesh Gradient Overlay for Light Mode */
+    background-image:
+      radial-gradient(at 0% 0%, var(--bg-gradient-1) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, var(--bg-gradient-2) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, var(--bg-gradient-1) 0px, transparent 50%);
     transition: background-color 0.3s ease;
     position: relative;
     overflow: hidden;

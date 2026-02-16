@@ -54,8 +54,65 @@ export default function QuizInterface() {
             return;
         }
 
-        fetchQuestions(criteriaId);
+        // --- RESTORE STATE FROM LOCAL STORAGE ---
+        const storageKey = `quiz_state_${interviewId}`;
+        const savedStateString = localStorage.getItem(storageKey);
+
+        if (savedStateString) {
+            try {
+                const savedState = JSON.parse(savedStateString);
+                console.log('[INIT] Found saved quiz state:', savedState);
+
+                // Restore basic state
+                if (savedState.answers) setAnswers(savedState.answers);
+                if (savedState.currentIndex) setCurrentIndex(savedState.currentIndex);
+                if (savedState.tabSwitchWarnings) setTabSwitchWarnings(savedState.tabSwitchWarnings);
+                if (savedState.answeredQuestions) setAnsweredQuestions(new Set(savedState.answeredQuestions));
+
+                // Restore specialization
+                if (savedState.specialization) {
+                    setSpecialization(savedState.specialization);
+                    setShowSpecialization(false); // Ensure selection UI is hidden if already selected
+                } else if (savedState.showSpecialization) {
+                    setShowSpecialization(true);
+                }
+
+                // Questions are tricky - we need to fetch them first, then apply correct subset
+                // For now, we rely on fetchQuestions to rebuild the question list based on criteria/specialization logic
+                // But we must ensure the timer considers the saved time
+
+                fetchQuestions(criteriaId, savedState.timeRemaining);
+                return; // fetchQuestions will handle the rest
+            } catch (err) {
+                console.error('[INIT] Failed to parse saved state:', err);
+                localStorage.removeItem(storageKey); // Clear corrupted state
+            }
+        }
+
+        fetchQuestions(criteriaId, null);
     }, [navigate]);
+
+    // --- SAVE STATE TO LOCAL STORAGE ---
+    useEffect(() => {
+        const interviewId = sessionStorage.getItem('interviewId');
+        if (!interviewId || loading || submitting) return;
+
+        const storageKey = `quiz_state_${interviewId}`;
+        const stateToSave = {
+            answers,
+            currentIndex,
+            timeRemaining,
+            tabSwitchWarnings,
+            specialization,
+            showSpecialization,
+            answeredQuestions: Array.from(answeredQuestions),
+            timestamp: Date.now()
+        };
+
+        localStorage.setItem(storageKey, JSON.stringify(stateToSave));
+        // console.log('[STORAGE] State saved'); // Commented out to reduce console spam
+    }, [answers, currentIndex, timeRemaining, tabSwitchWarnings, specialization, showSpecialization, answeredQuestions, loading, submitting]);
+
 
     useEffect(() => {
         if (timeRemaining === null || timeRemaining <= 0 || submitting) return;
@@ -125,7 +182,25 @@ export default function QuizInterface() {
         };
     }, []);
 
-    const fetchQuestions = async (criteriaId) => {
+    // 4. Block Browser Back Navigation
+    useEffect(() => {
+        // Push a new state to the history stack
+        window.history.pushState(null, document.title, window.location.href);
+
+        const handlePopState = (event) => {
+            // Prevent back navigation by pushing the state again
+            window.history.pushState(null, document.title, window.location.href);
+            showToast.error("Navigation is disabled during the quiz. Please complete the assessment.", { id: 'nav-warning' });
+        };
+
+        window.addEventListener('popstate', handlePopState);
+
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+        };
+    }, []);
+
+    const fetchQuestions = async (criteriaId, savedTimeRemaining = null) => {
         try {
             // Get exam configuration from session (set by ExamSetup.jsx)
             const examConfigStr = sessionStorage.getItem('examConfig');
@@ -178,8 +253,8 @@ export default function QuizInterface() {
             console.log('[FETCH] Selected elective questions:', selectedElectiveQs.length);
 
             // Store in refs
-            // Take first 12 general questions
-            generalQuestionsRef.current = generalQs.slice(0, 12);
+            // Take first 15 general questions
+            generalQuestionsRef.current = generalQs.slice(0, 15);
             console.log('[FETCH] Stored general questions:', generalQuestionsRef.current.length);
 
             // For backward compatibility with old specialization flow, store by subject
@@ -207,6 +282,22 @@ export default function QuizInterface() {
 
             // Initial State: Show General Questions
             setQuestions(generalQuestionsRef.current);
+
+            // CHECK RESTORED STATE FOR QUESTIONS
+            // If we restored a specialization, we need to append those questions immediately
+            const interviewId = sessionStorage.getItem('interviewId');
+            const storageKey = `quiz_state_${interviewId}`;
+            const savedStateString = localStorage.getItem(storageKey);
+            if (savedStateString) {
+                const savedState = JSON.parse(savedStateString);
+                if (savedState.specialization) {
+                    const type = savedState.specialization;
+                    const newQuestions = type === 'Java' ? javaQuestionsRef.current : pythonQuestionsRef.current;
+                    // Avoid duplicates if setQuestions already set them (though it shouldn't have yet)
+                    // Actually, setQuestions above only set general questions.
+                    setQuestions(prev => [...prev, ...newQuestions]);
+                }
+            }
 
             // If total general < 12, we might have an issue, but we proceed with what we have
             if (generalQuestionsRef.current.length < 1) {
@@ -267,7 +358,7 @@ export default function QuizInterface() {
                 }
             }
             // Universal Update: Ensure question_set and time_limit are ALWAYS saved
-            const interviewId = sessionStorage.getItem('interviewId');
+
             if (interviewId) {
                 console.log('[SETUP] Updating interview:', { interviewId, timeLimitMinutes, selectedSet });
                 await supabase
@@ -280,7 +371,10 @@ export default function QuizInterface() {
                     .eq('id', interviewId);
             }
 
-            if (timeLimitMinutes) {
+            if (savedTimeRemaining !== null) {
+                console.log('[TIMER] Restoring saved time:', savedTimeRemaining, 'seconds');
+                setTimeRemaining(savedTimeRemaining);
+            } else if (timeLimitMinutes) {
                 // Convert minutes to seconds
                 console.log('[TIMER] Setting timer to:', timeLimitMinutes, 'minutes (', timeLimitMinutes * 60, 'seconds)');
                 setTimeRemaining(timeLimitMinutes * 60);
@@ -444,7 +538,9 @@ export default function QuizInterface() {
                 });
             });
 
-            const totalQuestions = questions.length;
+            // Use the calculated total exam questions (e.g., 18) instead of just loaded questions (e.g., 15)
+            // This ensures correct scoring even if the user hasn't loaded the specialization section yet
+            const totalQuestions = totalExamQuestions > 0 ? totalExamQuestions : questions.length;
             const percentage = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0;
             const passed = percentage >= passingPercentage;
 
@@ -522,6 +618,11 @@ export default function QuizInterface() {
             sessionStorage.setItem('totalQuestions', totalQuestions);
             sessionStorage.setItem('percentage', percentage.toFixed(2));
             sessionStorage.setItem('passed', passed);
+
+            // Clear Quiz State from Local Storage
+            const storageKey = `quiz_state_${interviewId}`;
+            localStorage.removeItem(storageKey);
+            console.log('[STORAGE] Cleared quiz state');
 
             navigate('/thank-you');
         } catch (err) {

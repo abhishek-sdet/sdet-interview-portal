@@ -358,59 +358,63 @@ export default function HRDashboard() {
         );
     }
 
+
+
     return (
-        <div className="min-h-screen relative overflow-x-hidden transition-colors duration-300" style={{ background: 'linear-gradient(135deg, #0a0e1a 0%, #0f1420 50%, #141824 100%)' }}>
-            {/* Deep Space Animated Background */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                {/* Cosmic Orbs */}
-                <div className="absolute w-[600px] h-[600px] rounded-full opacity-30 blur-3xl"
-                    style={{
-                        background: 'radial-gradient(circle, rgba(59, 130, 246, 0.4), transparent 70%)',
-                        top: '-10%',
-                        left: '-10%',
-                        animation: 'float 20s ease-in-out infinite'
-                    }}></div>
-                <div className="absolute w-[500px] h-[500px] rounded-full opacity-20 blur-3xl"
-                    style={{
-                        background: 'radial-gradient(circle, rgba(139, 92, 246, 0.4), transparent 70%)',
-                        bottom: '-10%',
-                        right: '-10%',
-                        animation: 'float 25s ease-in-out infinite reverse'
-                    }}></div>
-                <div className="absolute w-[400px] h-[400px] rounded-full opacity-25 blur-3xl"
-                    style={{
-                        background: 'radial-gradient(circle, rgba(6, 182, 212, 0.3), transparent 70%)',
-                        top: '40%',
-                        left: '50%',
-                        animation: 'float 30s ease-in-out infinite'
-                    }}></div>
-
-                {/* Floating Particles - Increased count for premium feel */}
-                {[...Array(30)].map((_, i) => (
-                    <div
-                        key={i}
-                        className="particle absolute rounded-full"
+        <div className="min-h-screen relative overflow-x-hidden transition-colors duration-300 bg-universe">
+            {/* Deep Space Animated Background - Dark Mode Only */}
+            {theme === 'dark' && (
+                <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                    {/* Cosmic Orbs */}
+                    <div className="absolute w-[600px] h-[600px] rounded-full opacity-30 blur-3xl"
                         style={{
-                            width: `${Math.random() * 3 + 1}px`,
-                            height: `${Math.random() * 3 + 1}px`,
-                            background: `rgba(${Math.random() > 0.5 ? '59, 130, 246' : '139, 92, 246'}, ${Math.random() * 0.3 + 0.2})`,
-                            left: `${Math.random() * 100}%`,
-                            top: `${Math.random() * 100}%`,
-                            animationDelay: `${Math.random() * 10}s`,
-                            animationDuration: `${Math.random() * 20 + 20}s`,
-                            boxShadow: `0 0 ${Math.random() * 10 + 5}px rgba(59, 130, 246, 0.3)`
-                        }}
-                    ></div>
-                ))}
+                            background: 'radial-gradient(circle, rgba(59, 130, 246, 0.4), transparent 70%)',
+                            top: '-10%',
+                            left: '-10%',
+                            animation: 'float 20s ease-in-out infinite'
+                        }}></div>
+                    <div className="absolute w-[500px] h-[500px] rounded-full opacity-20 blur-3xl"
+                        style={{
+                            background: 'radial-gradient(circle, rgba(139, 92, 246, 0.4), transparent 70%)',
+                            bottom: '-10%',
+                            right: '-10%',
+                            animation: 'float 25s ease-in-out infinite reverse'
+                        }}></div>
+                    <div className="absolute w-[400px] h-[400px] rounded-full opacity-25 blur-3xl"
+                        style={{
+                            background: 'radial-gradient(circle, rgba(6, 182, 212, 0.3), transparent 70%)',
+                            top: '40%',
+                            left: '50%',
+                            animation: 'float 30s ease-in-out infinite'
+                        }}></div>
 
-                {/* Grid Texture */}
-                <div className="absolute inset-0 opacity-20"
-                    style={{
-                        backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px)',
-                        backgroundSize: '50px 50px',
-                        maskImage: 'radial-gradient(circle at center, black 40%, transparent 100%)'
-                    }}></div>
-            </div>
+                    {/* Floating Particles - Increased count for premium feel */}
+                    {[...Array(30)].map((_, i) => (
+                        <div
+                            key={i}
+                            className="particle absolute rounded-full"
+                            style={{
+                                width: `${Math.random() * 3 + 1}px`,
+                                height: `${Math.random() * 3 + 1}px`,
+                                background: `rgba(${Math.random() > 0.5 ? '59, 130, 246' : '139, 92, 246'}, ${Math.random() * 0.3 + 0.2})`,
+                                left: `${Math.random() * 100}%`,
+                                top: `${Math.random() * 100}%`,
+                                animationDelay: `${Math.random() * 10}s`,
+                                animationDuration: `${Math.random() * 20 + 20}s`,
+                                boxShadow: `0 0 ${Math.random() * 10 + 5}px rgba(59, 130, 246, 0.3)`
+                            }}
+                        ></div>
+                    ))}
+
+                    {/* Grid Texture */}
+                    <div className="absolute inset-0 opacity-20"
+                        style={{
+                            backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px)',
+                            backgroundSize: '50px 50px',
+                            maskImage: 'radial-gradient(circle at center, black 40%, transparent 100%)'
+                        }}></div>
+                </div>
+            )}
 
             <AppSignature />
 
@@ -480,54 +484,7 @@ export default function HRDashboard() {
 
                         {/* Right: Health Score & Theme Toggle */}
                         <div className="flex items-center gap-6">
-                            {/* Hiring Health Score Ring */}
-                            <div className="flex flex-col items-center">
-                                <div className="relative">
-                                    <svg className="w-24 h-24 transform -rotate-90">
-                                        <circle
-                                            cx="48"
-                                            cy="48"
-                                            r="40"
-                                            stroke="rgba(255, 255, 255, 0.1)"
-                                            strokeWidth="6"
-                                            fill="none"
-                                        />
-                                        <circle
-                                            cx="48"
-                                            cy="48"
-                                            r="40"
-                                            stroke="url(#healthGradient)"
-                                            strokeWidth="6"
-                                            fill="none"
-                                            strokeLinecap="round"
-                                            strokeDasharray={`${2 * Math.PI * 40}`}
-                                            strokeDashoffset={`${2 * Math.PI * 40 * (1 - successRate / 100)}`}
-                                            style={{
-                                                transition: 'stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.5))'
-                                            }}
-                                        />
-                                        <defs>
-                                            <linearGradient id="healthGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                                <stop offset="0%" stopColor="#3b82f6" />
-                                                <stop offset="50%" stopColor="#06b6d4" />
-                                                <stop offset="100%" stopColor="#8b5cf6" />
-                                            </linearGradient>
-                                        </defs>
-                                    </svg>
-                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                        <span className="text-2xl font-black" style={{ color: '#f8fafc' }}>
-                                            {Math.round(successRate)}
-                                        </span>
-                                        <span className="text-xs font-semibold" style={{ color: '#64748b' }}>
-                                            Health
-                                        </span>
-                                    </div>
-                                </div>
-                                <span className="text-xs mt-2 font-medium" style={{ color: '#94a3b8' }}>
-                                    Hiring Score
-                                </span>
-                            </div>
+
 
                             {/* Theme Toggle Button */}
                             <button
@@ -550,7 +507,7 @@ export default function HRDashboard() {
 
                             {/* Date */}
                             <div className="hidden lg:block text-right">
-                                <p className="text-xs font-mono" style={{ color: '#64748b' }}>
+                                <p className="text-xs font-mono text-[var(--text-muted)]">
                                     {new Date().toLocaleDateString(undefined, {
                                         weekday: 'long',
                                         year: 'numeric',
@@ -564,24 +521,24 @@ export default function HRDashboard() {
                 </header>
 
                 {/* Smart KPI Panels - Next-Generation Design */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {/* Total Candidates Panel */}
                     <div className="gradient-border fade-in-up-smooth delay-100">
                         <div className="glass-panel-strong rounded-lg p-6 h-full">
                             <div className="flex items-start justify-between mb-4">
-                                <div className="p-3 rounded-lg" style={{ background: 'rgba(59, 130, 246, 0.15)' }}>
-                                    <svg className="w-6 h-6" style={{ color: '#60a5fa' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <div className="p-3 rounded-lg" style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.2))' }}>
+                                    <svg className="w-6 h-6" style={{ color: '#3b82f6' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0z" />
                                     </svg>
                                 </div>
                                 <div className="text-right">
-                                    <span className="text-xs font-semibold px-2 py-1 rounded-full"
-                                        style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399' }}>
+                                    <span className="text-xs font-bold px-2 py-1 rounded-full border border-emerald-500/20"
+                                        style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#059669' }}>
                                         +12%
                                     </span>
                                 </div>
                             </div>
-                            <h3 className="text-xs uppercase tracking-wider font-bold mb-2" style={{ color: '#94a3b8' }}>
+                            <h3 className="text-xs uppercase tracking-wider font-bold mb-2 text-[var(--text-secondary)]">
                                 Total Candidates
                             </h3>
                             <div className="text-4xl font-black mb-3" style={{
@@ -592,9 +549,7 @@ export default function HRDashboard() {
                             }}>
                                 {totalCandidates}
                             </div>
-                            <div className="text-xs font-medium" style={{ color: '#64748b' }}>
-                                ✨ Steady growth this week
-                            </div>
+
                         </div>
                     </div>
 
@@ -602,19 +557,19 @@ export default function HRDashboard() {
                     <div className="gradient-border fade-in-up-smooth delay-200">
                         <div className="glass-panel-strong rounded-lg p-6 h-full">
                             <div className="flex items-start justify-between mb-4">
-                                <div className="p-3 rounded-lg" style={{ background: 'rgba(16, 185, 129, 0.15)' }}>
-                                    <svg className="w-6 h-6" style={{ color: '#34d399' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <div className="p-3 rounded-lg" style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.2))' }}>
+                                    <svg className="w-6 h-6" style={{ color: '#10b981' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </div>
                                 <div className="text-right">
-                                    <span className="text-xs font-semibold px-2 py-1 rounded-full"
-                                        style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399' }}>
+                                    <span className="text-xs font-bold px-2 py-1 rounded-full border border-emerald-500/20"
+                                        style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#059669' }}>
                                         +8%
                                     </span>
                                 </div>
                             </div>
-                            <h3 className="text-xs uppercase tracking-wider font-bold mb-2" style={{ color: '#94a3b8' }}>
+                            <h3 className="text-xs uppercase tracking-wider font-bold mb-2 text-[var(--text-secondary)]">
                                 Qualified
                             </h3>
                             <div className="text-4xl font-black mb-3" style={{
@@ -625,9 +580,7 @@ export default function HRDashboard() {
                             }}>
                                 {qualified}
                             </div>
-                            <div className="text-xs font-medium" style={{ color: '#64748b' }}>
-                                ✨ AI match score: 92%
-                            </div>
+
                         </div>
                     </div>
 
@@ -635,19 +588,19 @@ export default function HRDashboard() {
                     <div className="gradient-border fade-in-up-smooth delay-300">
                         <div className="glass-panel-strong rounded-lg p-6 h-full">
                             <div className="flex items-start justify-between mb-4">
-                                <div className="p-3 rounded-lg" style={{ background: 'rgba(239, 68, 68, 0.15)' }}>
-                                    <svg className="w-6 h-6" style={{ color: '#f87171' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <div className="p-3 rounded-lg" style={{ background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.2))' }}>
+                                    <svg className="w-6 h-6" style={{ color: '#ef4444' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </div>
                                 <div className="text-right">
-                                    <span className="text-xs font-semibold px-2 py-1 rounded-full"
-                                        style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#f87171' }}>
+                                    <span className="text-xs font-bold px-2 py-1 rounded-full border border-rose-500/20"
+                                        style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#dc2626' }}>
                                         -3%
                                     </span>
                                 </div>
                             </div>
-                            <h3 className="text-xs uppercase tracking-wider font-bold mb-2" style={{ color: '#94a3b8' }}>
+                            <h3 className="text-xs uppercase tracking-wider font-bold mb-2 text-[var(--text-secondary)]">
                                 Not Qualified
                             </h3>
                             <div className="text-4xl font-black mb-3" style={{
@@ -658,47 +611,11 @@ export default function HRDashboard() {
                             }}>
                                 {notQualified}
                             </div>
-                            <div className="text-xs font-medium" style={{ color: '#64748b' }}>
-                                ✨ Below experience threshold
-                            </div>
+
                         </div>
                     </div>
 
-                    {/* Success Rate Panel */}
-                    <div className="gradient-border fade-in-up-smooth delay-400">
-                        <div className="glass-panel-strong rounded-lg p-6 h-full">
-                            <div className="flex items-start justify-between mb-4">
-                                <div className="p-3 rounded-lg" style={{ background: 'rgba(139, 92, 246, 0.15)' }}>
-                                    <svg className="w-6 h-6" style={{ color: '#a78bfa' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                                    </svg>
-                                </div>
-                                <div className="text-right">
-                                    <span className="text-xs font-semibold px-2 py-1 rounded-full"
-                                        style={{
-                                            background: successRate >= 50 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                                            color: successRate >= 50 ? '#34d399' : '#fbbf24'
-                                        }}>
-                                        {successRate >= 50 ? '+' : ''}{Math.round(successRate - 50)}%
-                                    </span>
-                                </div>
-                            </div>
-                            <h3 className="text-xs uppercase tracking-wider font-bold mb-2" style={{ color: '#94a3b8' }}>
-                                Success Rate
-                            </h3>
-                            <div className="text-4xl font-black mb-3" style={{
-                                background: 'linear-gradient(135deg, #a78bfa, #8b5cf6)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                backgroundClip: 'text'
-                            }}>
-                                {successRate}%
-                            </div>
-                            <div className="text-xs font-medium" style={{ color: '#64748b' }}>
-                                ✨ AI prediction: {successRate >= 50 ? 'Excellent' : 'Improving'}
-                            </div>
-                        </div>
-                    </div>
+
                 </div>
 
                 {/* AI Candidate Intelligence Board */}
@@ -713,31 +630,25 @@ export default function HRDashboard() {
                             }}>
                                 Candidate Intelligence Board
                             </h2>
-                            <p className="text-sm font-medium" style={{ color: '#94a3b8' }}>
-                                AI-powered candidate insights and analytics
+                            <p className="text-sm font-medium text-[var(--text-secondary)]">
+                                candidate insights and analytics
                             </p>
                         </div>
 
                         {/* AI Search Bar */}
                         <div className="relative w-full max-w-md">
-                            <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                                <Search className="w-5 h-5" style={{ color: '#60a5fa' }} />
-                                <span className="text-xs font-semibold" style={{ color: '#60a5fa' }}>AI</span>
-                            </div>
+
                             <input
                                 type="text"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 placeholder="Search candidates by name or email..."
-                                className="w-full pl-16 pr-4 py-3 rounded-lg text-sm font-medium transition-all"
+                                className="w-full px-4 py-3 rounded-lg text-sm font-medium transition-all glass-input"
                                 style={{
-                                    background: 'rgba(20, 24, 36, 0.6)',
-                                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                                    color: '#f8fafc',
-                                    backdropFilter: 'blur(12px)'
+                                    color: 'var(--text-main)',
                                 }}
                                 onFocus={(e) => e.target.style.borderColor = '#60a5fa'}
-                                onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.08)'}
+                                onBlur={(e) => e.target.style.borderColor = 'var(--glass-border)'}
                             />
                         </div>
                     </div>
@@ -745,20 +656,18 @@ export default function HRDashboard() {
                     {/* Candidate Table with Premium Styling */}
                     <div className="overflow-x-auto custom-scrollbar rounded-lg" style={{
                         maxHeight: '400px',
-                        border: '1px solid rgba(255, 255, 255, 0.08)'
+                        border: '1px solid var(--glass-border-strong)'
                     }}>
                         <table className="w-full">
-                            <thead className="sticky top-0" style={{
-                                background: 'rgba(20, 24, 36, 0.95)',
-                                backdropFilter: 'blur(12px)',
-                                borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+                            <thead className="sticky top-0 glass-panel-strong" style={{
+                                borderBottom: '1px solid var(--glass-border-strong)'
                             }}>
                                 <tr>
-                                    <th className="px-4 py-3 text-left text-xs uppercase tracking-wider font-bold" style={{ color: '#94a3b8' }}>Name</th>
-                                    <th className="px-4 py-3 text-left text-xs uppercase tracking-wider font-bold" style={{ color: '#94a3b8' }}>Status</th>
-                                    <th className="px-4 py-3 text-left text-xs uppercase tracking-wider font-bold" style={{ color: '#94a3b8' }}>Email</th>
-                                    <th className="px-4 py-3 text-left text-xs uppercase tracking-wider font-bold" style={{ color: '#94a3b8' }}>Criteria</th>
-                                    <th className="px-4 py-3 text-left text-xs uppercase tracking-wider font-bold" style={{ color: '#94a3b8' }}>Timestamp</th>
+                                    <th className="px-4 py-3 text-left text-xs uppercase tracking-wider font-bold text-[var(--text-muted)]">Name</th>
+                                    <th className="px-4 py-3 text-left text-xs uppercase tracking-wider font-bold text-[var(--text-muted)]">Status</th>
+                                    <th className="px-4 py-3 text-left text-xs uppercase tracking-wider font-bold text-[var(--text-muted)]">Email</th>
+                                    <th className="px-4 py-3 text-left text-xs uppercase tracking-wider font-bold text-[var(--text-muted)]">Criteria</th>
+                                    <th className="px-4 py-3 text-left text-xs uppercase tracking-wider font-bold text-[var(--text-muted)]">Timestamp</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -784,11 +693,11 @@ export default function HRDashboard() {
 
                                         return (
                                             <tr key={interview.id} className="group transition-all" style={{
-                                                borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+                                                borderBottom: '1px solid var(--glass-border)'
                                             }}
                                                 onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.05)'}
                                                 onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                                                <td className="px-4 py-3 font-semibold" style={{ color: '#f8fafc' }}>
+                                                <td className="px-4 py-3 font-semibold text-[var(--text-main)]">
                                                     {interview.candidates?.full_name || 'N/A'}
                                                 </td>
                                                 <td className="px-4 py-3">
@@ -816,7 +725,7 @@ export default function HRDashboard() {
                                                         </span>
                                                     )}
                                                 </td>
-                                                <td className="px-4 py-3 text-sm" style={{ color: '#94a3b8' }}>
+                                                <td className="px-4 py-3 text-sm text-[var(--text-muted)]">
                                                     {interview.candidates?.email || 'N/A'}
                                                 </td>
                                                 <td className="px-4 py-3">
@@ -908,7 +817,7 @@ export default function HRDashboard() {
                         </div>
                         <div className="flex-1 grid grid-cols-2 overflow-hidden">
                             <div className="overflow-y-auto p-4 custom-scrollbar">
-                                <div className="text-xs uppercase tracking-wider font-bold text-emerald-400 mb-3 sticky top-0 bg-[#0f172a]/95 backdrop-blur-md z-10 py-2 border-b border-emerald-500/20 flex items-center gap-2 shadow-sm">
+                                <div className="text-xs uppercase tracking-wider font-bold text-emerald-400 mb-3 sticky top-0 bg-[var(--glass-bg-strong)] backdrop-blur-md z-10 py-2 border-b border-emerald-500/20 flex items-center gap-2 shadow-sm">
                                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
                                     Qualified
                                 </div>
@@ -951,7 +860,7 @@ export default function HRDashboard() {
                                 )}
                             </div>
                             <div className="overflow-y-auto p-4 border-l border-[var(--glass-border)] custom-scrollbar">
-                                <div className="text-xs uppercase tracking-wider font-bold text-rose-400 mb-3 sticky top-0 bg-[#0f172a]/95 backdrop-blur-md z-10 py-2 border-b border-rose-500/20 flex items-center gap-2 shadow-sm">
+                                <div className="text-xs uppercase tracking-wider font-bold text-rose-400 mb-3 sticky top-0 bg-[var(--glass-bg-strong)] backdrop-blur-md z-10 py-2 border-b border-rose-500/20 flex items-center gap-2 shadow-sm">
                                     <div className="w-1.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]"></div>
                                     Not Qualified
                                 </div>
@@ -1009,7 +918,7 @@ export default function HRDashboard() {
                         </div>
                         <div className="flex-1 grid grid-cols-2 overflow-hidden">
                             <div className="overflow-y-auto p-4 custom-scrollbar">
-                                <div className="text-xs uppercase tracking-wider font-bold text-emerald-400 mb-3 sticky top-0 bg-[#0f172a]/95 backdrop-blur-md z-10 py-2 border-b border-emerald-500/20 flex items-center gap-2 shadow-sm">
+                                <div className="text-xs uppercase tracking-wider font-bold text-emerald-400 mb-3 sticky top-0 bg-[var(--glass-bg-strong)] backdrop-blur-md z-10 py-2 border-b border-emerald-500/20 flex items-center gap-2 shadow-sm">
                                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
                                     Qualified
                                 </div>
@@ -1052,7 +961,7 @@ export default function HRDashboard() {
                                 )}
                             </div>
                             <div className="overflow-y-auto p-4 border-l border-[var(--glass-border)] custom-scrollbar">
-                                <div className="text-xs uppercase tracking-wider font-bold text-rose-400 mb-3 sticky top-0 bg-[#0f172a]/95 backdrop-blur-md z-10 py-2 border-b border-rose-500/20 flex items-center gap-2 shadow-sm">
+                                <div className="text-xs uppercase tracking-wider font-bold text-rose-400 mb-3 sticky top-0 bg-[var(--glass-bg-strong)] backdrop-blur-md z-10 py-2 border-b border-rose-500/20 flex items-center gap-2 shadow-sm">
                                     <div className="w-1.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]"></div>
                                     Not Qualified
                                 </div>

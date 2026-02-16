@@ -20,19 +20,26 @@ export default function AdminDashboard() {
         fetchTodayStats();
 
         // Subscribe to real-time changes
+        console.log('Setting up real-time subscription for dashboard...');
         const subscription = supabase
-            .channel('admin-dashboard-channel')
+            .channel('admin-dashboard-changes')
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'interviews' },
                 (payload) => {
-                    console.log('Real-time update:', payload);
+                    console.log('Real-time update received:', payload);
                     fetchTodayStats();
                 }
             )
-            .subscribe();
+            .subscribe((status) => {
+                console.log('Subscription status:', status);
+                if (status === 'SUBSCRIBED') {
+                    // toast.success('Live updates enabled');
+                }
+            });
 
         return () => {
+            console.log('Cleaning up subscription...');
             subscription.unsubscribe();
         };
     }, []);
