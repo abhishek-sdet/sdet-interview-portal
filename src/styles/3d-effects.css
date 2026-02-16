@@ -1,0 +1,472 @@
+/* ============================================
+   WORLD-CLASS 3D EFFECTS & ANIMATIONS
+   ============================================ */
+
+/* CSS Custom Properties for 3D Effects */
+:root {
+    /* 3D Transform Variables */
+    --perspective: 1000px;
+    --perspective-origin: center center;
+    --tilt-max: 15deg;
+    --elevation-hover: 20px;
+
+    /* Shadow Depths */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+    --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.25);
+    --shadow-3d: 0 30px 60px rgba(0, 0, 0, 0.3);
+
+    /* Glow Effects */
+    --glow-blue: 0 0 20px rgba(59, 130, 246, 0.5);
+    --glow-emerald: 0 0 20px rgba(16, 185, 129, 0.5);
+    --glow-rose: 0 0 20px rgba(244, 63, 94, 0.5);
+    --glow-violet: 0 0 20px rgba(139, 92, 246, 0.5);
+
+    /* Animation Timings */
+    --timing-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --timing-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --timing-elastic: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+
+    /* Gradient Presets */
+    --gradient-blue: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-emerald: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    --gradient-rose: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+    --gradient-violet: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    --gradient-cosmic: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+}
+
+/* ============================================
+   KEYFRAME ANIMATIONS
+   ============================================ */
+
+/* Float Animation */
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+/* Pulse Glow */
+@keyframes pulseGlow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 40px rgba(59, 130, 246, 0.6);
+    }
+}
+
+/* Rotate 3D */
+@keyframes rotate3d {
+    0% {
+        transform: perspective(1000px) rotateY(0deg);
+    }
+
+    100% {
+        transform: perspective(1000px) rotateY(360deg);
+    }
+}
+
+/* Shimmer Effect */
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+/* Slide Up Fade In */
+@keyframes slideUpFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Scale Bounce */
+@keyframes scaleBounce {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Gradient Shift */
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Particle Float */
+@keyframes particleFloat {
+
+    0%,
+    100% {
+        transform: translate(0, 0) rotate(0deg);
+        opacity: 0.3;
+    }
+
+    25% {
+        transform: translate(10px, -10px) rotate(90deg);
+        opacity: 0.6;
+    }
+
+    50% {
+        transform: translate(-5px, -20px) rotate(180deg);
+        opacity: 0.3;
+    }
+
+    75% {
+        transform: translate(-15px, -10px) rotate(270deg);
+        opacity: 0.6;
+    }
+}
+
+/* Number Counter */
+@keyframes countUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Card Flip */
+@keyframes cardFlip {
+    0% {
+        transform: perspective(1000px) rotateY(0deg);
+    }
+
+    100% {
+        transform: perspective(1000px) rotateY(180deg);
+    }
+}
+
+/* Glow Pulse */
+@keyframes glowPulse {
+
+    0%,
+    100% {
+        filter: drop-shadow(0 0 5px currentColor);
+    }
+
+    50% {
+        filter: drop-shadow(0 0 20px currentColor);
+    }
+}
+
+/* ============================================
+   3D UTILITY CLASSES
+   ============================================ */
+
+/* 3D Container */
+.perspective-container {
+    perspective: var(--perspective);
+    perspective-origin: var(--perspective-origin);
+}
+
+/* Preserve 3D */
+.preserve-3d {
+    transform-style: preserve-3d;
+}
+
+/* 3D Card Base */
+.card-3d {
+    transform-style: preserve-3d;
+    transition: transform 0.6s var(--timing-smooth);
+    will-change: transform;
+}
+
+/* 3D Tilt Effect */
+.card-tilt {
+    transition: transform 0.3s var(--timing-smooth);
+}
+
+.card-tilt:hover {
+    transform: perspective(1000px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) translateZ(20px);
+}
+
+/* Elevation Levels */
+.elevate-sm {
+    transform: translateZ(10px);
+    box-shadow: var(--shadow-lg);
+}
+
+.elevate-md {
+    transform: translateZ(20px);
+    box-shadow: var(--shadow-xl);
+}
+
+.elevate-lg {
+    transform: translateZ(30px);
+    box-shadow: var(--shadow-2xl);
+}
+
+.elevate-xl {
+    transform: translateZ(50px);
+    box-shadow: var(--shadow-3d);
+}
+
+/* Hover Elevation */
+.hover-elevate {
+    transition: transform 0.3s var(--timing-smooth), box-shadow 0.3s var(--timing-smooth);
+}
+
+.hover-elevate:hover {
+    transform: translateY(-10px) translateZ(20px);
+    box-shadow: var(--shadow-2xl);
+}
+
+/* Glassmorphism 2.0 */
+.glass-premium {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+        0 8px 32px 0 rgba(0, 0, 0, 0.37),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Neumorphism */
+.neuro-card {
+    background: linear-gradient(145deg, #1a1f36, #151929);
+    box-shadow:
+        20px 20px 60px #0d0f16,
+        -20px -20px 60px #1f2540;
+}
+
+.neuro-card:hover {
+    box-shadow:
+        25px 25px 75px #0d0f16,
+        -25px -25px 75px #1f2540;
+}
+
+/* Gradient Border */
+.gradient-border {
+    position: relative;
+    background: var(--bg-body);
+    border-radius: 1rem;
+}
+
+.gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 1rem;
+    padding: 2px;
+    background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+}
+
+/* Shimmer Effect */
+.shimmer {
+    background: linear-gradient(90deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.1) 50%,
+            rgba(255, 255, 255, 0) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+}
+
+/* Floating Animation */
+.float {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Pulse Glow Animation */
+.pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* Scale Bounce Animation */
+.scale-bounce {
+    animation: scaleBounce 1s ease-in-out infinite;
+}
+
+/* Gradient Animation */
+.gradient-animate {
+    background-size: 200% 200%;
+    animation: gradientShift 3s ease infinite;
+}
+
+/* Stagger Animation Delays */
+.stagger-1 {
+    animation-delay: 0.1s;
+}
+
+.stagger-2 {
+    animation-delay: 0.2s;
+}
+
+.stagger-3 {
+    animation-delay: 0.3s;
+}
+
+.stagger-4 {
+    animation-delay: 0.4s;
+}
+
+.stagger-5 {
+    animation-delay: 0.5s;
+}
+
+/* Entrance Animations */
+.fade-in-up {
+    animation: slideUpFadeIn 0.6s var(--timing-smooth) forwards;
+    opacity: 0;
+}
+
+/* Glow Effects */
+.glow-blue {
+    box-shadow: var(--glow-blue);
+}
+
+.glow-emerald {
+    box-shadow: var(--glow-emerald);
+}
+
+.glow-rose {
+    box-shadow: var(--glow-rose);
+}
+
+.glow-violet {
+    box-shadow: var(--glow-violet);
+}
+
+/* Icon Animations */
+.icon-rotate {
+    transition: transform 0.3s var(--timing-smooth);
+}
+
+.icon-rotate:hover {
+    transform: rotate(360deg);
+}
+
+.icon-bounce {
+    transition: transform 0.3s var(--timing-bounce);
+}
+
+.icon-bounce:hover {
+    transform: scale(1.2);
+}
+
+/* Text Gradient */
+.text-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Particle Effect */
+.particle {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: particleFloat 10s infinite;
+}
+
+/* ============================================
+   RESPONSIVE 3D ADJUSTMENTS
+   ============================================ */
+
+@media (max-width: 768px) {
+    :root {
+        --perspective: 800px;
+        --tilt-max: 10deg;
+        --elevation-hover: 10px;
+    }
+
+    /* Reduce 3D effects on mobile for performance */
+    .card-tilt:hover {
+        transform: perspective(800px) rotateX(0deg) rotateY(0deg) translateZ(10px);
+    }
+
+    .hover-elevate:hover {
+        transform: translateY(-5px) translateZ(10px);
+    }
+}
+
+/* ============================================
+   ACCESSIBILITY - REDUCED MOTION
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    .float,
+    .pulse-glow,
+    .scale-bounce,
+    .gradient-animate,
+    .particle {
+        animation: none !important;
+    }
+}
+
+/* ============================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================ */
+
+/* GPU Acceleration Hints */
+.gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+}
+
+/* Contain Paint */
+.contain-paint {
+    contain: paint;
+}
+
+/* Contain Layout */
+.contain-layout {
+    contain: layout;
+}

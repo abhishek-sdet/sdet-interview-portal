@@ -29,7 +29,7 @@ export default function AdminLayout() {
     const isActive = (path) => location.pathname === path;
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-cyan-500/30">
+        <div className="min-h-screen bg-[var(--bg-body)] text-[var(--text-main)] font-sans selection:bg-cyan-500/30 transition-colors duration-300">
             {/* Animated Background */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
                 <div className="orb-1"></div>
@@ -39,12 +39,12 @@ export default function AdminLayout() {
             </div>
 
             {/* Header */}
-            <header className="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-white/5 backdrop-blur-2xl">
+            <header className="fixed top-0 left-0 right-0 z-50 glass-panel border-b-2 border-[var(--glass-border)] backdrop-blur-2xl">
                 <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="relative group">
                             <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl blur opacity-25 group-hover:opacity-50 transition-opacity"></div>
-                            <div className="relative p-1 bg-slate-900 border border-white/10 rounded-xl">
+                            <div className="relative p-1 bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-xl">
                                 <img src="/logo_new.png" alt="Company Logo" className="w-10 h-10 rounded-lg object-contain bg-white p-1" />
                             </div>
                         </div>

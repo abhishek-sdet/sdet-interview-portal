@@ -88,11 +88,15 @@ export default function ThankYou() {
                         <span className="font-semibold text-white">{results.candidateName}</span>, your assessment has been submitted successfully.
                     </p>
 
-                    {/* Generic Message */}
-                    <div className="p-5 bg-white/5 border border-white/10 rounded-xl mb-8">
-                        <p className="text-sm md:text-base text-slate-300">
-                            Our HR team will review your results and get back to you shortly regarding the next steps in the recruitment process.
-                        </p>
+                    {/* Score and Status Display */}
+                    <div className="space-y-4 mb-8">
+                        {/* Qualification Status */}
+                        {/* Generic Message */}
+                        <div className="p-5 bg-white/5 border border-white/10 rounded-xl">
+                            <p className="text-sm md:text-base text-slate-300">
+                                Thank you for your participation. Our HR team will review your results and get back to you shortly regarding the next steps.
+                            </p>
+                        </div>
                     </div>
 
                     {/* Action Button */}

@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { showToast } from '@/components/Toast';
 import GPTWBadge from '@/components/GPTWBadge';
-import { Loader2, ArrowRight, ArrowLeft, Clock, CheckCircle2, Circle, AlertCircle, Code, Terminal, Sparkles } from 'lucide-react';
+import { Loader2, ArrowRight, ArrowLeft, Clock, CheckCircle2, Circle, AlertCircle, Code, Sparkles } from 'lucide-react';
+import QuizSubmissionModal from '@/components/QuizSubmissionModal';
+import QuestionStatusMap from '@/components/QuestionStatusMap';
 
 export default function QuizInterface() {
     const navigate = useNavigate();
@@ -14,10 +17,22 @@ export default function QuizInterface() {
     const [error, setError] = useState('');
     const [timeRemaining, setTimeRemaining] = useState(null);
     const [mounted, setMounted] = useState(false);
+    const [criteriaType, setCriteriaType] = useState(''); // 'Fresher' or 'Experienced'
+    const [answeredQuestions, setAnsweredQuestions] = useState(new Set()); // Track answered question IDs
+    const [showSubmitModal, setShowSubmitModal] = useState(false); // Custom Submission Modal State
 
     // Specialization State
     const [showSpecialization, setShowSpecialization] = useState(false);
     const [specialization, setSpecialization] = useState(null); // 'Java' or 'Python'
+    const [totalExamQuestions, setTotalExamQuestions] = useState(0); // Total expected questions
+
+    // Specialization Confirmation State
+    const [showConfirmSpecialization, setShowConfirmSpecialization] = useState(false);
+    const [pendingSpecialization, setPendingSpecialization] = useState(null);
+
+    // Proctoring State
+    const [tabSwitchWarnings, setTabSwitchWarnings] = useState(0);
+    const MAX_WARNINGS = 3;
 
     // Refs to hold cached questions needed for the second phase
     const generalQuestionsRef = useRef([]);
@@ -29,8 +44,13 @@ export default function QuizInterface() {
         const interviewId = sessionStorage.getItem('interviewId');
         const criteriaId = sessionStorage.getItem('criteriaId');
 
+        console.log('[INIT] Interview ID:', interviewId);
+        console.log('[INIT] Criteria ID:', criteriaId);
+
         if (!interviewId || !criteriaId) {
-            navigate('/criteria-selection');
+            console.error('[INIT ERROR] Missing session data:', { interviewId, criteriaId });
+            setError('Session expired. Please start the interview again.');
+            setTimeout(() => navigate('/criteria-selection'), 2000);
             return;
         }
 
@@ -38,12 +58,12 @@ export default function QuizInterface() {
     }, [navigate]);
 
     useEffect(() => {
-        if (timeRemaining === null || timeRemaining <= 0) return;
+        if (timeRemaining === null || timeRemaining <= 0 || submitting) return;
 
         const timer = setInterval(() => {
             setTimeRemaining((prev) => {
                 if (prev <= 1) {
-                    handleSubmit(true);
+                    handleSubmit(true); // Auto-submit when time runs out
                     return 0;
                 }
                 return prev - 1;
@@ -51,7 +71,59 @@ export default function QuizInterface() {
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [timeRemaining]);
+    }, [timeRemaining, submitting]);
+
+    // --- PROCTORING SHIELD ---
+
+    // 1. Tab Switch Detection
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.hidden && !submitting && !showSpecialization) {
+                setTabSwitchWarnings(prev => {
+                    const newCount = prev + 1;
+                    if (newCount < MAX_WARNINGS) {
+                        showToast.error(`WARNING ${newCount}/${MAX_WARNINGS}: Please stay on the quiz page!`, { id: 'focus-warning' });
+                    }
+                    return newCount;
+                });
+            }
+        };
+
+        const cleanup = () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return cleanup;
+    }, [submitting, showSpecialization]);
+
+    // 2. Auto-submit on max warnings
+    useEffect(() => {
+        if (tabSwitchWarnings >= MAX_WARNINGS && !submitting) {
+            showToast.error(`Test Auto-Submitted: Multiple tab switches detected.`);
+            handleSubmit(true, 'tab_switch');
+        }
+    }, [tabSwitchWarnings]);
+
+    // 3. Content Protection (Disable Right-click, Copy, Paste)
+    useEffect(() => {
+        const preventAction = (e) => {
+            e.preventDefault();
+            // Optional: showToast.error("Action disabled during assessment."); 
+            // Commenting out toast to avoid spamming if user persists
+        };
+
+        document.addEventListener('contextmenu', preventAction);
+        document.addEventListener('copy', preventAction);
+        document.addEventListener('paste', preventAction);
+        document.addEventListener('cut', preventAction);
+        document.addEventListener('selectstart', preventAction);
+
+        return () => {
+            document.removeEventListener('contextmenu', preventAction);
+            document.removeEventListener('copy', preventAction);
+            document.removeEventListener('paste', preventAction);
+            document.removeEventListener('cut', preventAction);
+            document.removeEventListener('selectstart', preventAction);
+        };
+    }, []);
 
     const fetchQuestions = async (criteriaId) => {
         try {
@@ -68,9 +140,10 @@ export default function QuizInterface() {
                 .eq('criteria_id', criteriaId)
                 .eq('is_active', true);
 
-            if (selectedSet) {
-                query = query.eq('category', selectedSet); // category = Set Name (Set A, Set B)
-            }
+            // REMOVED strict category filter here to ensure we fetch Elective questions too (which might not have a category)
+            // if (selectedSet) {
+            //     query = query.eq('category', selectedSet); 
+            // }
 
             const { data, error: fetchError } = await query.order('created_at');
 
@@ -82,17 +155,32 @@ export default function QuizInterface() {
             }
 
             // Categorize Questions by NEW structure: section + subsection
-            const generalQs = data.filter(q => q.section === 'general' || !q.section); // General/Aptitude
+            // General/Aptitude: Must match selected Set if applicable
+            const generalQs = data.filter(q => {
+                const isGeneral = q.section === 'general' || !q.section;
+                const matchesSet = selectedSet ? q.category === selectedSet : true;
+                return isGeneral && matchesSet;
+            });
+
             const electiveQs = data.filter(q => q.section === 'elective');
+
+            console.log('[FETCH] Total questions fetched:', data.length);
+            console.log('[FETCH] Selected Set:', selectedSet);
+            console.log('[FETCH] Selected Subject:', selectedSubject);
+            console.log('[FETCH] General questions filtered:', generalQs.length);
+            console.log('[FETCH] Elective questions filtered:', electiveQs.length);
 
             // Filter elective questions by selected subject
             const selectedElectiveQs = selectedSubject
                 ? electiveQs.filter(q => q.subsection === selectedSubject)
                 : [];
 
+            console.log('[FETCH] Selected elective questions:', selectedElectiveQs.length);
+
             // Store in refs
             // Take first 12 general questions
             generalQuestionsRef.current = generalQs.slice(0, 12);
+            console.log('[FETCH] Stored general questions:', generalQuestionsRef.current.length);
 
             // For backward compatibility with old specialization flow, store by subject
             // But now we use the selected subject directly
@@ -112,6 +200,11 @@ export default function QuizInterface() {
             }
 
 
+            // Calculate EXPECTED total questions (General + Elective)
+            // We know we take 12 general and 3 elective
+            const expectedTotal = generalQuestionsRef.current.length + 3;
+            setTotalExamQuestions(expectedTotal);
+
             // Initial State: Show General Questions
             setQuestions(generalQuestionsRef.current);
 
@@ -122,49 +215,92 @@ export default function QuizInterface() {
 
             // Check for scheduled interview for today
             const today = new Date().toISOString().split('T')[0];
+            console.log('[TIMER] Checking for scheduled interview on:', today);
             const { data: scheduledInterview, error: scheduleError } = await supabase
                 .from('scheduled_interviews')
                 .select('id, time_limit_minutes')
                 .eq('criteria_id', criteriaId)
                 .eq('scheduled_date', today)
                 .eq('is_active', true)
-                .single();
+                .maybeSingle(); // Use maybeSingle() to avoid errors when no scheduled interview
+
+            if (scheduleError) {
+                console.error('[TIMER ERROR] Failed to fetch scheduled interview:', scheduleError);
+            } else if (scheduledInterview) {
+                console.log('[TIMER] Found scheduled interview:', scheduledInterview);
+            } else {
+                console.log('[TIMER] No scheduled interview found for today');
+            }
 
             let timeLimitMinutes = null;
             let scheduledInterviewId = null;
 
-            if (!scheduleError && scheduledInterview) {
-                // Use scheduled interview's time limit
-                timeLimitMinutes = scheduledInterview.time_limit_minutes;
-                scheduledInterviewId = scheduledInterview.id;
+            // ALWAYS fetch criteria timer FIRST (this is what admin sets)
+            const { data: criteriaData, error: criteriaError } = await supabase
+                .from('criteria')
+                .select('timer_duration, name')
+                .eq('id', criteriaId)
+                .maybeSingle(); // Use maybeSingle() instead of single() to avoid errors when no row found
 
-                // Update interview record with scheduled_interview_id and time_limit
-                const interviewId = sessionStorage.getItem('interviewId');
+            console.log('[TIMER] Criteria data:', criteriaData);
+            console.log('[TIMER] Criteria error:', criteriaError);
+
+            if (criteriaError) {
+                console.error('[TIMER ERROR] Failed to fetch criteria:', criteriaError);
+            }
+
+            // Use criteria timer if available
+            if (criteriaData && criteriaData.timer_duration) {
+                timeLimitMinutes = criteriaData.timer_duration;
+                console.log('[TIMER] Using criteria timer from admin:', timeLimitMinutes, 'minutes');
+                setCriteriaType(criteriaData.name || '');
+            } else {
+                console.warn('[TIMER] No criteria timer found, will use default or scheduled timer');
+            }
+
+            // Override with scheduled interview timer if exists
+            if (!scheduleError && scheduledInterview) {
+                scheduledInterviewId = scheduledInterview.id;
+                if (scheduledInterview.time_limit_minutes) {
+                    timeLimitMinutes = scheduledInterview.time_limit_minutes;
+                    console.log('[TIMER] Overriding with scheduled timer:', timeLimitMinutes, 'minutes');
+                }
+            }
+            // Universal Update: Ensure question_set and time_limit are ALWAYS saved
+            const interviewId = sessionStorage.getItem('interviewId');
+            if (interviewId) {
+                console.log('[SETUP] Updating interview:', { interviewId, timeLimitMinutes, selectedSet });
                 await supabase
                     .from('interviews')
                     .update({
                         scheduled_interview_id: scheduledInterviewId,
-                        time_limit_minutes: timeLimitMinutes
+                        time_limit_minutes: timeLimitMinutes,
+                        question_set: selectedSet || null
                     })
                     .eq('id', interviewId);
-            } else {
-                // Fall back to criteria's default timer_duration
-                const { data: criteriaData, error: criteriaError } = await supabase
-                    .from('criteria')
-                    .select('timer_duration')
-                    .eq('id', criteriaId)
-                    .single();
-
-                if (!criteriaError && criteriaData?.timer_duration) {
-                    timeLimitMinutes = criteriaData.timer_duration;
-                }
             }
 
             if (timeLimitMinutes) {
                 // Convert minutes to seconds
+                console.log('[TIMER] Setting timer to:', timeLimitMinutes, 'minutes (', timeLimitMinutes * 60, 'seconds)');
                 setTimeRemaining(timeLimitMinutes * 60);
+            } else {
+                console.warn('[TIMER] No timer configured - using unlimited time');
             }
 
+            // Fetch criteria type for badge display
+            const { data: criteriaInfo, error: criteriaInfoError } = await supabase
+                .from('criteria')
+                .select('name')
+                .eq('id', criteriaId)
+                .single();
+
+            if (!criteriaInfoError && criteriaInfo) {
+                // Determine if Fresher or Experienced based on criteria name
+                const isExperienced = criteriaInfo.name?.toLowerCase().includes('experienced') ||
+                    criteriaInfo.name?.toLowerCase().includes('experience');
+                setCriteriaType(isExperienced ? 'Experienced' : 'Fresher');
+            }
         } catch (err) {
             console.error('Error fetching questions:', err);
             setError('Failed to load questions. Please try again.');
@@ -173,11 +309,24 @@ export default function QuizInterface() {
         }
     };
 
+    const answersRef = useRef(answers);
+
+    // Keep answersRef in sync with state
+    useEffect(() => {
+        answersRef.current = answers;
+    }, [answers]);
+
     const handleAnswerSelect = (questionId, answer) => {
-        setAnswers({
+        const newAnswers = {
             ...answers,
             [questionId]: answer
-        });
+        };
+        setAnswers(newAnswers);
+        // Ref is updated via useEffect, but for immediate safety in event loops:
+        answersRef.current = newAnswers;
+
+        // Mark this question as answered
+        setAnsweredQuestions(prev => new Set([...prev, questionId]));
     };
 
     const handleNext = () => {
@@ -193,7 +342,18 @@ export default function QuizInterface() {
     };
 
     const handleSpecializationSelect = (type) => { // 'Java' or 'Python'
-        setSpecialization(type);
+        setPendingSpecialization(type);
+        setShowConfirmSpecialization(true);
+    };
+
+    const confirmSpecialization = () => {
+        if (!pendingSpecialization) return;
+
+        const type = pendingSpecialization;
+
+        // Reset confirmation state
+        setShowConfirmSpecialization(false);
+        setPendingSpecialization(null);
         setShowSpecialization(false); // Hide selection UI
 
         // Append specific questions
@@ -203,6 +363,14 @@ export default function QuizInterface() {
 
         // Move to next question immediately
         setCurrentIndex(currentIndex + 1);
+
+        // Auto-set the specialization state for record keeping if needed
+        setSpecialization(type);
+    };
+
+    const cancelSpecialization = () => {
+        setShowConfirmSpecialization(false);
+        setPendingSpecialization(null);
     };
 
     const handlePrevious = () => {
@@ -211,17 +379,35 @@ export default function QuizInterface() {
         }
     };
 
-    const handleSubmit = async (autoSubmit = false) => {
-        if (!autoSubmit) {
-            const unanswered = questions.filter(q => !answers[q.id]);
-            if (unanswered.length > 0) {
-                const confirm = window.confirm(
-                    `You have ${unanswered.length} unanswered question(s). Are you sure you want to submit?`
-                );
-                if (!confirm) return;
-            }
+    const handleReview = () => {
+        // Find first unanswered question
+        const firstUnansweredIdx = questions.findIndex(q => !answers[q.id]);
+        if (firstUnansweredIdx !== -1) {
+            setCurrentIndex(firstUnansweredIdx);
+        }
+        setShowSubmitModal(false);
+    };
+
+    const handleSubmit = async (autoSubmit = false, reason = null) => {
+        console.log('[handleSubmit] triggered', { autoSubmit, reason });
+
+        // Check if at least one answer has been provided (using Ref for latest state)
+        const currentAnswers = answersRef.current;
+        const answeredQuestions = Object.keys(currentAnswers).filter(key => currentAnswers[key] !== null && currentAnswers[key] !== undefined && currentAnswers[key] !== '');
+
+        if (answeredQuestions.length === 0 && !autoSubmit) {
+            showToast('Please answer at least one question before submitting', 'error');
+            return;
         }
 
+        // If Manual Submit -> Open Layout first
+        if (!autoSubmit && !showSubmitModal) {
+            setShowSubmitModal(true);
+            return;
+        }
+
+        // Proceed if Auto-Submit OR Confirmed via Modal
+        console.log('[handleSubmit] Proceeding to REAL submission...');
         setSubmitting(true);
         setError('');
 
@@ -233,8 +419,20 @@ export default function QuizInterface() {
             const answerRecords = [];
 
             questions.forEach((question) => {
-                const selectedAnswer = answers[question.id];
-                const isCorrect = selectedAnswer === question.correct_answer;
+                const selectedAnswer = currentAnswers[question.id];
+
+                // ROBUST NORMALIZATION: Trim and Lowercase for comparison
+                const normalize = (str) => str ? String(str).trim().toLowerCase() : '';
+
+                const safeSelected = normalize(selectedAnswer);
+                const safeCorrect = normalize(question.correct_answer);
+
+                const isCorrect = safeSelected === safeCorrect;
+
+                console.log(`[SCORING] QID: ${question.id}`);
+                console.log(`  - Selected: '${selectedAnswer}' (Norm: '${safeSelected}')`);
+                console.log(`  - Correct:  '${question.correct_answer}' (Norm: '${safeCorrect}')`);
+                console.log(`  - Result:   ${isCorrect ? 'CORRECT' : 'WRONG'}`);
 
                 if (isCorrect) correctCount++;
 
@@ -247,27 +445,78 @@ export default function QuizInterface() {
             });
 
             const totalQuestions = questions.length;
-            const percentage = (correctCount / totalQuestions) * 100;
+            const percentage = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0;
             const passed = percentage >= passingPercentage;
 
+            console.log('[SCORING FINAL]');
+            console.log(`  - Total: ${totalQuestions}`);
+            console.log(`  - Correct Count: ${correctCount}`);
+            console.log(`  - Percentage: ${percentage}%`);
+            console.log(`  - Passing Needed: ${passingPercentage}%`);
+            console.log(`  - PASSED: ${passed}`);
+
+            console.log('[SUBMISSION] Inserting answers...', answerRecords.length, 'records');
             const { error: answersError } = await supabase
                 .from('answers')
                 .insert(answerRecords);
 
-            if (answersError) throw answersError;
+            if (answersError) {
+                console.error('[SUBMISSION ERROR] Failed to insert answers:', answersError);
+                throw answersError;
+            }
+            console.log('[SUBMISSION] Answers inserted successfully');
+
+            // Get question set safely
+            let questionSet = sessionStorage.getItem('selectedSet');
+            if (!questionSet) {
+                try {
+                    const examConfig = sessionStorage.getItem('examConfig');
+                    if (examConfig) {
+                        questionSet = JSON.parse(examConfig)?.set;
+                    }
+                } catch (e) {
+                    console.warn('Failed to parse examConfig:', e);
+                }
+            }
+
+            console.log('[SUBMISSION] Updating interview record...', {
+                interviewId,
+                status: 'completed',
+                score: correctCount,
+                total_questions: totalQuestions,
+                percentage,
+                passed,
+                question_set: questionSet
+            });
+
+            const updatePayload = {
+                status: 'completed',
+                completed_at: new Date().toISOString(),
+                score: correctCount,
+                total_questions: totalQuestions,
+                passed: passed
+            };
+
+            // Only add question_set if it exists
+            if (questionSet) {
+                updatePayload.question_set = questionSet;
+            }
+
+            // Only add metadata if it's an auto-submit
+            if (autoSubmit) {
+                updatePayload.metadata = { auto_submitted: true, reason: reason };
+            }
 
             const { error: updateError } = await supabase
                 .from('interviews')
-                .update({
-                    status: 'completed',
-                    completed_at: new Date().toISOString(),
-                    score: correctCount,
-                    total_questions: totalQuestions,
-                    passed: passed
-                })
+                .update(updatePayload)
                 .eq('id', interviewId);
 
-            if (updateError) throw updateError;
+            if (updateError) {
+                console.error('[SUBMISSION ERROR] Failed to update interview:', updateError);
+                throw updateError;
+            }
+            console.log('[SUBMISSION] Interview updated successfully');
 
             sessionStorage.setItem('score', correctCount);
             sessionStorage.setItem('totalQuestions', totalQuestions);
@@ -295,16 +544,16 @@ export default function QuizInterface() {
 
     if (error) {
         return (
-            <div className="min-h-screen w-full bg-universe flex items-center justify-center p-4">
-                <div className="max-w-md w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center">
-                    <div className="inline-block p-4 bg-red-500/10 rounded-full mb-4">
-                        <AlertCircle className="w-12 h-12 text-red-500" />
+            <div className="min-h-screen w-full bg-universe flex items-center justify-center p-4 text-white">
+                <div className="max-w-md w-full bg-white/10 backdrop-blur-md rounded-2xl border border-white/10 p-8 text-center">
+                    <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
+                        <AlertCircle className="w-8 h-8 text-red-400" />
                     </div>
-                    <h2 className="text-xl font-bold text-white mb-2">Unavailable</h2>
-                    <p className="text-slate-400 mb-6">{error}</p>
+                    <h2 className="text-xl font-bold text-white mb-2">Submission Error</h2>
+                    <p className="text-slate-400 mb-6">{error || 'Failed to submit interview. Please try again.'}</p>
                     <button
                         onClick={() => navigate('/criteria-selection')}
-                        className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-colors font-semibold"
+                        className="px-6 py-3 bg-brand-blue rounded-lg hover:bg-blue-600 transition-colors font-semibold"
                     >
                         Return to Selection
                     </button>
@@ -395,18 +644,108 @@ export default function QuizInterface() {
                         </button>
                     </div>
                 </div>
+
+                {/* Confirmation Modal Overlay */}
+                {showConfirmSpecialization && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+                        <div className="bg-[#0b101b] border border-white/10 rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl relative overflow-hidden animate-scale-up">
+                            {/* Glow effects */}
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                            <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
+
+                            <h3 className="text-2xl font-bold text-white mb-3 relative z-10">Confirm Selection</h3>
+                            <div className="text-slate-300 mb-8 relative z-10">
+                                Are you sure you want to select
+                                <div className="text-brand-blue font-bold text-xl my-2">{pendingSpecialization}</div>
+                                <span className="text-xs text-slate-500">This choice cannot be changed later.</span>
+                            </div>
+
+                            <div className="flex gap-4 justify-center relative z-10">
+                                <button
+                                    onClick={cancelSpecialization}
+                                    className="px-6 py-2.5 rounded-xl border border-white/10 text-slate-300 hover:bg-white/5 hover:text-white transition-colors font-medium"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={confirmSpecialization}
+                                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:scale-105 transition-all"
+                                >
+                                    Confirm
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         );
     }
 
 
     const currentQuestion = questions[currentIndex];
-    // Progress Calculation: Valid questions only
-    const totalQuestions = specialization ? 15 : 12; // Approximation based on logic
-    const progress = (currentIndex / totalQuestions) * 100;
+
+    // Safety check to prevent blank screen crash
+    if (!currentQuestion) {
+        return (
+            <div className="min-h-screen w-full bg-universe flex items-center justify-center p-4 text-white">
+                <div className="text-center p-8 bg-white/10 rounded-xl backdrop-blur-md border border-white/10">
+                    <p className="text-xl font-bold mb-4 text-red-400">Debug Mode: No Question Loaded</p>
+                    <div className="text-left space-y-2 font-mono text-sm text-slate-300 mb-6">
+                        <p>Questions Count: {questions?.length ?? 'undefined'}</p>
+                        <p>Current Index: {currentIndex}</p>
+                        <p>Loading State: {String(loading)}</p>
+                        <p>Error State: {String(error)}</p>
+                        <p>Total Exams: {totalExamQuestions}</p>
+                    </div>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="px-6 py-2 bg-brand-blue rounded-lg hover:bg-blue-600 transition-colors"
+                    >
+                        Reload Page
+                    </button>
+                    <button
+                        onClick={() => navigate('/criteria-selection')}
+                        className="block mt-4 text-sm text-slate-400 hover:text-white mx-auto"
+                    >
+                        Back to Selection
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // Secondary Safety Check: Malformed Data
+    if (!currentQuestion.options || !Array.isArray(currentQuestion.options)) {
+        return (
+            <div className="min-h-screen w-full bg-universe flex items-center justify-center p-4 text-white">
+                <div className="text-center p-8 bg-white/10 rounded-xl backdrop-blur-md border border-white/10">
+                    <p className="text-xl font-bold mb-4 text-amber-400">Debug Mode: Invalid Question Data</p>
+                    <div className="text-left space-y-2 font-mono text-sm text-slate-300 mb-6">
+                        <p>Question ID: {currentQuestion.id}</p>
+                        <p>Question Text: {currentQuestion.question_text}</p>
+                        <p>Options Type: {typeof currentQuestion.options}</p>
+                        <p>Is Array: {String(Array.isArray(currentQuestion.options))}</p>
+                    </div>
+                    <button
+                        onClick={() => navigate('/criteria-selection')}
+                        className="px-6 py-2 bg-brand-blue rounded-lg hover:bg-blue-600 transition-colors"
+                    >
+                        Go Back
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // Progress Calculation: Based on answered questions vs TOTAL EXPECTED questions
+    // This prevents the 100% -> 80% drop when specialization questions are added
     const answeredCount = Object.keys(answers).length;
+    const progress = totalExamQuestions > 0 ? (answeredCount / totalExamQuestions) * 100 : 0;
     const isFirstQuestion = currentIndex === 0;
     const isLastQuestion = currentIndex === questions.length - 1 && specialization; // Only last if specialization selected
+
+    // Check if current question is answered - if so, disable back button
+    const currentQuestionAnswered = answeredQuestions.has(currentQuestion?.id);
 
     return (
         <div className="min-h-screen w-full bg-universe flex flex-col font-sans text-slate-100 selection:bg-brand-orange selection:text-white relative overflow-hidden">
@@ -511,21 +850,20 @@ export default function QuizInterface() {
                                         {/* Category Chip */}
                                         {currentQuestion.category && (
                                             <div className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold tracking-wider text-blue-400 uppercase">
-                                                <Terminal className="w-3 h-3" />
                                                 {currentQuestion.category}
                                             </div>
                                         )}
 
-                                        {/* Difficulty Chip */}
-                                        {currentQuestion.difficulty && (
+                                        {/* Set Type Chip (Fresher/Experience) */}
+                                        {criteriaType && (
                                             <div className={`
                                                 flex items-center gap-1.5 px-3 py-1 rounded-md border text-[10px] font-bold tracking-wider uppercase
-                                                ${currentQuestion.difficulty === 'easy' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                                                    currentQuestion.difficulty === 'medium' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                                                        'bg-rose-500/10 text-rose-400 border-rose-500/20'}
+                                                ${criteriaType === 'Fresher'
+                                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                                    : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}
                                             `}>
                                                 <Sparkles className="w-3 h-3" />
-                                                {currentQuestion.difficulty}
+                                                {criteriaType} Set
                                             </div>
                                         )}
                                     </div>
@@ -539,19 +877,21 @@ export default function QuizInterface() {
 
                         {/* Answer Options - Animated List */}
                         <div className="space-y-3 relative z-10">
-                            {currentQuestion.options.map((option, idx) => {
+                            {currentQuestion.options?.map((option, idx) => {
                                 const isSelected = answers[currentQuestion.id] === option;
 
                                 return (
                                     <button
                                         key={idx}
                                         onClick={() => handleAnswerSelect(currentQuestion.id, option)}
+                                        disabled={submitting || timeRemaining === 0}
                                         className={`
                                             w-full text-left p-4 rounded-xl border transition-all duration-300 group/option relative overflow-hidden
                                             ${isSelected
                                                 ? 'bg-brand-blue/10 border-brand-blue shadow-[0_0_15px_rgba(0,119,255,0.2)] translate-x-1'
                                                 : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20 hover:translate-x-1'
                                             }
+                                            ${(submitting || timeRemaining === 0) ? 'cursor-not-allowed' : ''}
                                         `}
                                     >
                                         {/* Selection Gradient Background */}
@@ -590,7 +930,7 @@ export default function QuizInterface() {
                             className={`
                                 flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all text-sm group
                                 ${isFirstQuestion
-                                    ? 'opacity-0 pointer-events-none'
+                                    ? 'opacity-30 pointer-events-none cursor-not-allowed'
                                     : 'text-slate-400 hover:text-white hover:bg-white/5'
                                 }
                             `}
@@ -598,7 +938,9 @@ export default function QuizInterface() {
                             <div className="p-1.5 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors border border-white/5 group-hover:border-white/20">
                                 <ArrowLeft className="w-4 h-4" />
                             </div>
-                            <span className="hidden sm:inline">Back</span>
+                            <span className="hidden sm:inline">
+                                Back
+                            </span>
                         </button>
 
                         {!isLastQuestion ? (
@@ -642,8 +984,32 @@ export default function QuizInterface() {
                         )}
                     </div>
 
+                    {/* Embed Question Map for Quick Access */}
+                    <div className="mt-10 px-4 sm:px-6">
+                        <QuestionStatusMap
+                            questions={questions}
+                            answers={answers}
+                            currentIndex={currentIndex}
+                            onQuestionSelect={(idx) => setCurrentIndex(idx)}
+                        />
+                    </div>
+
                 </div>
             </div>
+
+            {/* Custom Submission Modal */}
+            <QuizSubmissionModal
+                isOpen={showSubmitModal}
+                onClose={() => setShowSubmitModal(false)}
+                onReview={handleReview}
+                onConfirm={() => {
+                    setShowSubmitModal(false);
+                    handleSubmit(true, 'manual_confirm'); // Treat as auto-submit to bypass checks, but with reason
+                }}
+                questions={questions}
+                answers={answers}
+            />
+
         </div>
     );
 }

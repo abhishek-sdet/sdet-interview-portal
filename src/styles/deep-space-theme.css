@@ -1,0 +1,573 @@
+/* ============================================
+   DEEP SPACE INTELLIGENCE THEME
+   Next-Generation AI Dashboard - 2032 Design
+   ============================================ */
+
+:root {
+  /* Deep Space Background Colors */
+  --bg-primary: #0a0e1a;
+  --bg-secondary: #0f1420;
+  --bg-tertiary: #141824;
+  --bg-elevated: #1a1f2e;
+
+  /* Glassmorphism */
+  --glass-bg: rgba(20, 24, 36, 0.6);
+  --glass-bg-strong: rgba(20, 24, 36, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-strong: rgba(255, 255, 255, 0.12);
+
+  /* Accent Colors - Deep Space Intelligence */
+  --accent-blue: #3b82f6;
+  --accent-blue-light: #60a5fa;
+  --accent-cyan: #06b6d4;
+  --accent-cyan-light: #22d3ee;
+  --accent-purple: #8b5cf6;
+  --accent-purple-light: #a78bfa;
+
+  /* Text Colors */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-disabled: #475569;
+
+  /* Status Colors */
+  --success: #10b981;
+  --success-light: #34d399;
+  --warning: #f59e0b;
+  --warning-light: #fbbf24;
+  --danger: #ef4444;
+  --danger-light: #f87171;
+  --info: #3b82f6;
+
+  /* Glow Effects */
+  --glow-blue: 0 0 30px rgba(59, 130, 246, 0.3);
+  --glow-blue-strong: 0 0 50px rgba(59, 130, 246, 0.5);
+  --glow-cyan: 0 0 30px rgba(6, 182, 212, 0.3);
+  --glow-cyan-strong: 0 0 50px rgba(6, 182, 212, 0.5);
+  --glow-purple: 0 0 30px rgba(139, 92, 246, 0.3);
+  --glow-purple-strong: 0 0 50px rgba(139, 92, 246, 0.5);
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #06b6d4 50%, #8b5cf6 100%);
+  --gradient-blue-cyan: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+  --gradient-cyan-purple: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+  --gradient-purple-blue: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 40px rgba(59, 130, 246, 0.2);
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 600ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* ============================================
+   GLASSMORPHISM COMPONENTS
+   ============================================ */
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all var(--transition-base);
+}
+
+.glass-panel-strong {
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  border: 1px solid var(--glass-border-strong);
+  box-shadow: var(--shadow-xl), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel:hover {
+  border-color: var(--glass-border-strong);
+  box-shadow: var(--shadow-xl), var(--shadow-glow), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   ANIMATED GRADIENT BORDERS
+   ============================================ */
+
+.gradient-border {
+  position: relative;
+  background: var(--glass-bg);
+  border-radius: var(--radius-lg);
+  padding: 2px;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  padding: 2px;
+  background: var(--gradient-primary);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.6;
+  transition: opacity var(--transition-base);
+}
+
+.gradient-border:hover::before {
+  opacity: 1;
+  animation: rotateBorder 3s linear infinite;
+}
+
+@keyframes rotateBorder {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+
+  100% {
+    filter: hue-rotate(360deg);
+  }
+}
+
+/* ============================================
+   MAGNETIC BUTTON EFFECT
+   ============================================ */
+
+.magnetic-button {
+  position: relative;
+  padding: 12px 24px;
+  background: var(--gradient-blue-cyan);
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-md);
+}
+
+.magnetic-button::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-md);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  z-index: -1;
+  filter: blur(8px);
+}
+
+.magnetic-button:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: var(--shadow-lg), var(--glow-blue);
+}
+
+.magnetic-button:hover::before {
+  opacity: 0.6;
+}
+
+.magnetic-button:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* ============================================
+   PULSING ANIMATIONS
+   ============================================ */
+
+.pulse-glow-blue {
+  animation: pulseGlowBlue 2s ease-in-out infinite;
+}
+
+.pulse-glow-cyan {
+  animation: pulseGlowCyan 2s ease-in-out infinite;
+}
+
+.pulse-glow-purple {
+  animation: pulseGlowPurple 2s ease-in-out infinite;
+}
+
+@keyframes pulseGlowBlue {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 40px rgba(59, 130, 246, 0.6);
+  }
+}
+
+@keyframes pulseGlowCyan {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 40px rgba(6, 182, 212, 0.6);
+  }
+}
+
+@keyframes pulseGlowPurple {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.6);
+  }
+}
+
+/* ============================================
+   SMOOTH ENTRANCE ANIMATIONS
+   ============================================ */
+
+.fade-in-up-smooth {
+  animation: fadeInUpSmooth 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+@keyframes fadeInUpSmooth {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-scale {
+  animation: fadeInScale 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Stagger delays */
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+.delay-400 {
+  animation-delay: 400ms;
+}
+
+.delay-500 {
+  animation-delay: 500ms;
+}
+
+.delay-600 {
+  animation-delay: 600ms;
+}
+
+/* ============================================
+   SCORE RING ANIMATION
+   ============================================ */
+
+.score-ring {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.score-ring-circle {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.score-ring-bg {
+  stroke: rgba(255, 255, 255, 0.1);
+}
+
+.score-ring-progress {
+  stroke: url(#scoreGradient);
+  filter: drop-shadow(0 0 8px currentColor);
+}
+
+/* ============================================
+   SPARKLINE STYLES
+   ============================================ */
+
+.sparkline {
+  width: 100%;
+  height: 40px;
+}
+
+.sparkline-line {
+  fill: none;
+  stroke: var(--accent-cyan);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 4px var(--accent-cyan));
+}
+
+.sparkline-area {
+  fill: url(#sparklineGradient);
+  opacity: 0.3;
+}
+
+/* ============================================
+   AI INSIGHT BADGE
+   ============================================ */
+
+.ai-insight-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: var(--radius-full);
+  color: var(--accent-blue-light);
+  font-size: 12px;
+  font-weight: 500;
+  backdrop-filter: blur(8px);
+}
+
+.ai-insight-badge::before {
+  content: '✨';
+  font-size: 14px;
+}
+
+/* ============================================
+   CANDIDATE CARD STYLES
+   ============================================ */
+
+.candidate-card {
+  position: relative;
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  transition: all var(--transition-base);
+  cursor: pointer;
+}
+
+.candidate-card:hover {
+  border-color: var(--glass-border-strong);
+  box-shadow: var(--shadow-xl), var(--glow-blue);
+  transform: translateY(-4px);
+}
+
+.candidate-card-expanded {
+  max-height: 500px;
+  transition: max-height var(--transition-slow);
+}
+
+/* ============================================
+   STATUS PILLS
+   ============================================ */
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all var(--transition-base);
+}
+
+.status-pill-qualified {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: 1px solid #059669;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.4), 0 4px 8px rgba(16, 185, 129, 0.3);
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.status-pill-not-qualified {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  border: 1px solid #dc2626;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.4), 0 4px 8px rgba(239, 68, 68, 0.3);
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.status-pill-pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--warning-light);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+}
+
+/* ============================================
+   SKILL TAGS
+   ============================================ */
+
+.skill-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: var(--gradient-blue-cyan);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.skill-tag:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md), var(--glow-cyan);
+}
+
+/* ============================================
+   TOGGLE SWITCH
+   ============================================ */
+
+.toggle-switch {
+  display: inline-flex;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-full);
+  padding: 4px;
+  gap: 4px;
+}
+
+.toggle-option {
+  padding: 8px 20px;
+  border-radius: var(--radius-full);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  border: none;
+  background: transparent;
+}
+
+.toggle-option-active {
+  background: var(--gradient-blue-cyan);
+  color: white;
+  box-shadow: var(--shadow-md), var(--glow-blue);
+}
+
+.toggle-option:hover:not(.toggle-option-active) {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ============================================
+   SCROLLBAR STYLING
+   ============================================ */
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--gradient-blue-cyan);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-base);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--gradient-cyan-purple);
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+
+@media (max-width: 768px) {
+  :root {
+    --space-lg: 16px;
+    --space-xl: 24px;
+    --space-2xl: 32px;
+  }
+
+  .glass-panel {
+    backdrop-filter: blur(16px) saturate(150%);
+  }
+
+  .candidate-card {
+    padding: var(--space-md);
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus visible for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}

@@ -8,25 +8,26 @@ import LandingPage from './pages/interview/LandingPage';
 import CriteriaSelection from './pages/interview/CriteriaSelection';
 import SetSelection from './pages/interview/SetSelection';
 import ExamSetup from './pages/interview/ExamSetup';
+import ExamRules from './pages/interview/ExamRules';
 import QuizInterface from './pages/interview/QuizInterface';
 import ThankYou from './pages/interview/ThankYou';
 
 // Admin Portal Pages
 import AdminLogin from './pages/admin/AdminLogin';
-import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminSchedule from './pages/admin/AdminSchedule';
-import AdminCriteria from './pages/admin/AdminCriteria';
-import AdminQuestions from './pages/admin/AdminQuestions';
-import ProtectedRoute from './components/ProtectedRoute';
+import UploadQuestions from './pages/admin/UploadQuestions';
+import ManageQuestions from './pages/admin/ManageQuestions';
+import AdminResults from './pages/admin/AdminResults';
+import ManageCriteria from './pages/admin/ManageCriteria';
 
 // Results Dashboard
-import AdminResults from './pages/admin/AdminResults';
 import HRDashboard from './pages/dashboard/HRDashboard';
+
+import { ThemeProvider } from './context/ThemeContext';
 
 function App() {
     return (
-        <>
+        <ThemeProvider>
             <Toaster position="top-right" />
             <Router>
                 <AppSignature />
@@ -35,21 +36,18 @@ function App() {
                     <Route path="/" element={<LandingPage />} />
                     <Route path="/criteria-selection" element={<CriteriaSelection />} />
                     <Route path="/set-selection" element={<SetSelection />} />
+                    <Route path="/exam-rules" element={<ExamRules />} />
                     <Route path="/exam-setup" element={<ExamSetup />} />
                     <Route path="/quiz" element={<QuizInterface />} />
                     <Route path="/thank-you" element={<ThankYou />} />
 
-                    {/* Admin Portal Routes */}
-                    <Route path="/admin" element={<AdminLogin />} />
-                    <Route element={<ProtectedRoute />}>
-                        <Route path="/admin" element={<AdminLayout />}>
-                            <Route path="dashboard" element={<AdminDashboard />} />
-                            <Route path="schedule" element={<AdminSchedule />} />
-                            <Route path="criteria" element={<AdminCriteria />} />
-                            <Route path="questions" element={<AdminQuestions />} />
-                            <Route path="results" element={<AdminResults />} />
-                        </Route>
-                    </Route>
+                    {/* Admin Portal Routes (New Simple Version) */}
+                    <Route path="/admin/login" element={<AdminLogin />} />
+                    <Route path="/admin" element={<AdminDashboard />} />
+                    <Route path="/admin/upload" element={<UploadQuestions />} />
+                    <Route path="/admin/questions" element={<ManageQuestions />} />
+                    <Route path="/admin/criteria" element={<ManageCriteria />} />
+                    <Route path="/admin/results" element={<AdminResults />} />
 
                     {/* Results Dashboard Route */}
                     {/* HR Dashboard Route (Public/Read-Only) */}
@@ -59,7 +57,7 @@ function App() {
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
             </Router>
-        </>
+        </ThemeProvider>
     );
 }
 

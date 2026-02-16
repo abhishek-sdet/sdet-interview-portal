@@ -2,37 +2,130 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import World-Class 3D Effects */
+@import './styles/3d-effects.css';
+
+/* Import Deep Space Intelligence Theme */
+@import './styles/deep-space-theme.css';
+
 @layer base {
   :root {
-    /* Base Colors */
+    /* Base Colors (Light) */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    /* THEME VARIABLES - PREMIUM LIGHT */
+    --bg-body: #f8fafc;
+    /* Slate 50 */
+    --bg-gradient-1: rgba(56, 189, 248, 0.1);
+    /* Soft Blue */
+    --bg-gradient-2: rgba(168, 85, 247, 0.05);
+    /* Soft Purple */
+
+    /* GLASS THEME - LIGHT & CLEAN */
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(226, 232, 240, 0.8);
+    /* Slate 200 */
+
+    /* Text - HIGH CONTRAST */
+    --text-main: #0f172a;
+    /* Slate 900 */
+    --text-muted: #64748b;
+    /* Slate 500 */
+
+    --card-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+
+    --input-bg: rgba(255, 255, 255, 0.8);
+    --chart-grid: rgba(0, 0, 0, 0.05);
+    --chart-text: #475569;
+    /* Slate 600 */
+
+    --neon-blue: #0ea5e9;
+    /* Sky 500 */
+    --success: #16a34a;
+    /* Green 600 */
+    --danger: #dc2626;
+    /* Red 600 */
+    --success-bg: rgba(22, 163, 74, 0.1);
+    --danger-bg: rgba(220, 38, 38, 0.1);
+
+    /* SDET Brand Identity */
+    --brand-blue: #0284c7;
+    /* Sky 600 */
+    --brand-orange: #ea580c;
+    /* Orange 600 */
+    --brand-dark: #0f172a;
+
+    /* UI Variables (Light) */
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 215 20.2% 65.1%;
+    --radius: 0.5rem;
+  }
+
+  [data-theme="dark"] {
+    /* Base Colors (Dark) */
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
-    /* THEME VARIABLES (From index.html) - Default Dark */
-    --bg-body: #050511;
-    --bg-gradient-1: rgba(76, 29, 149, 0.15);
+    /* THEME VARIABLES - PREMIUM DARK */
+    --bg-body: #0f172a;
+    /* Slate 900 - Deep & Professional */
+    --bg-gradient-1: rgba(76, 29, 149, 0.25);
+    /* Subtle Purple Glow */
     --bg-gradient-2: rgba(56, 189, 248, 0.15);
-    --glass-bg: rgba(255, 255, 255, 0.03);
-    --glass-border: rgba(255, 255, 255, 0.08);
-    --text-main: #ffffff;
-    --text-muted: rgba(255, 255, 255, 0.5);
-    --card-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-    --input-bg: rgba(0, 0, 0, 0.3);
-    --chart-grid: rgba(255, 255, 255, 0.1);
-    --chart-text: rgba(255, 255, 255, 0.7);
+    /* Soft Cyan Accent */
 
-    --neon-blue: #4facfe;
-    --success: #00f260;
-    --danger: #ff5e62;
-    --success-bg: rgba(0, 242, 96, 0.1);
-    --danger-bg: rgba(255, 94, 98, 0.1);
+    /* GLASS THEME - VISIBLE & ELEGANT */
+    --glass-bg: rgba(30, 41, 59, 0.7);
+    /* Slate 800 with high opacity */
+    --glass-border: rgba(148, 163, 184, 0.2);
+    /* Slate 400 border */
+
+    /* Text - HIGH CONTRAST */
+    --text-main: #f8fafc;
+    /* Slate 50 - Bright White */
+    --text-muted: #94a3b8;
+    /* Slate 400 - Readable Gray */
+
+    --card-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.5);
+
+    --input-bg: rgba(15, 23, 42, 0.6);
+    --chart-grid: rgba(255, 255, 255, 0.08);
+    --chart-text: #cbd5e1;
+    /* Slate 300 */
+
+    --neon-blue: #38bdf8;
+    /* Sky 400 */
+    --success: #4ade80;
+    /* Green 400 */
+    --danger: #f87171;
+    /* Red 400 */
+    --success-bg: rgba(74, 222, 128, 0.15);
+    --danger-bg: rgba(248, 113, 113, 0.15);
 
     /* SDET Brand Identity */
-    --brand-blue: #0054a5;
-    --brand-orange: #ff6b35;
-    --brand-dark: #020617;
+    --brand-blue: #0ea5e9;
+    /* Sky 500 */
+    --brand-orange: #f97316;
+    /* Orange 500 */
+    --brand-dark: #0f172a;
 
-    /* UI Variables */
+    /* UI Variables (Dark) */
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
@@ -50,28 +143,6 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-    --radius: 0.5rem;
-  }
-
-  [data-theme="light"] {
-    /* LIGHT THEME OVERRIDES */
-    --bg-body: #f3f4f6;
-    --bg-gradient-1: rgba(79, 172, 254, 0.1);
-    --bg-gradient-2: rgba(161, 140, 209, 0.1);
-    --glass-bg: rgba(255, 255, 255, 0.85);
-    --glass-border: rgba(209, 213, 219, 0.8);
-    --text-main: #111827;
-    --text-muted: #6b7280;
-    --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-    --input-bg: #ffffff;
-    --chart-grid: rgba(0, 0, 0, 0.05);
-    --chart-text: #374151;
-
-    --neon-blue: #2563eb;
-    --success: #059669;
-    --danger: #dc2626;
-    --success-bg: #d1fae5;
-    --danger-bg: #fee2e2;
   }
 }
 

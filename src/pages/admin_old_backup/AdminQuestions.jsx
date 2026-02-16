@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Plus, Edit2, Trash2, Save, X, Upload, FileText, CheckCircle, Search, Filter, Folder, List, Tag, Layers } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, Upload, FileText, CheckCircle, Search, Filter, Folder, List, Tag, Layers, Check, Smartphone } from 'lucide-react';
 import mammoth from 'mammoth';
 import { showToast } from '@/components/Toast';
+import { preprocessDocumentText, detectSections, parseQuestionsInSection } from '@/utils/questionParser';
+import QuestionCard from '@/components/admin/questions/QuestionCard';
+import CriteriaTabs from '@/components/admin/questions/CriteriaTabs';
+import ConfirmModal from '@/components/ConfirmModal';
+import DraggableQuestionList from '@/components/admin/questions/DraggableQuestionList';
+import MobilePreview from '@/components/admin/questions/MobilePreview';
+
 
 export default function AdminQuestions() {
     const [questions, setQuestions] = useState([]);
@@ -13,6 +20,17 @@ export default function AdminQuestions() {
     const [importing, setImporting] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [activeCriteriaId, setActiveCriteriaId] = useState(null);
+
+    const [activeElectiveSubject, setActiveElectiveSubject] = useState(null);
+    const [mobilePreview, setMobilePreview] = useState(false);
+
+    // Confirm Modal State
+    const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: null
+    });
 
     // Form State
     const [formData, setFormData] = useState({
@@ -32,6 +50,7 @@ export default function AdminQuestions() {
     // Bulk Import State
     const [bulkImportData, setBulkImportData] = useState({
         criteria_id: '',
+        category: 'Set A',
         file: null
     });
 
@@ -43,7 +62,7 @@ export default function AdminQuestions() {
         try {
             setLoading(true);
             const [questionsRes, criteriaRes] = await Promise.all([
-                supabase.from('questions').select('*').order('created_at', { ascending: false }),
+                supabase.from('questions').select('*').order('order_index', { ascending: true }).order('created_at', { ascending: false }),
                 supabase.from('criteria').select('*').eq('is_active', true).order('name')
             ]);
 
@@ -66,10 +85,19 @@ export default function AdminQuestions() {
 
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
-        if (file && file.name.endsWith('.docx')) {
-            setBulkImportData({ ...bulkImportData, file });
-        } else {
-            showToast.error('Please upload a valid .docx file');
+        if (file) {
+            if (!file.name.endsWith('.docx')) {
+                showToast.error('Please upload a valid .docx file');
+                return;
+            }
+            // Auto-detect set name from filename (e.g., "SET A.docx" -> "Set A")
+            let category = 'Set A';
+            const match = file.name.match(/SET\s+([A-Z])/i);
+            if (match) {
+                category = `Set ${match[1].toUpperCase()}`;
+            }
+
+            setBulkImportData({ ...bulkImportData, file, category });
         }
     };
 
@@ -80,18 +108,129 @@ export default function AdminQuestions() {
         try {
             const arrayBuffer = await bulkImportData.file.arrayBuffer();
             const result = await mammoth.extractRawText({ arrayBuffer });
-            const text = result.value;
+            let text = result.value;
 
-            // Simple parsing logic (can be enhanced based on specific format)
-            console.log('Parsed text:', text);
+            console.log('📄 Raw extracted text:', text.substring(0, 500));
 
-            showToast.info('Word parsing is experimental. Please manually verify imported questions.');
-            // Implementation of parsing logic would go here
-            // For now, simple alert
+            // Preprocess the text to ensure proper line breaks
+            text = preprocessDocumentText(text);
+
+            // Detect sections in the document
+            const sections = detectSections(text);
+            console.log(`📊 Detected ${sections.length} section(s):`, sections.map(s => s.name));
+
+            if (sections.length === 0) {
+                showToast.error('No sections found in document. Please check the format.');
+                return;
+            }
+
+            // Parse questions from all sections
+            const allQuestions = [];
+            const importData = {
+                criteria_id: bulkImportData.criteria_id || activeCriteriaId, // Use active tab if no specific criteria selected
+                category: bulkImportData.category || 'Set A',
+                difficulty: 'medium'
+            };
+
+            for (const section of sections) {
+                console.log(`   🔍 Processing section: "${section.name}"`);
+                const sectionQuestions = parseQuestionsInSection(section, importData);
+                allQuestions.push(...sectionQuestions);
+            }
+
+            if (allQuestions.length === 0) {
+                showToast.error('No valid questions found in document. Please check the format.');
+                return;
+            }
+
+            console.log(`✅ Total questions parsed: ${allQuestions.length}`);
+
+            // Check if this set already exists and delete old questions
+            const setName = importData.category;
+            console.log(`🔍 Checking for existing questions in set: "${setName}"`);
+
+            const { data: existingQuestions, error: checkError } = await supabase
+                .from('questions')
+                .select('id')
+                .eq('criteria_id', importData.criteria_id)
+                .eq('category', setName);
+
+            if (checkError) {
+                console.error('❌ Error checking existing questions:', checkError);
+            } else if (existingQuestions && existingQuestions.length > 0) {
+                console.log(`⚠️ Found ${existingQuestions.length} existing questions in "${setName}". Deleting them...`);
+
+                const { error: deleteError } = await supabase
+                    .from('questions')
+                    .delete()
+                    .eq('criteria_id', importData.criteria_id)
+                    .eq('category', setName);
+
+                if (deleteError) {
+                    console.error('❌ Error deleting existing questions:', deleteError);
+                    showToast.error('Failed to delete existing questions. Upload cancelled.');
+                    return;
+                } else {
+                    console.log(`✅ Deleted ${existingQuestions.length} existing questions`);
+                    showToast.info(`Replacing ${existingQuestions.length} existing questions in "${setName}"`);
+                }
+            }
+
+            // Import questions to database
+            let successCount = 0;
+            let errorCount = 0;
+
+            for (const q of allQuestions) {
+                try {
+                    // Convert options array to individual fields
+                    const questionData = {
+                        criteria_id: q.criteria_id,
+                        category: q.category, // Set Name (e.g., Set A)
+                        section: q.section, // Already detected by parser: 'general' or 'elective'
+                        subsection: q.subsection, // Already detected by parser: 'java', 'python', 'aptitude', or null
+                        question_text: q.question_text,
+                        options: q.options, // REQUIRED: Store as JSON array for schema compatibility
+                        option_a: q.options[0] || '',
+                        option_b: q.options[1] || '',
+                        option_c: q.options[2] || '',
+                        option_d: q.options[3] || '',
+                        correct_option: q.correct_option || 'A',
+                        correct_answer: q.options[q.correct_option ? q.correct_option.charCodeAt(0) - 65 : 0] || q.options[0] || '', // Full text of correct answer
+                        is_active: q.is_active
+                    };
+
+                    const { error } = await supabase
+                        .from('questions')
+                        .insert([questionData]);
+
+                    if (error) {
+                        console.error('❌ Error inserting question:', JSON.stringify(error, null, 2), questionData);
+                        errorCount++;
+                    } else {
+                        successCount++;
+                    }
+                } catch (err) {
+                    console.error('❌ Error inserting question:', JSON.stringify(err, null, 2));
+                    errorCount++;
+                }
+            }
+
+            if (successCount > 0) {
+                showToast.success(`Successfully imported ${successCount} questions${errorCount > 0 ? `. Failed: ${errorCount}` : ''}`);
+            } else {
+                showToast.error(`Failed to import questions. Errors: ${errorCount}`);
+            }
+
+            // Refresh questions list
+            fetchData();
+
+            // Reset bulk import form
+            setBulkImportData({ criteria_id: '', category: '', file: null });
+            setShowBulkImport(false);
 
         } catch (error) {
-            console.error('Error parsing document:', error);
-            showToast.error('Failed to parse document');
+            console.error('❌ Error parsing document:', error);
+            showToast.error('Failed to parse document: ' + error.message);
         } finally {
             setImporting(false);
         }
@@ -133,20 +272,27 @@ export default function AdminQuestions() {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this question?')) return;
-
-        try {
-            const { error } = await supabase
-                .from('questions')
-                .delete()
-                .eq('id', id);
-            if (error) throw error;
-            showToast.success('Question deleted successfully');
-            fetchData();
-        } catch (error) {
-            console.error('Error deleting question:', error);
-            showToast.error('Failed to delete question');
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: 'Delete Question',
+            message: 'Are you sure you want to delete this question? This action cannot be undone.',
+            onConfirm: async () => {
+                try {
+                    const { error } = await supabase
+                        .from('questions')
+                        .delete()
+                        .eq('id', id);
+                    if (error) throw error;
+                    showToast.success('Question deleted successfully');
+                    fetchData();
+                } catch (error) {
+                    console.error('Error deleting question:', error);
+                    showToast.error('Failed to delete question');
+                } finally {
+                    setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: null });
+                }
+            }
+        });
     };
 
     const handleEdit = (question) => {
@@ -211,7 +357,130 @@ export default function AdminQuestions() {
         return bySet;
     };
 
+    // Set default active elective subject
+    useEffect(() => {
+        if (!loading && activeCriteriaId) {
+            const grouped = getGroupedQuestions();
+            const firstSet = Object.values(grouped)[0];
+            if (firstSet && Object.keys(firstSet.elective).length > 0 && !activeElectiveSubject) {
+                setActiveElectiveSubject(Object.keys(firstSet.elective)[0]);
+            }
+        }
+    }, [loading, questions, activeCriteriaId]);
+
     const groupedData = getGroupedQuestions();
+
+    // Handle set rename
+    const handleRenameSet = async (oldSetName) => {
+        const newSetName = prompt('Enter new name for set:', oldSetName);
+        if (!newSetName || newSetName.trim() === '' || newSetName === oldSetName) return;
+
+        try {
+            // Update all questions with this set name (category)
+            const { error } = await supabase
+                .from('questions')
+                .update({ category: newSetName.trim() })
+                .eq('category', oldSetName)
+                .eq('criteria_id', activeCriteriaId);
+
+            if (error) throw error;
+
+            showToast.success(`Set renamed from "${oldSetName}" to "${newSetName}"`);
+            fetchData();
+        } catch (error) {
+            console.error('Error renaming set:', error);
+            showToast.error('Failed to rename set');
+        }
+    };
+
+    // Handle set delete
+    const handleDeleteSet = async (setName) => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Delete Set',
+            message: `Are you sure you want to delete "${setName}"? This will permanently delete all questions in this set. This action cannot be undone.`,
+            onConfirm: async () => {
+                try {
+                    // Delete all questions with this set name
+                    const { error } = await supabase
+                        .from('questions')
+                        .delete()
+                        .eq('category', setName)
+                        .eq('criteria_id', activeCriteriaId);
+
+                    if (error) throw error;
+
+                    showToast.success(`Set "${setName}" and all its questions deleted successfully`);
+                    fetchData();
+                } catch (error) {
+                    console.error('Error deleting set:', error);
+                    showToast.error('Failed to delete set');
+                } finally {
+                    setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: null });
+                }
+            }
+        });
+    };
+
+    // Handle Question Reorder
+    const handleReorder = async (newOrder) => {
+        // Optimistically update local state
+        // We need to merge the new order into the full 'questions' array
+        // This is tricky because 'newOrder' is a subset (e.g., just General questions)
+
+        // Strategy: Create a map of IDs to their new index order
+        // Then map over the original questions array, if ID exists in newOrder, update its position visually?
+        // Actually, framer-motion controls the visual order of the subset.
+        // We need to update the 'questions' state to reflect the new order to prevent "snap back".
+
+        const newOrderIds = new Set(newOrder.map(q => q.id));
+
+        // Keep questions NOT in the moved set as they are
+        const unaffectedQuestions = questions.filter(q => !newOrderIds.has(q.id));
+
+        // Combine them (this might mess up global sort if we are not careful)
+        // Better: Update the specific objects in the master array? 
+        // No, simplest is to just re-fetch after DB update, but that's slow.
+        // For local state:
+        // We need to verify if we are reordering General or Elective.
+
+        // A safer standard approach for this specific UI structure:
+        // 1. Calculate new order_index for items in newOrder (0 to N)
+        // 2. Send updates to DB
+        // 3. Refetch (easiest) or manually splice (complex)
+
+        try {
+            const updates = newOrder.map((q, index) => ({
+                id: q.id,
+                order_index: index
+            }));
+
+            // Prepare Supabase updates
+            // Since Supabase doesn't support bulk update of different values easily without RPC, 
+            // we'll loop (for N < 50 this is fine)
+
+            await Promise.all(updates.map(u =>
+                supabase.from('questions').update({ order_index: u.order_index }).eq('id', u.id)
+            ));
+
+            // Update local state by mapping through
+            setQuestions(prev => {
+                const updated = [...prev];
+                updates.forEach(u => {
+                    const idx = updated.findIndex(q => q.id === u.id);
+                    if (idx !== -1) updated[idx].order_index = u.order_index;
+                });
+                // Re-sort locally to match new order_indices?
+                // Actually, the mapped views (getGroupedQuestions) rely on filtering.
+                // If we sort the master list by order_index, rendering will update.
+                return updated.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+            });
+
+        } catch (error) {
+            console.error('Error reordering:', error);
+            showToast.error('Failed to save new order');
+        }
+    };
 
     return (
         <div className="space-y-8 animate-fade-in pb-20">
@@ -222,6 +491,13 @@ export default function AdminQuestions() {
                     <p className="text-slate-400">Create questions for <strong>Section A (General)</strong> and <strong>Section B (Elective: Java/Python/etc.)</strong></p>
                 </div>
                 <div className="flex gap-3">
+                    <button
+                        onClick={() => setMobilePreview(true)}
+                        className="glass-button flex items-center gap-2 text-purple-300 border-purple-500/30 hover:bg-purple-500/10"
+                    >
+                        <Smartphone size={18} />
+                        Mobile Preview
+                    </button>
                     <button
                         onClick={() => {
                             setShowBulkImport(!showBulkImport);
@@ -277,6 +553,21 @@ export default function AdminQuestions() {
                                 </div>
                             </label>
 
+                            {/* Set Name Input for Bulk Import */}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-2 uppercase tracking-wide">
+                                    Set Name <span className="text-red-400">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={bulkImportData.category}
+                                    onChange={(e) => setBulkImportData({ ...bulkImportData, category: e.target.value })}
+                                    className="glass-input px-4 w-full"
+                                    placeholder="e.g., Set A, Set B"
+                                    required
+                                />
+                            </div>
+
                             {bulkImportData.file && (
                                 <div className="flex item-center justify-between p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
                                     <div className="flex items-center gap-3">
@@ -285,8 +576,8 @@ export default function AdminQuestions() {
                                     </div>
                                     <button
                                         onClick={parseWordDocument}
-                                        disabled={importing}
-                                        className="text-sm font-bold text-cyan-400 hover:text-cyan-300"
+                                        disabled={importing || !bulkImportData.category}
+                                        className="text-sm font-bold text-cyan-400 hover:text-cyan-300 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {importing ? 'Parsing...' : 'Process File'}
                                     </button>
@@ -558,82 +849,142 @@ export default function AdminQuestions() {
                     {/* Set Cards */}
                     <div className="space-y-8">
                         {Object.entries(groupedData).map(([setName, sections]) => (
-                            <div key={setName} className="glass-panel p-6 rounded-2xl border border-white/5 shadow-xl">
-                                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
-                                    <div className="p-2 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg shadow-lg shadow-cyan-500/20">
-                                        <Layers size={24} className="text-white" />
+                            <div key={setName} className="glass-panel p-6 rounded-2xl border border-white/5 shadow-xl group">
+                                <div className="flex items-center justify-between gap-3 mb-6 pb-4 border-b border-white/10">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg shadow-lg shadow-cyan-500/20">
+                                            <Layers size={24} className="text-white" />
+                                        </div>
+                                        <h3 className="text-2xl font-bold text-white">{setName}</h3>
+                                        <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-medium text-slate-300">
+                                            {(sections.general.length || 0) + Object.values(sections.elective).reduce((a, b) => a + b.length, 0)} Questions
+                                        </span>
                                     </div>
-                                    <h3 className="text-2xl font-bold text-white">{setName}</h3>
-                                    <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-medium text-slate-300">
-                                        {(sections.general.length || 0) + Object.values(sections.elective).reduce((a, b) => a + b.length, 0)} Questions
-                                    </span>
+
+                                    {/* Set Actions - Show on hover */}
+                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={() => handleRenameSet(setName)}
+                                            className="p-2 text-cyan-400 hover:bg-cyan-500/10 rounded-lg transition-colors"
+                                            title="Rename Set"
+                                        >
+                                            <Edit2 size={16} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteSet(setName)}
+                                            className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                            title="Delete Set"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <div className="grid lg:grid-cols-2 gap-6">
+                                {/* Vertical Stack Layout for Questions */}
+                                <div className="space-y-8">
                                     {/* Section A: General */}
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between">
+                                    <div className="glass-panel-inner p-6 rounded-xl border border-white/5 bg-white/5">
+                                        <div className="flex items-center justify-between mb-4">
                                             <h4 className="text-lg font-bold text-cyan-400 flex items-center gap-2">
                                                 <span className="w-2 h-8 bg-cyan-500 rounded-full"></span>
-                                                Section A: General
+                                                Section A: General Questions
                                             </h4>
-                                            <span className="text-xs text-slate-500 uppercase tracking-wide font-bold">Mandatory</span>
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-xs text-slate-500 uppercase tracking-wide font-bold">Mandatory</span>
+                                                <span className="text-xs text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded-full">
+                                                    {sections.general.length} Questions
+                                                </span>
+                                            </div>
                                         </div>
 
                                         {sections.general.length > 0 ? (
-                                            <div className="space-y-3">
-                                                {sections.general.map((q, idx) => (
-                                                    <QuestionCard
-                                                        key={q.id}
-                                                        question={q}
-                                                        index={idx}
-                                                        onEdit={handleEdit}
-                                                        onDelete={handleDelete}
-                                                    />
-                                                ))}
-                                            </div>
+                                            <DraggableQuestionList
+                                                questions={sections.general}
+                                                onReorder={handleReorder}
+                                                onEdit={handleEdit}
+                                                onDelete={handleDelete}
+                                                type="general"
+                                            />
                                         ) : (
-                                            <div className="p-8 text-center bg-white/5 rounded-xl border border-dashed border-white/10">
-                                                <p className="text-slate-500 text-sm">No general questions in this set.</p>
+                                            <div className="p-12 text-center bg-black/20 rounded-xl border border-dashed border-white/10">
+                                                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                    <FileText size={24} className="text-slate-600" />
+                                                </div>
+                                                <p className="text-slate-400 font-medium">No general questions added yet</p>
+                                                <p className="text-slate-500 text-sm mt-1">Start by adding questions manually or importing a file</p>
                                             </div>
                                         )}
                                     </div>
 
                                     {/* Section B: Elective */}
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between">
+                                    <div className="glass-panel-inner p-6 rounded-xl border border-white/5 bg-white/5">
+                                        <div className="flex items-center justify-between mb-6">
                                             <h4 className="text-lg font-bold text-purple-400 flex items-center gap-2">
                                                 <span className="w-2 h-8 bg-purple-500 rounded-full"></span>
-                                                Section B: Elective
+                                                Section B: Elective Questions
                                             </h4>
-                                            <span className="text-xs text-slate-500 uppercase tracking-wide font-bold">Optional Choice</span>
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-xs text-slate-500 uppercase tracking-wide font-bold">Candidate Chooses One</span>
+                                                <span className="text-xs text-purple-400 bg-purple-500/10 px-2 py-1 rounded-full">
+                                                    {Object.values(sections.elective).reduce((a, b) => a + b.length, 0)} Total
+                                                </span>
+                                            </div>
                                         </div>
 
-                                        {Object.entries(sections.elective).length > 0 ? (
+                                        {Object.keys(sections.elective).length > 0 ? (
                                             <div className="space-y-6">
-                                                {Object.entries(sections.elective).map(([subject, questions]) => (
-                                                    <div key={subject} className="bg-white/5 rounded-xl p-4 border border-white/5">
-                                                        <h5 className="text-white font-bold mb-3 flex items-center gap-2 text-sm uppercase tracking-wider">
-                                                            <Tag size={14} className="text-purple-400" />
-                                                            {subject} ({questions.length})
-                                                        </h5>
-                                                        <div className="space-y-3">
-                                                            {questions.map((q, idx) => (
-                                                                <QuestionCard
-                                                                    key={q.id}
-                                                                    question={q}
-                                                                    index={idx}
-                                                                    onEdit={handleEdit}
-                                                                    onDelete={handleDelete}
-                                                                />
-                                                            ))}
+                                                {/* Subject Selector Tabs */}
+                                                <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                                                    {Object.keys(sections.elective).map((subject) => (
+                                                        <button
+                                                            key={subject}
+                                                            onClick={() => setActiveElectiveSubject(subject)}
+                                                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 border ${activeElectiveSubject === subject ? 'bg-purple-500 text-white border-purple-500 shadow-lg shadow-purple-500/20' : 'bg-white/5 text-slate-400 border-white/5 hover:bg-white/10 hover:border-white/10 hover:text-white'}`}
+                                                        >
+                                                            <Tag size={14} className={activeElectiveSubject === subject ? 'text-white' : 'text-purple-400'} />
+                                                            {subject}
+                                                            <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${activeElectiveSubject === subject ? 'bg-white/20 text-white' : 'bg-black/20 text-slate-500'}`}>
+                                                                {sections.elective[subject].length}
+                                                            </span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+
+                                                {/* Selected Subject Questions */}
+                                                {activeElectiveSubject && sections.elective[activeElectiveSubject] && (
+                                                    <div className="animate-fade-in bg-black/20 rounded-xl border border-white/5 overflow-hidden">
+                                                        <div className="px-6 py-4 bg-gradient-to-r from-purple-500/10 to-transparent border-b border-purple-500/10 flex items-center justify-between">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="p-1.5 bg-purple-500/20 rounded-lg">
+                                                                    <List size={16} className="text-purple-400" />
+                                                                </div>
+                                                                <h5 className="font-bold text-purple-200 capitalize text-lg">{activeElectiveSubject} Questions</h5>
+                                                            </div>
+                                                        </div>
+                                                        <div className="p-6 grid md:grid-cols-2 gap-4">
+                                                            <DraggableQuestionList
+                                                                questions={questions.filter(q =>
+                                                                    q.category === setName &&
+                                                                    q.section === 'elective' &&
+                                                                    q.subsection === activeElectiveSubject
+                                                                )}
+                                                                onReorder={handleReorder}
+                                                                onEdit={handleEdit}
+                                                                onDelete={handleDelete}
+                                                                type="elective"
+                                                            />
                                                         </div>
                                                     </div>
-                                                ))}
+
+                                                )}
                                             </div>
                                         ) : (
-                                            <div className="p-8 text-center bg-white/5 rounded-xl border border-dashed border-white/10">
-                                                <p className="text-slate-500 text-sm">No elective questions in this set.</p>
+                                            <div className="p-12 text-center bg-black/20 rounded-xl border border-dashed border-white/10">
+                                                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                    <Tag size={24} className="text-slate-600" />
+                                                </div>
+                                                <p className="text-slate-400 font-medium">No elective questions added yet</p>
+                                                <p className="text-slate-500 text-sm mt-1">Add general questions first, then add electives</p>
                                             </div>
                                         )}
                                     </div>
@@ -643,64 +994,33 @@ export default function AdminQuestions() {
                     </div>
                 </div>
             )}
-        </div>
+
+
+            {/* Confirm Modal */}
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                onConfirm={confirmModal.onConfirm}
+                onClose={() => setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: null })}
+                type="danger"
+            />
+
+            {/* Mobile Preview Overlay */}
+            {
+                mobilePreview && (
+                    <MobilePreview
+                        onClose={() => setMobilePreview(false)}
+                        questions={questions}
+                        activeSet={Object.keys(groupedData)[0] || 'Set A'}
+                        criteriaName={criteriaList.find(c => c.id === activeCriteriaId)?.name}
+                    />
+                )
+            }
+        </div >
     );
 }
 
-function CriteriaTabs({ criteria, activeTab, onTabChange }) {
-    return (
-        <div className="flex gap-2 p-1 bg-white/5 rounded-xl overflow-x-auto no-scrollbar mb-6">
-            {criteria.map((c) => (
-                <button
-                    key={c.id}
-                    onClick={() => onTabChange(c.id)}
-                    className={`
-                        px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all
-                        ${activeTab === c.id
-                            ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20'
-                            : 'text-slate-400 hover:text-white hover:bg-white/5'
-                        }
-                    `}
-                >
-                    {c.name}
-                </button>
-            ))}
-        </div>
-    );
-}
-
-function QuestionCard({ question, index, onEdit, onDelete }) {
-    return (
-        <div className="bg-slate-900/40 rounded-lg p-4 group hover:bg-slate-800/60 transition-colors border border-transparent hover:border-white/5">
-            <div className="flex justify-between items-start gap-4">
-                <div className="flex gap-3">
-                    <span className="text-slate-500 font-mono text-xs pt-1">0{index + 1}</span>
-                    <div>
-                        <p className="text-slate-300 text-sm font-medium leading-relaxed line-clamp-2">{question.question_text}</p>
-                        <div className="flex gap-2 mt-2">
-                            <span className="text-[10px] uppercase font-bold text-slate-500 bg-white/5 px-2 py-0.5 rounded">
-                                {question.correct_option ? `Ans: ${question.correct_option.toUpperCase()}` : 'No Ans'}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                        onClick={() => onEdit(question)}
-                        className="p-1.5 text-cyan-400 hover:bg-cyan-500/10 rounded-lg transition-colors"
-                        title="Edit"
-                    >
-                        <Edit2 size={14} />
-                    </button>
-                    <button
-                        onClick={() => onDelete(question.id)}
-                        className="p-1.5 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                        title="Delete"
-                    >
-                        <Trash2 size={14} />
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-}
+// Components extracted to separate files:
+// - CriteriaTabs: @/components/admin/questions/CriteriaTabs.jsx
+// - QuestionCard: @/components/admin/questions/QuestionCard.jsx

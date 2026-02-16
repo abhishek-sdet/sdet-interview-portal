@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS criteria (
   name TEXT NOT NULL UNIQUE,
   description TEXT,
   passing_percentage INTEGER NOT NULL DEFAULT 70 CHECK (passing_percentage >= 0 AND passing_percentage <= 100),
+  sub_heading TEXT,
+  timer_duration INTEGER DEFAULT 45,
   is_active BOOLEAN DEFAULT true,
   metadata JSONB DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT NOW(),

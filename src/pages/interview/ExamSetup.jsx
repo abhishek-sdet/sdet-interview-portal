@@ -10,6 +10,7 @@ export default function ExamSetup() {
     const [sets, setSets] = useState([]);
     const [selectedSet, setSelectedSet] = useState(null);
     const [selectedSubject, setSelectedSubject] = useState(null);
+    const [isLocked, setIsLocked] = useState(false);
 
     // Subject options for Elective section
     // In a real app, we could fetch these dynamically if valid subjects are stored in DB
@@ -31,6 +32,20 @@ export default function ExamSetup() {
             navigate('/');
             return;
         }
+
+        // Check for existing lock
+        const savedConfig = sessionStorage.getItem('examConfig');
+        if (savedConfig) {
+            try {
+                const config = JSON.parse(savedConfig);
+                setSelectedSet(config.set);
+                setSelectedSubject(config.subject);
+                setIsLocked(true);
+            } catch (e) {
+                console.error('Error parsing saved config', e);
+            }
+        }
+
         fetchAvailableSets();
     }, []);
 
@@ -112,6 +127,16 @@ export default function ExamSetup() {
                     </p>
                 </div>
 
+                {isLocked && (
+                    <div className="max-w-4xl mx-auto mb-8 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center gap-3 text-amber-200">
+                        <CheckCircle2 className="shrink-0" />
+                        <div>
+                            <p className="font-bold">Selection Locked</p>
+                            <p className="text-sm opacity-80">You have already confirmed your choices. You cannot change them now.</p>
+                        </div>
+                    </div>
+                )}
+
                 <div className="grid md:grid-cols-2 gap-8 mb-12">
                     {/* Step 1: Select Set */}
                     <div className="glass-panel p-8 rounded-2xl animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
@@ -125,10 +150,11 @@ export default function ExamSetup() {
                                 {sets.map((set) => (
                                     <button
                                         key={set}
-                                        onClick={() => setSelectedSet(set)}
+                                        onClick={() => !isLocked && setSelectedSet(set)}
+                                        disabled={isLocked}
                                         className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all ${selectedSet === set
-                                                ? 'bg-cyan-500/20 border-cyan-400 shadow-lg shadow-cyan-500/20'
-                                                : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
+                                            ? 'bg-cyan-500/20 border-cyan-400 shadow-lg shadow-cyan-500/20'
+                                            : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
@@ -161,10 +187,11 @@ export default function ExamSetup() {
                                 return (
                                     <button
                                         key={subject.id}
-                                        onClick={() => setSelectedSubject(subject.id)}
+                                        onClick={() => !isLocked && setSelectedSubject(subject.id)}
+                                        disabled={isLocked}
                                         className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all group ${selectedSubject === subject.id
-                                                ? 'bg-purple-500/20 border-purple-400 shadow-lg shadow-purple-500/20'
-                                                : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
+                                            ? 'bg-purple-500/20 border-purple-400 shadow-lg shadow-purple-500/20'
+                                            : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">

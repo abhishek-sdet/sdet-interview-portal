@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { Loader2, CheckCircle2, Circle } from 'lucide-react';
+import { Loader2, CheckCircle2, Circle, AlertTriangle, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CriteriaSelection() {
     const navigate = useNavigate();
@@ -11,6 +12,8 @@ export default function CriteriaSelection() {
     const [error, setError] = useState('');
     const [candidateName, setCandidateName] = useState('');
     const [mounted, setMounted] = useState(false);
+    const [showConfirmation, setShowConfirmation] = useState(false);
+    const [pendingCriteria, setPendingCriteria] = useState(null);
 
     useEffect(() => {
         setMounted(true);
@@ -144,7 +147,18 @@ export default function CriteriaSelection() {
                         return (
                             <button
                                 key={item.id}
-                                onClick={() => setSelectedCriteria(item)}
+                                onClick={() => {
+                                    // Check if this is an experienced criteria
+                                    const isExperienced = item.name?.toLowerCase().includes('experienced') ||
+                                        item.name?.toLowerCase().includes('testing background');
+
+                                    if (isExperienced) {
+                                        setPendingCriteria(item);
+                                        setShowConfirmation(true);
+                                    } else {
+                                        setSelectedCriteria(item);
+                                    }
+                                }}
                                 disabled={loading}
                                 className={`
                                     relative p-8 rounded-3xl border text-left group transition-all duration-500 overflow-hidden
@@ -164,6 +178,11 @@ export default function CriteriaSelection() {
                                         <h3 className={`text-xl font-bold transition-colors ${isSelected ? 'text-white' : 'text-slate-200 group-hover:text-white'}`}>
                                             {item.name}
                                         </h3>
+                                        {item.sub_heading && (
+                                            <div className={`text-sm font-medium mb-1 ${isSelected ? 'text-blue-300' : 'text-blue-400/80 group-hover:text-blue-300'}`}>
+                                                {item.sub_heading}
+                                            </div>
+                                        )}
                                         <p className="text-slate-400 text-sm leading-relaxed max-w-xs">
                                             {item.description || 'Suitable for this experience level.'}
                                         </p>
@@ -214,6 +233,79 @@ export default function CriteriaSelection() {
                         </span>
                     </button>
                 </div>
+
+                {/* Confirmation Modal for Experienced Selection */}
+                <AnimatePresence>
+                    {showConfirmation && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                            {/* Backdrop */}
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setShowConfirmation(false)}
+                                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                            />
+
+                            {/* Modal */}
+                            <motion.div
+                                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                                className="relative bg-[#0b101b] border border-white/10 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+                            >
+                                {/* Header */}
+                                <div className="p-6 border-b border-white/5 bg-white/5 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400">
+                                            <AlertTriangle size={24} />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-bold text-white">Confirm Selection</h3>
+                                            <p className="text-sm text-slate-400">Please verify your choice</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowConfirmation(false)}
+                                        className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                                    >
+                                        <X size={20} />
+                                    </button>
+                                </div>
+
+                                {/* Content */}
+                                <div className="p-6">
+                                    <p className="text-slate-300 text-lg mb-2">
+                                        Are you sure you want to opt for <span className="font-bold text-white">Experienced</span>?
+                                    </p>
+                                    <p className="text-slate-400 text-sm">
+                                        This will customize your interview for candidates with testing experience.
+                                    </p>
+                                </div>
+
+                                {/* Footer Actions */}
+                                <div className="p-6 border-t border-white/5 bg-white/5 flex gap-4">
+                                    <button
+                                        onClick={() => setShowConfirmation(false)}
+                                        className="flex-1 px-4 py-3 rounded-xl font-bold bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-all text-sm uppercase tracking-wide"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setSelectedCriteria(pendingCriteria);
+                                            setShowConfirmation(false);
+                                            setPendingCriteria(null);
+                                        }}
+                                        className="flex-1 px-4 py-3 rounded-xl font-bold bg-gradient-to-r from-brand-blue to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-lg shadow-blue-500/20 transition-all text-sm uppercase tracking-wide"
+                                    >
+                                        Confirm
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );

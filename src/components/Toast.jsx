@@ -73,10 +73,11 @@ export function ToastProvider({ children }) {
 }
 
 // Helper functions for consistent toast usage
+// Helper functions for consistent toast usage
 export const showToast = {
-    success: (message) => toast.success(message, toastStyles.success),
-    error: (message) => toast.error(message, toastStyles.error),
-    loading: (message) => toast.loading(message, toastStyles.loading),
+    success: (message, options = {}) => toast.success(message, { ...toastStyles.success, ...options }),
+    error: (message, options = {}) => toast.error(message, { ...toastStyles.error, ...options }),
+    loading: (message, options = {}) => toast.loading(message, { ...toastStyles.loading, ...options }),
     dismiss: (toastId) => toast.dismiss(toastId),
 };
 

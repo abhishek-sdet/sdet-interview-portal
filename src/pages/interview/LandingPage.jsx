@@ -46,6 +46,19 @@ export default function LandingPage() {
             return;
         }
 
+        // Phone number validation
+        if (!formData.phone.trim()) {
+            setError('Phone number is required');
+            return;
+        }
+
+        // Basic phone validation (10 digits)
+        const phoneRegex = /^[0-9]{10}$/;
+        if (!phoneRegex.test(formData.phone.trim())) {
+            setError('Please enter a valid 10-digit phone number');
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -55,7 +68,7 @@ export default function LandingPage() {
                     {
                         full_name: formData.fullName.trim(),
                         email: formData.email.trim(),
-                        phone: formData.phone.trim() || null
+                        phone: formData.phone.trim()
                     }
                 ])
                 .select()
@@ -66,7 +79,11 @@ export default function LandingPage() {
             sessionStorage.setItem('candidateId', data.id);
             sessionStorage.setItem('candidateName', data.full_name);
 
-            navigate('/criteria-selection');
+            navigate('/exam-rules', {
+                state: {
+                    candidateData: data
+                }
+            });
         } catch (err) {
             console.error('Error creating candidate:', err);
             setError('Failed to register. Please try again.');
@@ -196,7 +213,7 @@ export default function LandingPage() {
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider ml-1">Phone <span className="text-slate-600 font-normal opacity-50">(Optional)</span></label>
+                                        <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider ml-1">Phone</label>
                                         <div className="relative group/input">
                                             <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/input:text-brand-blue transition-colors" />
                                             <input
@@ -204,7 +221,10 @@ export default function LandingPage() {
                                                 value={formData.phone}
                                                 onChange={handleChange('phone')}
                                                 className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-10 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue/50 transition-all font-medium text-sm"
-                                                placeholder="+91 Phone number"
+                                                placeholder="10-digit phone number"
+                                                required
+                                                maxLength="10"
+                                                pattern="[0-9]{10}"
                                             />
                                         </div>
                                     </div>

@@ -29,13 +29,13 @@ export default function SetSelection() {
         try {
             const { data, error } = await supabase
                 .from('questions')
-                .select('set_name')
+                .select('category')
                 .eq('criteria_id', criteriaId)
                 .eq('is_active', true);
 
             if (error) throw error;
 
-            const uniqueSetNames = [...new Set(data.map(q => q.set_name).filter(Boolean))];
+            const uniqueSetNames = [...new Set(data.map(q => q.category).filter(Boolean))];
 
             const availableSets = uniqueSetNames.map((name, index) => ({
                 id: name,

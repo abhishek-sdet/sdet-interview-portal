@@ -1,397 +1,267 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import SimpleLayout from '@/components/admin/SimpleLayout';
 import { supabase } from '@/lib/supabase';
-import { Calendar, X } from 'lucide-react';
+import { Users, CheckCircle2, TrendingUp, Upload, FileText, Calendar } from 'lucide-react';
 
 export default function AdminDashboard() {
+    const navigate = useNavigate();
     const [stats, setStats] = useState({
-        totalCandidates: 0,
-        totalInterviews: 0,
-        qualified: 0,
-        notQualified: 0,
-        successRate: 0,
-        inProgress: 0
+        totalToday: 0,
+        completedToday: 0,
+        passedToday: 0,
+        passRate: 0,
+        recentActivity: []
     });
-    const [recentResults, setRecentResults] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [selectedDate, setSelectedDate] = useState(null);
-    const [upcomingSchedules, setUpcomingSchedules] = useState([]);
 
     useEffect(() => {
-        fetchDashboardData();
-    }, [selectedDate]);
+        checkAuth();
+        fetchTodayStats();
 
-    const fetchDashboardData = async () => {
+        // Subscribe to real-time changes
+        const subscription = supabase
+            .channel('admin-dashboard-channel')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'interviews' },
+                (payload) => {
+                    console.log('Real-time update:', payload);
+                    fetchTodayStats();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            subscription.unsubscribe();
+        };
+    }, []);
+
+    const checkAuth = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            navigate('/admin/login');
+        }
+    };
+
+    const fetchTodayStats = async () => {
         try {
-            // Fetch stats
-            let interviewsQuery = supabase.from('interviews').select('*');
+            const today = new Date().toISOString().split('T')[0];
 
-            // Apply date filter if selected
-            if (selectedDate) {
-                // Use local string comparison to avoid timezone issues
-                // We filter in memory or we need a robust DB query.
-                // Since Supabase filtering by date string on timestampz is tricky with timezones,
-                // let's try to filter by range roughly or exact string match if possible.
-                // Actually, the previous 'gte/lte' was correct IF selectedDate was correct.
-                // But let's align with AdminResults logic if possible?
-                // AdminResults filters IN MEMORY. Here we query DB.
-                // For DB query, we need start/end of day in UTC.
-                // If user selects "2023-10-27" (Local), we want 00:00 to 23:59 LOCAL.
-                // So we construct Local Date, then toISOString?
-                // new Date("2023-10-27") -> UTC 00:00.
-                // new Date("2023-10-27T00:00:00") -> Local 00:00.
-                // So:
-                const startLocal = new Date(`${selectedDate}T00:00:00`);
-                const endLocal = new Date(`${selectedDate}T23:59:59.999`);
+            // Get today's interviews
+            const { data: interviews, error } = await supabase
+                .from('interviews')
+                .select('*')
+                .gte('started_at', `${today}T00:00:00`)
+                .lte('started_at', `${today}T23:59:59`);
 
-                interviewsQuery = interviewsQuery
-                    .gte('started_at', startLocal.toISOString())
-                    .lte('started_at', endLocal.toISOString());
-            }
+            if (error) throw error;
 
-            const { data: interviews, error: interviewsError } = await interviewsQuery;
+            const total = interviews?.length || 0;
+            const completed = interviews?.filter(i => i.status === 'completed').length || 0;
+            const passed = interviews?.filter(i => i.passed === true).length || 0;
+            const passRate = completed > 0 ? ((passed / completed) * 100).toFixed(1) : 0;
 
-            if (interviewsError) throw interviewsError;
-
-            const completed = interviews.filter(i => i.status === 'completed');
-            const qualified = completed.filter(i => i.passed).length;
-            const notQualified = completed.filter(i => !i.passed).length;
-            const inProgress = interviews.filter(i => i.status === 'in_progress').length;
-
-            const { data: candidates } = await supabase
-                .from('candidates')
-                .select('id');
+            // Get recent 5 interviews for activity feed
+            const { data: recent, error: recentError } = await supabase
+                .from('interviews')
+                .select(`
+                    *,
+                    candidates(full_name),
+                    criteria(name)
+                `)
+                .order('completed_at', { ascending: false })
+                .limit(5);
 
             setStats({
-                totalCandidates: candidates?.length || 0,
-                totalInterviews: interviews.length,
-                qualified,
-                notQualified,
-                successRate: completed.length > 0 ? ((qualified / completed.length) * 100).toFixed(1) : 0,
-                inProgress
+                totalToday: total,
+                completedToday: completed,
+                passedToday: passed,
+                passRate,
+                recentActivity: recent || []
             });
-
-            // Fetch recent results with date filter
-            let resultsQuery = supabase
-                .from('results')
-                .select('*')
-                .order('started_at', { ascending: false })
-                .limit(10);
-
-            if (selectedDate) {
-                const startLocal = new Date(`${selectedDate}T00:00:00`);
-                const endLocal = new Date(`${selectedDate}T23:59:59.999`);
-
-                resultsQuery = resultsQuery
-                    .gte('started_at', startLocal.toISOString())
-                    .lte('started_at', endLocal.toISOString());
-            }
-
-            const { data: results, error: resultsError } = await resultsQuery;
-
-            if (resultsError) throw resultsError;
-            setRecentResults(results || []);
-
-            // Fetch upcoming schedules (only if no date filter)
-            if (!selectedDate) {
-                const today = new Date().toISOString().split('T')[0];
-                const { data: schedules, error: schedulesError } = await supabase
-                    .from('scheduled_interviews_view')
-                    .select('*')
-                    .gte('scheduled_date', today)
-                    .eq('is_active', true)
-                    .order('scheduled_date')
-                    .limit(5);
-
-                if (!schedulesError) {
-                    setUpcomingSchedules(schedules || []);
-                }
-            }
         } catch (err) {
-            console.error('Error fetching dashboard data:', err);
+            console.error('Error fetching stats:', err);
         } finally {
             setLoading(false);
         }
     };
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center py-20 min-h-[60vh]">
-                <div className="relative">
-                    <div className="absolute inset-0 bg-cyan-500 blur-xl opacity-20 animate-pulse"></div>
-                    <div className="relative animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-cyan-400"></div>
+    const StatCard = ({ icon: Icon, label, value, color, sublabel }) => (
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6 hover:border-white/20 transition-all">
+            <div className="flex items-start justify-between mb-4">
+                <div className={`p-3 rounded-lg bg-${color}-500/10`}>
+                    <Icon className={`w-6 h-6 text-${color}-400`} />
                 </div>
             </div>
+            <div className="text-3xl font-bold text-white mb-1">{value}</div>
+            <div className="text-sm text-slate-400">{label}</div>
+            {sublabel && <div className="text-xs text-slate-500 mt-1">{sublabel}</div>}
+        </div>
+    );
+
+    if (loading) {
+        return (
+            <SimpleLayout>
+                <div className="flex items-center justify-center h-64">
+                    <div className="w-8 h-8 border-2 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin"></div>
+                </div>
+            </SimpleLayout>
         );
     }
 
     return (
-        <div className="space-y-8 animate-fade-in">
-            {/* Header Section */}
-            <div className="flex items-center justify-between flex-wrap gap-4">
+        <SimpleLayout>
+            <div className="space-y-8">
+                {/* Header */}
                 <div>
-                    <h2 className="text-3xl font-bold text-white tracking-tight mb-2">Dashboard Overview</h2>
-                    <p className="text-slate-400">
-                        {selectedDate
-                            ? `Showing data for ${new Date(selectedDate).toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`
-                            : 'Real-time insights and recruitment metrics.'}
+                    <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
+                    <p className="text-slate-400 flex items-center gap-2">
+                        <Calendar size={16} />
+                        {new Date().toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        })}
                     </p>
                 </div>
-                <div className="flex gap-3">
-                    {/* Date Filter */}
-                    <div className="flex items-center gap-2 glass-panel px-4 py-2 rounded-xl">
-                        <Calendar size={18} className="text-cyan-400" />
-                        <input
-                            type="date"
-                            value={selectedDate || ''}
-                            onChange={(e) => setSelectedDate(e.target.value || null)}
-                            className="bg-transparent border-none text-white text-sm focus:outline-none cursor-pointer"
-                        />
-                    </div>
-                    {selectedDate && (
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <StatCard
+                        icon={Users}
+                        label="Total Candidates"
+                        value={stats.totalToday}
+                        color="blue"
+                        sublabel="Registered today"
+                    />
+                    <StatCard
+                        icon={CheckCircle2}
+                        label="Completed"
+                        value={stats.completedToday}
+                        color="green"
+                        sublabel="Finished assessments"
+                    />
+                    <StatCard
+                        icon={TrendingUp}
+                        label="Passed"
+                        value={stats.passedToday}
+                        color="emerald"
+                        sublabel="Met passing criteria"
+                    />
+                    <StatCard
+                        icon={TrendingUp}
+                        label="Pass Rate"
+                        value={`${stats.passRate}%`}
+                        color="purple"
+                        sublabel="Success percentage"
+                    />
+                </div>
+
+                {/* Quick Actions */}
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-8">
+                    <h2 className="text-xl font-bold text-white mb-6">Quick Actions</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <button
-                            onClick={() => setSelectedDate(null)}
-                            className="glass-button flex items-center gap-2"
+                            onClick={() => navigate('/admin/upload')}
+                            className="flex items-center gap-4 p-6 bg-brand-blue/10 hover:bg-brand-blue/20 border border-brand-blue/20 hover:border-brand-blue/40 rounded-xl transition-all group"
                         >
-                            <X size={18} />
-                            Clear Filter
+                            <div className="p-3 bg-brand-blue/20 rounded-lg group-hover:scale-110 transition-transform">
+                                <Upload className="w-6 h-6 text-brand-blue" />
+                            </div>
+                            <div className="text-left">
+                                <div className="font-bold text-white mb-1">Upload Questions</div>
+                                <div className="text-sm text-slate-400">Import questions from Word document</div>
+                            </div>
                         </button>
-                    )}
-                    <button
-                        onClick={fetchDashboardData}
-                        className="glass-button flex items-center gap-2 hover:bg-cyan-500/10 hover:text-cyan-400"
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                        Refresh
-                    </button>
-                    <button className="glass-button-primary flex items-center gap-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                        Download Report
-                    </button>
-                </div>
-            </div>
 
-            {/* Quick Actions Section */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Link to="/admin/schedule" className="glass-panel p-4 rounded-xl flex items-center gap-3 hover:bg-cyan-500/10 transition-colors group">
-                    <div className="p-2 bg-cyan-500/20 rounded-lg group-hover:scale-110 transition-transform">
-                        <span className="text-xl">📅</span>
-                    </div>
-                    <div>
-                        <h3 className="font-bold text-white text-sm">Schedule Interview</h3>
-                        <p className="text-xs text-slate-400">Create new sessions</p>
-                    </div>
-                </Link>
-                <Link to="/admin/results" className="glass-panel p-4 rounded-xl flex items-center gap-3 hover:bg-emerald-500/10 transition-colors group">
-                    <div className="p-2 bg-emerald-500/20 rounded-lg group-hover:scale-110 transition-transform">
-                        <span className="text-xl">📈</span>
-                    </div>
-                    <div>
-                        <h3 className="font-bold text-white text-sm">View Results</h3>
-                        <p className="text-xs text-slate-400">Analyze performance</p>
-                    </div>
-                </Link>
-                <Link to="/admin/questions" className="glass-panel p-4 rounded-xl flex items-center gap-3 hover:bg-purple-500/10 transition-colors group">
-                    <div className="p-2 bg-purple-500/20 rounded-lg group-hover:scale-110 transition-transform">
-                        <span className="text-xl">❓</span>
-                    </div>
-                    <div>
-                        <h3 className="font-bold text-white text-sm">Manage Questions</h3>
-                        <p className="text-xs text-slate-400">Update question bank</p>
-                    </div>
-                </Link>
-                <Link to="/admin/criteria" className="glass-panel p-4 rounded-xl flex items-center gap-3 hover:bg-orange-500/10 transition-colors group">
-                    <div className="p-2 bg-orange-500/20 rounded-lg group-hover:scale-110 transition-transform">
-                        <span className="text-xl">📋</span>
-                    </div>
-                    <div>
-                        <h3 className="font-bold text-white text-sm">Update Criteria</h3>
-                        <p className="text-xs text-slate-400">Set passing marks</p>
-                    </div>
-                </Link>
-            </div>
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard
-                    label="Total Candidates"
-                    value={stats.totalCandidates}
-                    icon="👥"
-                    color="cyan"
-                    trend="+12%"
-                />
-                <StatCard
-                    label="Qualified"
-                    value={stats.qualified}
-                    icon="✅"
-                    color="green"
-                    trend="+5%"
-                />
-                <StatCard
-                    label="Not Qualified"
-                    value={stats.notQualified}
-                    icon="❌"
-                    color="red"
-                    trend="-2%"
-                />
-                <StatCard
-                    label="Success Rate"
-                    value={`${stats.successRate}%`}
-                    icon="📊"
-                    color="blue"
-                    subtext="Based on completed interviews"
-                />
-            </div>
-
-            {/* Upcoming Schedules Section */}
-            {!selectedDate && upcomingSchedules.length > 0 && (
-                <div className="glass-panel rounded-2xl p-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                            <Calendar size={20} className="text-cyan-400" />
-                            Upcoming Scheduled Interviews
-                        </h3>
-                        <Link to="/admin/schedule" className="text-cyan-400 hover:text-cyan-300 text-sm flex items-center gap-1">
-                            View All →
-                        </Link>
-                    </div>
-                    <div className="space-y-3">
-                        {upcomingSchedules.length > 0 ? (
-                            upcomingSchedules.map((schedule) => (
-                                <div key={schedule.id} className="glass-panel p-4 rounded-xl flex items-center justify-between hover:bg-white/10 transition-all">
-                                    <div className="flex items-center gap-4">
-                                        <div className="p-2 bg-cyan-500/20 rounded-lg">
-                                            <Calendar size={18} className="text-cyan-400" />
-                                        </div>
-                                        <div>
-                                            <h4 className="text-white font-medium">{schedule.criteria_name}</h4>
-                                            <p className="text-sm text-slate-400">
-                                                {new Date(schedule.scheduled_date).toLocaleDateString('en-IN', {
-                                                    weekday: 'short',
-                                                    month: 'short',
-                                                    day: 'numeric'
-                                                })} • {schedule.time_limit_minutes} min
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="text-white font-medium">{schedule.total_interviews} / {schedule.max_candidates || '∞'}</div>
-                                        <div className="text-xs text-slate-400">candidates</div>
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="text-center text-slate-400 py-4">No upcoming schedules</div>
-                        )}
+                        <button
+                            onClick={() => navigate('/admin/results')}
+                            className="flex items-center gap-4 p-6 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 hover:border-purple-500/40 rounded-xl transition-all group"
+                        >
+                            <div className="p-3 bg-purple-500/20 rounded-lg group-hover:scale-110 transition-transform">
+                                <FileText className="w-6 h-6 text-purple-400" />
+                            </div>
+                            <div className="text-left">
+                                <div className="font-bold text-white mb-1">View Results</div>
+                                <div className="text-sm text-slate-400">Check candidate scores and performance</div>
+                            </div>
+                        </button>
                     </div>
                 </div>
-            )}
 
-            {/* Recent Results Table */}
-            <div className="glass-panel rounded-2xl p-6 overflow-hidden">
-                <div className="flex items-center justify-between mb-6">
-                    <div>
-                        <h2 className="text-xl font-bold text-white mb-1">Recent Results</h2>
-                        <p className="text-sm text-slate-400">Latest candidate submissions</p>
-                    </div>
-                    <Link to="/admin/results" className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors">
-                        View All Results &rarr;
-                    </Link>
-                </div>
-
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead>
-                            <tr className="border-b border-white/5">
-                                <th className="text-left py-4 px-4 text-xs uppercase text-slate-500 font-bold tracking-wider">Candidate</th>
-                                <th className="text-left py-4 px-4 text-xs uppercase text-slate-500 font-bold tracking-wider">Criteria</th>
-                                <th className="text-left py-4 px-4 text-xs uppercase text-slate-500 font-bold tracking-wider">Score</th>
-                                <th className="text-left py-4 px-4 text-xs uppercase text-slate-500 font-bold tracking-wider">Percentage</th>
-                                <th className="text-left py-4 px-4 text-xs uppercase text-slate-500 font-bold tracking-wider">Status</th>
-                                <th className="text-left py-4 px-4 text-xs uppercase text-slate-500 font-bold tracking-wider">Date</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                            {recentResults.map((result) => (
-                                <tr key={result.interview_id} className="hover:bg-white/5 transition-colors group">
-                                    <td className="py-4 px-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-cyan-400 border border-white/10 group-hover:border-cyan-500/50 transition-colors">
-                                                {result.full_name?.charAt(0)}
-                                            </div>
-                                            <span className="text-white font-medium group-hover:text-cyan-400 transition-colors">{result.full_name}</span>
-                                        </div>
-                                    </td>
-                                    <td className="py-4 px-4 text-slate-400 text-sm">{result.criteria_name}</td>
-                                    <td className="py-4 px-4 text-white font-mono text-sm">{result.score}/{result.total_questions}</td>
-                                    <td className="py-4 px-4">
-                                        <div className="w-full bg-slate-800 rounded-full h-1.5 w-24 mb-1">
-                                            <div
-                                                className={`h-1.5 rounded-full ${result.passed ? 'bg-green-500' : 'bg-red-500'}`}
-                                                style={{ width: `${result.percentage}%` }}
-                                            ></div>
-                                        </div>
-                                        <span className={`text-xs font-bold ${result.passed ? 'text-green-400' : 'text-red-400'}`}>
-                                            {result.percentage}%
-                                        </span>
-                                    </td>
-                                    <td className="py-4 px-4">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${result.passed
-                                            ? 'bg-green-500/10 text-green-400 border-green-500/20'
-                                            : 'bg-red-500/10 text-red-400 border-red-500/20'
-                                            }`}>
-                                            {result.passed ? 'QUALIFIED' : 'NOT QUALIFIED'}
-                                        </span>
-                                    </td>
-                                    <td className="py-4 px-4 text-slate-500 text-sm">
-                                        {new Date(result.completed_at).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-
-                    {recentResults.length === 0 && (
-                        <div className="text-center py-12 text-slate-400">
-                            No recent results found
+                {/* Interview Date Reminder */}
+                <div className="bg-gradient-to-r from-brand-orange/10 to-red-500/10 border border-brand-orange/20 rounded-xl p-6">
+                    <div className="flex items-start gap-4">
+                        <div className="p-3 bg-brand-orange/20 rounded-lg">
+                            <Calendar className="w-6 h-6 text-brand-orange" />
                         </div>
-                    )}
+                        <div>
+                            <h3 className="font-bold text-white mb-1">Upcoming Interview</h3>
+                            <p className="text-slate-300 text-sm mb-2">
+                                Scheduled for <span className="font-bold text-brand-orange">February 21, 2026</span>
+                            </p>
+                            <p className="text-slate-400 text-xs">
+                                {Math.ceil((new Date('2026-02-21') - new Date()) / (1000 * 60 * 60 * 24))} days remaining
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {/* Recent Activity Table */}
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden">
+                    <div className="p-6 border-b border-white/10 flex justify-between items-center">
+                        <h2 className="text-xl font-bold text-white">Recent Activity</h2>
+                        <button
+                            onClick={() => navigate('/admin/results')}
+                            className="text-sm text-brand-blue hover:text-brand-blue/80 transition-colors"
+                        >
+                            View All Results
+                        </button>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead className="bg-white/5 border-b border-white/10">
+                                <tr>
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Candidate</th>
+                                    <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Score</th>
+                                    <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
+                                    <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-wider">Time</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                                {stats.recentActivity?.length > 0 ? (
+                                    stats.recentActivity.map((activity) => (
+                                        <tr key={activity.id} className="hover:bg-white/5 transition-colors">
+                                            <td className="px-6 py-4">
+                                                <div className="font-medium text-white">{activity.candidates?.full_name || 'N/A'}</div>
+                                                <div className="text-xs text-slate-400">{activity.criteria?.name}</div>
+                                            </td>
+                                            <td className="px-6 py-4 text-center font-mono font-bold text-slate-300">
+                                                {activity.score}/{activity.total_questions}
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                {activity.passed ? (
+                                                    <span className="inline-flex px-2 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-green-400 text-xs font-bold">Passed</span>
+                                                ) : (
+                                                    <span className="inline-flex px-2 py-1 bg-red-500/10 border border-red-500/20 rounded-full text-red-400 text-xs font-bold">Failed</span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 text-right text-sm text-slate-400">
+                                                {new Date(activity.completed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="4" className="px-6 py-8 text-center text-slate-500">No recent activity</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
-    );
-}
-
-function StatCard({ label, value, icon, color, trend, subtext }) {
-    const colorStyles = {
-        cyan: { bg: 'from-cyan-500/10 to-blue-500/10', border: 'border-cyan-500/20', text: 'text-cyan-400', shadow: 'shadow-cyan-500/10' },
-        green: { bg: 'from-emerald-500/10 to-green-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400', shadow: 'shadow-emerald-500/10' },
-        red: { bg: 'from-red-500/10 to-orange-500/10', border: 'border-red-500/20', text: 'text-red-400', shadow: 'shadow-red-500/10' },
-        blue: { bg: 'from-blue-500/10 to-indigo-500/10', border: 'border-blue-500/20', text: 'text-blue-400', shadow: 'shadow-blue-500/10' },
-    };
-
-    const style = colorStyles[color];
-
-    return (
-        <div className={`relative overflow-hidden rounded-2xl border ${style.border} bg-gradient-to-br ${style.bg} p-6 transition-all hover:scale-[1.02] hover:shadow-xl ${style.shadow} group`}>
-            {/* Background Glow */}
-            <div className={`absolute -right-6 -top-6 h-24 w-24 rounded-full ${style.text} opacity-10 blur-2xl group-hover:opacity-20 transition-opacity`}></div>
-
-            <div className="relative">
-                <div className="flex items-center justify-between mb-4">
-                    <p className="text-sm font-medium text-slate-400 tracking-wide uppercase">{label}</p>
-                    <span className={`text-2xl opacity-80 group-hover:scale-110 transition-transform duration-300`}>{icon}</span>
-                </div>
-                <div className="flex items-baseline gap-2">
-                    <h3 className="text-3xl font-bold text-white tracking-tight">{value}</h3>
-                    {trend && (
-                        <span className={`text-xs font-medium ${trend.startsWith('+') ? 'text-emerald-400' : 'text-red-400'}`}>
-                            {trend}
-                        </span>
-                    )}
-                </div>
-                {subtext && <p className="mt-1 text-xs text-slate-500">{subtext}</p>}
-            </div>
-        </div>
+        </SimpleLayout>
     );
 }

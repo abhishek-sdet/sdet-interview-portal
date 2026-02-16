@@ -2,67 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import InsightLogo from '@/components/InsightLogo';
 
+import { useTheme } from '@/context/ThemeContext';
+
 export default function ResultsDashboard() {
     const [results, setResults] = useState([]);
     const [filteredResults, setFilteredResults] = useState([]);
     const [stats, setStats] = useState({ total: 0, qualified: 0, notQualified: 0, successRate: 0 });
     const [searchTerm, setSearchTerm] = useState('');
-    const [theme, setTheme] = useState('dark');
+    const { theme, toggleTheme } = useTheme();
     const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        fetchResults();
-
-        // Auto-refresh every 30 seconds
-        const interval = setInterval(fetchResults, 30000);
-        return () => clearInterval(interval);
-    }, []);
-
-    useEffect(() => {
-        // Filter results based on search
-        if (searchTerm.trim() === '') {
-            setFilteredResults(results);
-        } else {
-            const filtered = results.filter(r =>
-                r.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                r.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                r.criteria_name?.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-            setFilteredResults(filtered);
-        }
-    }, [searchTerm, results]);
-
-    const fetchResults = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('results')
-                .select('*')
-                .order('started_at', { ascending: false });
-
-            if (error) throw error;
-
-            setResults(data || []);
-            setFilteredResults(data || []);
-
-            // Calculate stats
-            const qualified = data?.filter(r => r.passed).length || 0;
-            const total = data?.length || 0;
-            setStats({
-                total,
-                qualified,
-                notQualified: total - qualified,
-                successRate: total > 0 ? ((qualified / total) * 100).toFixed(1) : 0
-            });
-        } catch (err) {
-            console.error('Error fetching results:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const toggleTheme = () => {
-        setTheme(theme === 'dark' ? 'light' : 'dark');
-    };
 
     const bgClass = theme === 'dark'
         ? 'bg-slate-900 text-white'
