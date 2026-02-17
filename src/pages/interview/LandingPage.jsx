@@ -106,7 +106,7 @@ export default function LandingPage() {
             {/* Scrollable Content Wrapper */}
             <div className="min-h-full w-full flex items-center justify-center p-4 lg:p-8">
                 {/* Main Content Grid */}
-                <div className={`relative z-10 w-full max-w-7xl grid lg:grid-cols-12 gap-8 lg:gap-12 items-center transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+                <div className={`relative z-10 w-[90%] max-w-[90%] grid lg:grid-cols-12 gap-8 lg:gap-12 items-center transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
 
                     {/* Left Column: Brand Story (Span 7) */}
                     <div className="lg:col-span-7 space-y-8 text-center lg:text-left pt-6 lg:pt-0">

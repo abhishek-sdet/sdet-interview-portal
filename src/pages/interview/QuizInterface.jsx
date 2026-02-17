@@ -202,6 +202,9 @@ export default function QuizInterface() {
 
     const fetchQuestions = async (criteriaId, savedTimeRemaining = null) => {
         try {
+            // Get interviewId from session storage
+            const interviewId = sessionStorage.getItem('interviewId');
+
             // Get exam configuration from session (set by ExamSetup.jsx)
             const examConfigStr = sessionStorage.getItem('examConfig');
             const examConfig = examConfigStr ? JSON.parse(examConfigStr) : null;
@@ -252,52 +255,82 @@ export default function QuizInterface() {
 
             console.log('[FETCH] Selected elective questions:', selectedElectiveQs.length);
 
-            // Store in refs
-            // Take first 15 general questions
-            generalQuestionsRef.current = generalQs.slice(0, 15);
-            console.log('[FETCH] Stored general questions:', generalQuestionsRef.current.length);
+            // Organize general questions by subsection (5-section structure)
+            // This ensures questions appear in the same order as the admin panel
+            const computerScienceQs = generalQs.filter(q => q.subsection === 'computer_science');
+            const logicalReasoningQs = generalQs.filter(q => q.subsection === 'logical_reasoning');
+            const miscellaneousQs = generalQs.filter(q => q.subsection === 'miscellaneous');
+            const grammarQs = generalQs.filter(q => q.subsection === 'grammar');
+
+            console.log('[FETCH] Computer Science questions:', computerScienceQs.length);
+            console.log('[FETCH] Logical Reasoning questions:', logicalReasoningQs.length);
+            console.log('[FETCH] Miscellaneous Logic questions:', miscellaneousQs.length);
+            console.log('[FETCH] Grammar questions:', grammarQs.length);
+
+            // Combine in order: Computer Science → Logical Reasoning → Miscellaneous → Grammar
+            // This matches the 5-section structure in the admin panel
+            const orderedGeneralQs = [
+                ...computerScienceQs,
+                ...logicalReasoningQs,
+                ...miscellaneousQs,
+                ...grammarQs
+            ];
+
+            // Store in refs - Take first 23 general questions (in subsection order)
+            generalQuestionsRef.current = orderedGeneralQs.slice(0, 23);
+            console.log('[FETCH] Stored general questions (ordered by subsection):', generalQuestionsRef.current.length);
 
             // For backward compatibility with old specialization flow, store by subject
             // But now we use the selected subject directly
             if (selectedSubject) {
-                // Store selected elective questions (take top 3)
+                // Store selected elective questions (take top 7)
                 if (selectedSubject === 'java') {
-                    javaQuestionsRef.current = selectedElectiveQs.slice(0, 3);
+                    javaQuestionsRef.current = selectedElectiveQs.slice(0, 7);
                 } else if (selectedSubject === 'python') {
-                    pythonQuestionsRef.current = selectedElectiveQs.slice(0, 3);
+                    pythonQuestionsRef.current = selectedElectiveQs.slice(0, 7);
                 }
                 // Auto-set specialization since user already chose in ExamSetup
                 setSpecialization(selectedSubject.charAt(0).toUpperCase() + selectedSubject.slice(1));
             } else {
                 // Fallback: if no exam config, populate both for old flow
-                javaQuestionsRef.current = electiveQs.filter(q => q.subsection === 'java').slice(0, 3);
-                pythonQuestionsRef.current = electiveQs.filter(q => q.subsection === 'python').slice(0, 3);
+                javaQuestionsRef.current = electiveQs.filter(q => q.subsection === 'java').slice(0, 7);
+                pythonQuestionsRef.current = electiveQs.filter(q => q.subsection === 'python').slice(0, 7);
             }
 
 
             // Calculate EXPECTED total questions (General + Elective)
-            // We know we take 12 general and 3 elective
-            const expectedTotal = generalQuestionsRef.current.length + 3;
+            // We know we take 23 general and 7 elective
+            const expectedTotal = generalQuestionsRef.current.length + 7;
             setTotalExamQuestions(expectedTotal);
 
-            // Initial State: Show General Questions
-            setQuestions(generalQuestionsRef.current);
+            // NEW: Load ALL 30 questions upfront (23 general + 7 elective)
+            // This ensures the question map shows all questions from the start with a visual separator
+            let electiveQuestionsToShow = [];
 
-            // CHECK RESTORED STATE FOR QUESTIONS
-            // If we restored a specialization, we need to append those questions immediately
-            const interviewId = sessionStorage.getItem('interviewId');
-            const storageKey = `quiz_state_${interviewId}`;
-            const savedStateString = localStorage.getItem(storageKey);
-            if (savedStateString) {
-                const savedState = JSON.parse(savedStateString);
-                if (savedState.specialization) {
-                    const type = savedState.specialization;
-                    const newQuestions = type === 'Java' ? javaQuestionsRef.current : pythonQuestionsRef.current;
-                    // Avoid duplicates if setQuestions already set them (though it shouldn't have yet)
-                    // Actually, setQuestions above only set general questions.
-                    setQuestions(prev => [...prev, ...newQuestions]);
-                }
+            if (selectedSubject) {
+                // Use the selected subject's questions
+                electiveQuestionsToShow = selectedSubject === 'java'
+                    ? (javaQuestionsRef.current || [])
+                    : (pythonQuestionsRef.current || []);
+            } else {
+                // Default to Java if no selection yet, but ensure it's an array
+                electiveQuestionsToShow = javaQuestionsRef.current || [];
             }
+
+            // Safety check: ensure we have valid arrays
+            if (!Array.isArray(electiveQuestionsToShow)) {
+                console.error('[FETCH ERROR] Elective questions is not an array:', electiveQuestionsToShow);
+                electiveQuestionsToShow = [];
+            }
+
+            const allQuestions = [...generalQuestionsRef.current, ...electiveQuestionsToShow];
+            setQuestions(allQuestions);
+
+            console.log('[FETCH] Loaded all questions upfront:', allQuestions.length);
+            console.log('[FETCH] General questions:', generalQuestionsRef.current.length);
+            console.log('[FETCH] Elective questions:', electiveQuestionsToShow.length);
+
+            // Note: Questions are already loaded upfront, no need to append elective questions later
 
             // If total general < 12, we might have an issue, but we proceed with what we have
             if (generalQuestionsRef.current.length < 1) {
@@ -450,10 +483,17 @@ export default function QuizInterface() {
         setPendingSpecialization(null);
         setShowSpecialization(false); // Hide selection UI
 
-        // Append specific questions
-        const newQuestions = type === 'Java' ? javaQuestionsRef.current : pythonQuestionsRef.current;
+        // SWAP elective questions instead of appending
+        // Since we loaded 30 questions upfront (defaulting to Java), we need to replace the last 7
+        // if the user selected a different language (or just re-confirm if same)
+        const newElectiveQuestions = type === 'Java' ? javaQuestionsRef.current : pythonQuestionsRef.current;
 
-        setQuestions(prev => [...prev, ...newQuestions]);
+        setQuestions(prevQuestions => {
+            // Keep general questions (first 23) and append the selected elective questions
+            // precise slice based on generalQuestionsRef length to be safe
+            const generalQs = prevQuestions.slice(0, generalQuestionsRef.current.length);
+            return [...generalQs, ...newElectiveQuestions];
+        });
 
         // Move to next question immediately
         setCurrentIndex(currentIndex + 1);
@@ -804,7 +844,35 @@ export default function QuizInterface() {
     }
 
 
+    // Helper function to get section display name and color
+    const getSectionInfo = (question) => {
+        if (question.section === 'elective') {
+            return {
+                name: question.subsection === 'java' ? 'Java' : 'Python',
+                color: 'purple',
+                bgClass: 'bg-purple-500/10',
+                borderClass: 'border-purple-500/20',
+                textClass: 'text-purple-400'
+            };
+        }
+
+        // General questions - determine by subsection
+        switch (question.subsection) {
+            case 'computer_science':
+                return { name: 'Computer Science', color: 'blue', bgClass: 'bg-blue-500/10', borderClass: 'border-blue-500/20', textClass: 'text-blue-400' };
+            case 'logical_reasoning':
+                return { name: 'Logical Reasoning', color: 'green', bgClass: 'bg-green-500/10', borderClass: 'border-green-500/20', textClass: 'text-green-400' };
+            case 'miscellaneous':
+                return { name: 'Miscellaneous Logic', color: 'yellow', bgClass: 'bg-yellow-500/10', borderClass: 'border-yellow-500/20', textClass: 'text-yellow-400' };
+            case 'grammar':
+                return { name: 'Grammar', color: 'pink', bgClass: 'bg-pink-500/10', borderClass: 'border-pink-500/20', textClass: 'text-pink-400' };
+            default:
+                return { name: 'General', color: 'slate', bgClass: 'bg-slate-500/10', borderClass: 'border-slate-500/20', textClass: 'text-slate-400' };
+        }
+    };
+
     const currentQuestion = questions[currentIndex];
+    const currentSectionInfo = currentQuestion ? getSectionInfo(currentQuestion) : null;
 
     // Safety check to prevent blank screen crash
     if (!currentQuestion) {
@@ -900,6 +968,19 @@ export default function QuizInterface() {
             <div className="fixed top-4 right-4 z-40 flex justify-end pointer-events-none">
                 <div className="bg-[#0b101b]/90 backdrop-blur-xl border border-white/10 rounded-full px-5 py-2 shadow-2xl flex items-center gap-5 pointer-events-auto hover:border-brand-blue/30 transition-colors">
 
+                    {/* Current Section Badge - NEW */}
+                    {currentSectionInfo && (
+                        <>
+                            <div className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider ${currentSectionInfo.bgClass} ${currentSectionInfo.textClass} border ${currentSectionInfo.borderClass} transition-colors duration-300`}>
+                                <span className="opacity-70">SECTION:</span>
+                                <span>{currentSectionInfo.name}</span>
+                            </div>
+
+                            {/* Divider */}
+                            <div className="hidden sm:block h-6 w-[1px] bg-white/10"></div>
+                        </>
+                    )}
+
                     {/* Progress Section */}
                     <div className="flex flex-col gap-1 min-w-[140px] sm:min-w-[200px]">
                         <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -942,9 +1023,9 @@ export default function QuizInterface() {
                 </div>
             </div>
 
-            {/* Main Content Area - Scrollable Wrapper */}
+            {/* Main Content Area - Scrollable Wrapper - 75% Width */}
             <div className="min-h-full w-full flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 pt-24 relative z-10">
-                <div className={`w-full max-w-4xl transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                <div className={`w-[75%] max-w-6xl transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
 
                     {/* Question Card - Premium Glassmorphism */}
                     <div className="bg-[#0b101b]/90 backdrop-blur-3xl border border-white/10 rounded-2xl p-6 shadow-2xl relative overflow-hidden group hover:border-white/20 transition-all duration-500">
@@ -986,6 +1067,14 @@ export default function QuizInterface() {
                                             `}>
                                                 <Sparkles className="w-3 h-3" />
                                                 {criteriaType} Set
+                                            </div>
+                                        )}
+
+                                        {/* Section Name Chip - NEW */}
+                                        {currentSectionInfo && (
+                                            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-md border text-[10px] font-bold tracking-wider uppercase ${currentSectionInfo.bgClass} ${currentSectionInfo.borderClass} ${currentSectionInfo.textClass}`}>
+                                                <Code className="w-3 h-3" />
+                                                {currentSectionInfo.name}
                                             </div>
                                         )}
                                     </div>

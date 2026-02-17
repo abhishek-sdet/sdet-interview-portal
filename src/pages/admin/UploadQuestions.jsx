@@ -59,7 +59,7 @@ export default function UploadQuestions() {
 
     // Helper function to parse questions from text
     const parseSimpleQuestions = (text, importData) => {
-        console.log('Raw text sample:', text.substring(0, 500)); // Debug log
+        console.log('Starting parse of text length:', text.length);
 
         const questions = [];
 
@@ -73,18 +73,17 @@ export default function UploadQuestions() {
         // Split into lines for line-by-line analysis
         const lines = cleanText.split('\n').map(l => l.trim()).filter(l => l);
 
-        // Detect sections
+        // Default state
         let currentSection = 'general';
         let currentSubsection = null;
-
         let currentQuestion = null;
 
         // Regex patterns
-        // Section: [Computer Science], Section A, 🔹 MISCELLANEOUS LOGIC
-        const sectionRegex = /^\[(.+)\]$|^(Section|Part|🔹)\s+[\w\d\s]|^[A-Z\s]+LOGIC/i;
+        // Section: [Computer Science], Section A, 🔹 MISCELLANEOUS LOGIC, [Java programming...]
+        // We capture the content inside [] or after cues
+        const sectionRegex = /^\[(.+)\]$|^(?:Section|Part|🔹)\s+(.+)|^([A-Z\s]+LOGIC)$/i;
 
         // Question: #1. or Q1. or 1.
-        // IMPROVED: Split into two to avoid matching code like "1 + 2" as "1."
         // 1. Prefix format: #1, Q1, Q 1 (allows space separator)
         const questionPrefixRegex = /^(?:#|Q)\s*(\d+)[\.)\s]?\s*(.+)?/i;
         // 2. No prefix format: 1. or 1) (MUST have DOT or PAREN, no space allowed as separator)
@@ -100,42 +99,46 @@ export default function UploadQuestions() {
             const line = lines[i];
 
             // 1. Check for Section Headers
-            // Logic: Strict matches for known headers to avoid false positives in text
-            if (sectionRegex.test(line) || line.includes('MISCELLANEOUS')) {
-                const rawName = line.replace(/[\[\]🔹]/g, '').trim().toLowerCase();
+            const sectionMatch = line.match(sectionRegex);
+            if (sectionMatch) {
+                // Extract the meaningful name from the match groups
+                const rawName = (sectionMatch[1] || sectionMatch[2] || sectionMatch[3]).trim();
+                const lowerName = rawName.toLowerCase();
 
-                // Exclude if it looks like a question or option
-                if (/^Answer|^Question|^\d/.test(rawName)) continue;
+                // Safety: Exclude if it looks like a question or option or answer
+                if (/^Answer|^Ans|^Question|^\d/.test(rawName)) {
+                    // Do nothing, treat as text
+                } else {
+                    console.log(`[Parser] Found Section: "${rawName}"`);
 
-                if (rawName.includes('java')) {
-                    currentSection = 'elective';
-                    currentSubsection = 'java';
-                } else if (rawName.includes('python')) {
-                    currentSection = 'elective';
-                    currentSubsection = 'python';
-                } else if (rawName.includes('computer science')) {
-                    currentSection = 'Computer Science';
-                    currentSubsection = null;
-                } else if (rawName.includes('logical reasoning')) {
-                    currentSection = 'Logical Reasoning';
-                    currentSubsection = null;
-                } else if (rawName.includes('miscellaneous')) {
-                    currentSection = 'Miscellaneous Logic';
-                    currentSubsection = null;
-                } else if (rawName.includes('grammar')) {
-                    currentSection = 'Grammar';
-                    currentSubsection = null;
-                }
-                // Don't continue here blindly, just in case it wasn't a section. 
-                // But if we matched specific keywords, we updated the state.
-                if (rawName.includes('java') || rawName.includes('python') ||
-                    rawName.includes('computer') || rawName.includes('logical') ||
-                    rawName.includes('miscellaneous') || rawName.includes('grammar')) {
-                    continue;
+                    if (lowerName.includes('java')) {
+                        currentSection = 'elective';
+                        currentSubsection = 'java';
+                    } else if (lowerName.includes('python')) {
+                        currentSection = 'elective';
+                        currentSubsection = 'python';
+                    } else if (lowerName.includes('computer')) {
+                        currentSection = 'Computer Science';
+                        currentSubsection = null;
+                    } else if (lowerName.includes('logical')) {
+                        currentSection = 'Logical Reasoning';
+                        currentSubsection = null;
+                    } else if (lowerName.includes('miscellaneous')) {
+                        currentSection = 'Miscellaneous Logic';
+                        currentSubsection = null;
+                    } else if (lowerName.includes('grammar')) {
+                        currentSection = 'Grammar';
+                        currentSubsection = null;
+                    } else {
+                        // Default fallback for other headers
+                        currentSection = rawName;
+                        currentSubsection = null;
+                    }
+                    continue; // Skip this line
                 }
             }
 
-            // 2. Check for Answer Key matches First (to avoid confusing with options if formatted weirdly)
+            // 2. Check for Answer Key matches (Priority over options)
             const ansMatch = line.match(answerRegex);
             if (ansMatch && currentQuestion) {
                 currentQuestion.correct_option = ansMatch[1].toUpperCase();
@@ -164,15 +167,19 @@ export default function UploadQuestions() {
             // 4. Check for New Question Start
             let qMatch = line.match(questionPrefixRegex) || line.match(questionNoPrefixRegex);
 
-            // Extra safety: Ensure this isn't inside a code block context if possible, 
-            // but the stricter regex should handle "1 + 2" or "10 / 0" correctly now.
-
             if (qMatch) {
                 // Save previous question if valid
-                if (currentQuestion && currentQuestion.options.some(o => o)) {
-                    // Ensure 4 options
+                if (currentQuestion) {
+                    // Fix: Be more lenient. If it has text, accept it. 
+                    // Fill missing options with empty strings.
                     while (currentQuestion.options.length < 4) currentQuestion.options.push('');
-                    questions.push(currentQuestion);
+
+                    // Only push if we have at least ONE option or it looks like a question
+                    if (currentQuestion.options.some(o => o) || currentQuestion.question_text) {
+                        questions.push(currentQuestion);
+                    } else {
+                        console.warn('[Parser] Dropping empty question:', currentQuestion);
+                    }
                 }
 
                 currentQuestion = {
@@ -189,32 +196,42 @@ export default function UploadQuestions() {
             }
 
             // 5. Append continuation text to question
-            // (If the line doesn't match anything else)
             if (currentQuestion) {
                 // If we haven't started options yet, append to question text
                 if (currentQuestion.options.length === 0 && !currentQuestion.options[0]) {
                     if (currentQuestion.question_text) {
-                        currentQuestion.question_text += '\n' + line; // Use newline for better code formatting
+                        currentQuestion.question_text += '\n' + line;
                     } else {
                         currentQuestion.question_text = line;
                     }
                 }
-                // Else ignore (or append to last option if we wanted multi-line options)
+                // If we ARE in options, but this line didn't match an option regex,
+                // it might be a multiline option. Append to the LAST option.
+                else {
+                    // Find the last filled option index
+                    let lastIdx = -1;
+                    for (let k = 3; k >= 0; k--) {
+                        if (currentQuestion.options[k]) {
+                            lastIdx = k;
+                            break;
+                        }
+                    }
+                    if (lastIdx !== -1) {
+                        currentQuestion.options[lastIdx] += ' ' + line;
+                    }
+                }
             }
         }
 
         // Add the last question
-        if (currentQuestion && currentQuestion.options.some(o => o)) {
+        if (currentQuestion) {
             while (currentQuestion.options.length < 4) currentQuestion.options.push('');
-            questions.push(currentQuestion);
+            if (currentQuestion.options.some(o => o) || currentQuestion.question_text) {
+                questions.push(currentQuestion);
+            }
         }
 
-        console.log(`Parsed ${questions.length} questions`);
-
-        if (questions.length === 0) {
-            console.warn('Line-based parser found 0 questions. Text sample:', lines.slice(0, 10));
-        }
-
+        console.log(`[Parser] Successfully parsed ${questions.length} questions.`);
         return questions;
     };
 
@@ -278,33 +295,70 @@ export default function UploadQuestions() {
 
             // Insert new questions
             let successCount = 0;
+            // IMPORTANT: Insert one by one to isolate bad rows and log errors
             for (const q of allQuestions) {
+                // Map section to allowed database values ('general' or 'elective')
+                // and preserve the specific topic in subsection
+                let dbSection = 'general';
+                let dbSubsection = q.subsection || (q.section ? q.section.toLowerCase() : 'aptitude');
+
+                const sectionLower = (q.section || '').toLowerCase();
+                if (sectionLower.includes('java') || sectionLower.includes('python')) {
+                    dbSection = 'elective';
+                    dbSubsection = sectionLower.includes('java') ? 'java' : 'python';
+                } else {
+                    dbSection = 'general';
+                    // Clean up subsection naming
+                    if (sectionLower.includes('computer')) dbSubsection = 'computer_science';
+                    else if (sectionLower.includes('logical')) dbSubsection = 'logical_reasoning';
+                    else if (sectionLower.includes('miscellaneous')) dbSubsection = 'miscellaneous';
+                    else if (sectionLower.includes('grammar')) dbSubsection = 'grammar';
+                    else if (sectionLower.includes('aptitude')) dbSubsection = 'aptitude';
+                }
+
+                // If q.subsection already existed (from parser), prioritize mapped logic above but if parser was specific?
+                // Actually the parser sets subsection sometimes. Let's merge logic:
+                // If parser set subsection (like 'java'), trust it for elective.
+                // If parser set subsection to null, map section name.
+
+                if (q.subsection) {
+                    dbSubsection = q.subsection;
+                    if (q.subsection === 'java' || q.subsection === 'python') {
+                        dbSection = 'elective';
+                    }
+                }
+
                 const questionData = {
                     criteria_id: q.criteria_id,
                     category: q.category,
-                    section: q.section,
-                    subsection: q.subsection,
+                    section: dbSection,
+                    subsection: dbSubsection,
                     question_text: q.question_text,
-                    options: q.options,
-                    option_a: q.options[0] || '',
-                    option_b: q.options[1] || '',
-                    option_c: q.options[2] || '',
-                    option_d: q.options[3] || '',
-                    correct_option: q.correct_option || 'A',
+                    options: q.options, // This is an array, Supabase JSONB should handle it
                     correct_answer: q.options[q.correct_option ? q.correct_option.charCodeAt(0) - 65 : 0] || q.options[0] || '',
-                    is_active: q.is_active
+                    difficulty: 'medium',
+                    is_active: true,
+                    points: 1
                 };
+
+                // Remove temp fields
+                delete questionData.original_options;
 
                 const { error } = await supabase
                     .from('questions')
                     .insert([questionData]);
 
-                if (!error) successCount++;
+                if (!error) {
+                    successCount++;
+                } else {
+                    console.error('[Upload Error] Failed to insert question:', error);
+                    console.error('Failed Data:', JSON.stringify(questionData, null, 2));
+                }
             }
 
             setMessage({
                 type: 'success',
-                text: `Successfully uploaded ${successCount} questions for "${setName}"`
+                text: `Successfully uploaded ${successCount} out of ${allQuestions.length} questions for "${setName}"`
             });
 
             // Reset form
@@ -320,63 +374,6 @@ export default function UploadQuestions() {
         } finally {
             setLoading(false);
         }
-    };
-
-    // Helper function to parse questions from a section
-    const parseQuestionsInSection = (section, importData) => {
-        const questions = [];
-        const lines = section.text.split('\n').filter(line => line.trim());
-
-        let currentQuestion = null;
-        let optionIndex = 0;
-
-        for (let line of lines) {
-            line = line.trim();
-
-            // Question pattern: starts with number followed by dot or parenthesis
-            if (/^\d+[\.)]\s/.test(line)) {
-                if (currentQuestion && currentQuestion.question_text) {
-                    questions.push(currentQuestion);
-                }
-
-                currentQuestion = {
-                    ...importData,
-                    section: section.section,
-                    subsection: section.subsection,
-                    question_text: line.replace(/^\d+[\.)]\s*/, '').trim(),
-                    options: [],
-                    correct_option: 'A',
-                    is_active: true
-                };
-                optionIndex = 0;
-            }
-            // Option pattern: A) B) C) D) or a) b) c) d)
-            else if (/^[A-Da-d][\)\.]\s/.test(line) && currentQuestion) {
-                const optionText = line.replace(/^[A-Da-d][\)\.]\s*/, '').trim();
-                currentQuestion.options.push(optionText);
-
-                // Check if this is marked as correct (contains *)
-                if (line.includes('*') || optionText.includes('*')) {
-                    currentQuestion.correct_option = String.fromCharCode(65 + optionIndex);
-                    currentQuestion.options[optionIndex] = optionText.replace(/\*/g, '').trim();
-                }
-                optionIndex++;
-            }
-            // Answer pattern: "Answer: A" or "Ans: A"
-            else if (/^(Answer|Ans):/i.test(line) && currentQuestion) {
-                const match = line.match(/[A-D]/i);
-                if (match) {
-                    currentQuestion.correct_option = match[0].toUpperCase();
-                }
-            }
-        }
-
-        // Add last question
-        if (currentQuestion && currentQuestion.question_text && currentQuestion.options.length >= 2) {
-            questions.push(currentQuestion);
-        }
-
-        return questions;
     };
 
     return (
@@ -483,12 +480,12 @@ export default function UploadQuestions() {
                         {loading ? (
                             <>
                                 <Loader2 className="w-5 h-5 animate-spin" />
-                                Uploading...
+                                <UploadQuestionsText loading={loading} />
                             </>
                         ) : (
                             <>
                                 <Upload size={20} />
-                                Upload Questions
+                                <UploadQuestionsText loading={loading} />
                             </>
                         )}
                     </button>
@@ -511,3 +508,7 @@ export default function UploadQuestions() {
         </SimpleLayout>
     );
 }
+
+const UploadQuestionsText = ({ loading }) => (
+    <span>{loading ? 'Uploading...' : 'Upload Questions'}</span>
+);

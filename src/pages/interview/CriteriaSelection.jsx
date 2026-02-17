@@ -122,7 +122,7 @@ export default function CriteriaSelection() {
             {/* Scrollable Content Wrapper */}
             <div className="min-h-full w-full flex items-center justify-center p-4 lg:p-8">
                 {/* Main Content */}
-                <div className={`relative z-10 w-full max-w-4xl mx-auto transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+                <div className={`relative z-10 w-[90%] max-w-[90%] mx-auto transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
 
                     {/* Header */}
                     <div className="text-center mb-12 sm:mb-16">

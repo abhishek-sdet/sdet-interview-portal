@@ -418,7 +418,7 @@ export default function HRDashboard() {
 
             <AppSignature />
 
-            <div className="relative z-10 max-w-7xl mx-auto px-6 py-8 space-y-8">
+            <div className="relative z-10 w-[90%] max-w-[90%] mx-auto px-6 py-8 space-y-8">
                 {/* AI Command Header - Revolutionary Design */}
                 <header className="glass-panel-strong rounded-xl p-8 relative overflow-hidden fade-in-up-smooth">
                     {/* Animated Gradient Background */}
@@ -659,7 +659,8 @@ export default function HRDashboard() {
                         border: '1px solid var(--glass-border-strong)'
                     }}>
                         <table className="w-full">
-                            <thead className="sticky top-0 glass-panel-strong" style={{
+                            <thead className="sticky top-0 z-20" style={{
+                                backgroundColor: theme === 'dark' ? '#0f172a' : '#ffffff',
                                 borderBottom: '1px solid var(--glass-border-strong)'
                             }}>
                                 <tr>

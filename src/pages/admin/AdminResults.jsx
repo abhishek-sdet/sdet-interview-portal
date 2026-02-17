@@ -338,7 +338,7 @@ export default function AdminResults() {
                     <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-white/5 border-b border-white/10">
+                                <thead className="bg-[#0f172a] border-b border-white/10 relative z-10 w-full">
                                     <tr>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">
                                             Candidate

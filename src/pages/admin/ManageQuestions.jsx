@@ -231,7 +231,7 @@ export default function ManageQuestions() {
         }
     };
 
-    // Group questions by set and section
+    // Group questions by set and subsection (5 subsections)
     const questionSets = React.useMemo(() => {
         return filteredQuestions.reduce((acc, q) => {
             // If criteria_id is missing, use a fallback
@@ -246,17 +246,31 @@ export default function ManageQuestions() {
                     criteriaName: q.criteria?.name || 'Unknown',
                     setName: category,
                     sections: {
-                        general: [],
-                        elective: [] // Both Java and Python together
+                        computer_science: [],
+                        logical_reasoning: [],
+                        miscellaneous: [],
+                        grammar: [],
+                        elective: [] // Java and Python together
                     }
                 };
             }
 
-            // Categorize by section
+            // Categorize by subsection
+            const subsection = q.subsection || 'computer_science'; // Default fallback
+
             if (q.section === 'elective') {
                 acc[key].sections.elective.push(q);
+            } else if (subsection === 'computer_science') {
+                acc[key].sections.computer_science.push(q);
+            } else if (subsection === 'logical_reasoning') {
+                acc[key].sections.logical_reasoning.push(q);
+            } else if (subsection === 'miscellaneous') {
+                acc[key].sections.miscellaneous.push(q);
+            } else if (subsection === 'grammar') {
+                acc[key].sections.grammar.push(q);
             } else {
-                acc[key].sections.general.push(q);
+                // Fallback for any unknown subsection
+                acc[key].sections.computer_science.push(q);
             }
 
             return acc;
@@ -475,7 +489,12 @@ export default function ManageQuestions() {
                 ) : (
                     <div className="space-y-8">
                         {Object.values(questionSets).map((set) => {
-                            const totalQuestions = set.sections.general.length + set.sections.elective.length;
+                            const totalQuestions =
+                                set.sections.computer_science.length +
+                                set.sections.logical_reasoning.length +
+                                set.sections.miscellaneous.length +
+                                set.sections.grammar.length +
+                                set.sections.elective.length;
                             const isExpanded = !!expandedSets[set.key];
 
                             return (
@@ -521,25 +540,64 @@ export default function ManageQuestions() {
                                     {/* Set Content - Collapsible */}
                                     {isExpanded && (
                                         <div className="p-6 space-y-8 animate-in slide-in-from-top-4 duration-300">
-                                            {/* Section A: General Questions */}
-                                            {set.sections.general.length > 0 && (
+                                            {/* Section 1: Computer Science */}
+                                            {set.sections.computer_science.length > 0 && (
                                                 <div>
                                                     <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                                        <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-lg">Section A</span>
-                                                        General Questions ({set.sections.general.length})
+                                                        <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-lg">Section 1</span>
+                                                        Computer Science ({set.sections.computer_science.length})
                                                     </h3>
                                                     <div className="space-y-4">
-                                                        {set.sections.general.map((q, qIdx) => renderQuestion(q, qIdx))}
+                                                        {set.sections.computer_science.map((q, qIdx) => renderQuestion(q, qIdx))}
                                                     </div>
                                                 </div>
                                             )}
 
-                                            {/* Section B: Elective Questions (Java & Python together) */}
+                                            {/* Section 2: Logical Reasoning */}
+                                            {set.sections.logical_reasoning.length > 0 && (
+                                                <div>
+                                                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                                        <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-lg">Section 2</span>
+                                                        Logical Reasoning ({set.sections.logical_reasoning.length})
+                                                    </h3>
+                                                    <div className="space-y-4">
+                                                        {set.sections.logical_reasoning.map((q, qIdx) => renderQuestion(q, qIdx))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Section 3: Miscellaneous Logic */}
+                                            {set.sections.miscellaneous.length > 0 && (
+                                                <div>
+                                                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                                        <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-lg">Section 3</span>
+                                                        Miscellaneous Logic ({set.sections.miscellaneous.length})
+                                                    </h3>
+                                                    <div className="space-y-4">
+                                                        {set.sections.miscellaneous.map((q, qIdx) => renderQuestion(q, qIdx))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Section 4: Grammar */}
+                                            {set.sections.grammar.length > 0 && (
+                                                <div>
+                                                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                                        <span className="px-3 py-1 bg-pink-500/20 text-pink-400 rounded-lg">Section 4</span>
+                                                        Grammar ({set.sections.grammar.length})
+                                                    </h3>
+                                                    <div className="space-y-4">
+                                                        {set.sections.grammar.map((q, qIdx) => renderQuestion(q, qIdx))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Section 5: Elective Questions (Java & Python) */}
                                             {set.sections.elective.length > 0 && (
                                                 <div>
                                                     <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
-                                                        <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-lg">Section B</span>
-                                                        Elective Questions ({set.sections.elective.length})
+                                                        <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-lg">Section 5</span>
+                                                        Java/Python ({set.sections.elective.length})
                                                     </h3>
                                                     <p className="text-sm text-slate-400 mb-4">
                                                         Aspirants will choose between Java or Python during the interview

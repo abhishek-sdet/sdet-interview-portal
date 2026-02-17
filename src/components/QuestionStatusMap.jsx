@@ -40,28 +40,43 @@ export default function QuestionStatusMap({ questions = [], answers = {}, curren
                     }
 
                     return (
-                        <button
-                            key={q.id}
-                            onClick={() => onQuestionSelect && onQuestionSelect(idx)}
-                            disabled={!onQuestionSelect}
-                            className={`
-                                relative w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center text-xs sm:text-sm font-bold transition-all duration-300 border
-                                ${isCurrent
-                                    ? 'ring-2 ring-white ring-offset-2 ring-offset-[#0b101b] scale-110 z-10 shadow-lg'
-                                    : 'hover:scale-105'
-                                }
-                                ${statusColor}
-                                ${statusShadow}
-                            `}
-                            title={`Question ${idx + 1}`}
-                        >
-                            {idx + 1}
+                        <React.Fragment key={q.id}>
+                            <button
+                                onClick={() => onQuestionSelect && onQuestionSelect(idx)}
+                                disabled={!onQuestionSelect}
+                                className={`
+                                    relative w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center text-xs sm:text-sm font-bold transition-all duration-300 border
+                                    ${isCurrent
+                                        ? 'ring-2 ring-white ring-offset-2 ring-offset-[#0b101b] scale-110 z-10 shadow-lg'
+                                        : 'hover:scale-105'
+                                    }
+                                    ${statusColor}
+                                    ${statusShadow}
+                                `}
+                                title={`Question ${idx + 1}`}
+                            >
+                                {idx + 1}
 
-                            {/* Status Indicator Dot for Answered */}
-                            {isAnswered && (
-                                <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.8)]"></div>
+                                {/* Status Indicator Dot for Answered */}
+                                {isAnswered && (
+                                    <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.8)]"></div>
+                                )}
+                            </button>
+
+                            {/* Visual Separator after Question 23 */}
+                            {idx === 22 && questions.length > 23 && (
+                                <div className="w-full flex items-center gap-3 my-2">
+                                    <div className="h-px bg-purple-500/30 flex-grow"></div>
+                                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-purple-500/10 border border-purple-500/20">
+                                        <svg className="w-3.5 h-3.5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                                        </svg>
+                                        <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">Technical Questions</span>
+                                    </div>
+                                    <div className="h-px bg-purple-500/30 flex-grow"></div>
+                                </div>
                             )}
-                        </button>
+                        </React.Fragment>
                     );
                 })}
             </div>

@@ -120,7 +120,7 @@ export default function ResultsDashboard() {
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead>
-                                <tr className={`border-b ${theme === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>
+                                <tr className={`border-b sticky top-0 z-10 ${theme === 'dark' ? 'bg-slate-900 border-white/10' : 'bg-white border-gray-200'}`}>
                                     <th className="text-left py-4 px-4 text-xs uppercase text-cyan-400 font-semibold">Criteria</th>
                                     <th className="text-left py-4 px-4 text-xs uppercase text-cyan-400 font-semibold">Status</th>
                                     <th className="text-left py-4 px-4 text-xs uppercase text-cyan-400 font-semibold">Name</th>

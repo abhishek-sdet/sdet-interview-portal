@@ -79,7 +79,7 @@ export default function ExamRules() {
             {/* Scrollable Content Wrapper */}
             <div className="min-h-full w-full flex flex-col items-center justify-center p-4">
                 {/* Main Content */}
-                <div className={`relative z-10 w-full max-w-4xl mx-auto transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                <div className={`relative z-10 w-[90%] max-w-[90%] mx-auto transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
 
                     {/* Header */}
                     <div className="text-center mb-8">
