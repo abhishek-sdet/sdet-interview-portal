@@ -30,32 +30,34 @@ function App() {
         <ThemeProvider>
             <Toaster position="top-right" />
             <Router>
-                <AppSignature />
-                <Routes>
-                    {/* Interview Portal Routes */}
-                    <Route path="/" element={<LandingPage />} />
-                    <Route path="/criteria-selection" element={<CriteriaSelection />} />
-                    <Route path="/set-selection" element={<SetSelection />} />
-                    <Route path="/exam-rules" element={<ExamRules />} />
-                    <Route path="/exam-setup" element={<ExamSetup />} />
-                    <Route path="/quiz" element={<QuizInterface />} />
-                    <Route path="/thank-you" element={<ThankYou />} />
+                <div className="h-full w-full flex flex-col overflow-hidden">
+                    <AppSignature />
+                    <Routes>
+                        {/* Interview Portal Routes */}
+                        <Route path="/" element={<LandingPage />} />
+                        <Route path="/criteria-selection" element={<CriteriaSelection />} />
+                        <Route path="/set-selection" element={<SetSelection />} />
+                        <Route path="/exam-rules" element={<ExamRules />} />
+                        <Route path="/exam-setup" element={<ExamSetup />} />
+                        <Route path="/quiz" element={<QuizInterface />} />
+                        <Route path="/thank-you" element={<ThankYou />} />
 
-                    {/* Admin Portal Routes (New Simple Version) */}
-                    <Route path="/admin/login" element={<AdminLogin />} />
-                    <Route path="/admin" element={<AdminDashboard />} />
-                    <Route path="/admin/upload" element={<UploadQuestions />} />
-                    <Route path="/admin/questions" element={<ManageQuestions />} />
-                    <Route path="/admin/criteria" element={<ManageCriteria />} />
-                    <Route path="/admin/results" element={<AdminResults />} />
+                        {/* Admin Portal Routes (New Simple Version) */}
+                        <Route path="/admin/login" element={<AdminLogin />} />
+                        <Route path="/admin" element={<AdminDashboard />} />
+                        <Route path="/admin/upload" element={<UploadQuestions />} />
+                        <Route path="/admin/questions" element={<ManageQuestions />} />
+                        <Route path="/admin/criteria" element={<ManageCriteria />} />
+                        <Route path="/admin/results" element={<AdminResults />} />
 
-                    {/* Results Dashboard Route */}
-                    {/* HR Dashboard Route (Public/Read-Only) */}
-                    <Route path="/dashboard" element={<HRDashboard />} />
+                        {/* Results Dashboard Route */}
+                        {/* HR Dashboard Route (Public/Read-Only) */}
+                        <Route path="/dashboard" element={<HRDashboard />} />
 
-                    {/* Fallback */}
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
+                        {/* Fallback */}
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                </div>
             </Router>
         </ThemeProvider>
     );

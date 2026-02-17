@@ -405,9 +405,20 @@
   @apply px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-lg transition-all;
 }
 
-/* Base Styles */
+/* Base Styles - REFACTORED FOR 100% VIEWPORT */
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  /* Prevent scroll on body, handle inside app */
+}
+
 body {
   @apply bg-[var(--bg-body)] text-[var(--text-main)];
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-  zoom: 0.75;
+  /* REMOVED: zoom: 0.75; */
 }

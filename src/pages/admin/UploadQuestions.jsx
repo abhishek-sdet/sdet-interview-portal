@@ -48,8 +48,8 @@ export default function UploadQuestions() {
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
         if (selectedFile) {
-            if (!selectedFile.name.endsWith('.docx')) {
-                setMessage({ type: 'error', text: 'Please select a .docx file' });
+            if (!selectedFile.name.endsWith('.docx') && !selectedFile.name.endsWith('.txt')) {
+                setMessage({ type: 'error', text: 'Please select a .docx or .txt file' });
                 return;
             }
             setFile(selectedFile);
@@ -64,22 +64,13 @@ export default function UploadQuestions() {
         const questions = [];
 
         // Normalize text
-        // Aggressively fix merged lines: "validation?A. Executing" -> "validation?\nA. Executing"
-        // And "defectsB. Reviewing" -> "defects\nB. Reviewing"
         const cleanText = text
             .replace(/\r\n/g, '\n')
             .replace(/\r/g, '\n')
             .replace(/\t/g, ' ')
-            .replace(/\u00A0/g, ' ') // Replace non-breaking spaces
-            // Inject newline before options A. B. C. D. if they are not at start of line
-            // Look for: any char, followed by A-D, followed by dot/paren, followed by space
-            .replace(/([^\n])([A-D][\.\)]\s+)/g, '$1\n$2')
-            // Also handle if there is no space after dot (rare but possible in bad formatting)
-            .replace(/([^\n])([A-D][\.\)][A-Z])/g, '$1\n$2')
-            // Inject newline before Answer/Ans/Correct key if not at start of line
-            .replace(/([^\n])((?:Answer|Ans|Correct)\s*[:\-])/gi, '$1\n$2');
+            .replace(/\u00A0/g, ' '); // Replace non-breaking spaces
 
-        // Split into lines for line-by-line analysis (fallback method)
+        // Split into lines for line-by-line analysis
         const lines = cleanText.split('\n').map(l => l.trim()).filter(l => l);
 
         // Detect sections
@@ -89,63 +80,65 @@ export default function UploadQuestions() {
         let currentQuestion = null;
 
         // Regex patterns
-        const sectionRegex = /^(General|Java|Python|Elective|Section|Part)/i;
-        const questionStartRegex = /^(\d+|Q\d+)[\.)\s]\s*(.+)/i;
+        // Section: [Computer Science], Section A, 🔹 MISCELLANEOUS LOGIC
+        const sectionRegex = /^\[(.+)\]$|^(Section|Part|🔹)\s+[\w\d\s]|^[A-Z\s]+LOGIC/i;
+
+        // Question: #1. or Q1. or 1.
+        // IMPROVED: Split into two to avoid matching code like "1 + 2" as "1."
+        // 1. Prefix format: #1, Q1, Q 1 (allows space separator)
+        const questionPrefixRegex = /^(?:#|Q)\s*(\d+)[\.)\s]?\s*(.+)?/i;
+        // 2. No prefix format: 1. or 1) (MUST have DOT or PAREN, no space allowed as separator)
+        const questionNoPrefixRegex = /^(\d+)[\.)]\s*(.+)?/i;
+
+        // Option: A. or A)
         const optionRegex = /^([A-D])[\.)\)]\s*(.+)/i;
-        const answerRegex = /^(Answer|Ans|Correct)\s*[:\-]\s*([A-D])/i;
+
+        // Answer: ✅ Answer: A or Answer: A or Ans: A
+        const answerRegex = /^(?:✅\s*)?(?:Answer|Ans|Correct)\s*[:\-]\s*([A-D])/i;
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
 
             // 1. Check for Section Headers
-            // Logic: Must start with "Section" or "Part" OR be a very short header (e.g. "Java", "Python Questions")
-            const isExplicitSection = /^(Section|Part)\s+[\w\d]/i.test(line);
-            const isShortHeader = line.length < 40 && /^(General|Java|Python|Elective)/i.test(line);
+            // Logic: Strict matches for known headers to avoid false positives in text
+            if (sectionRegex.test(line) || line.includes('MISCELLANEOUS')) {
+                const rawName = line.replace(/[\[\]🔹]/g, '').trim().toLowerCase();
 
-            if ((isExplicitSection || isShortHeader) && line.length < 150) {
-                // If it contains "Java" -> Java section
-                if (/java/i.test(line)) {
+                // Exclude if it looks like a question or option
+                if (/^Answer|^Question|^\d/.test(rawName)) continue;
+
+                if (rawName.includes('java')) {
                     currentSection = 'elective';
                     currentSubsection = 'java';
-                } else if (/python/i.test(line)) {
+                } else if (rawName.includes('python')) {
                     currentSection = 'elective';
                     currentSubsection = 'python';
-                } else {
-                    // Default to General unless it explicitly says Elective without Java/Python
-                    if (/elective/i.test(line) && !/java|python/i.test(line)) {
-                        currentSection = 'elective';
-                        currentSubsection = null; // Mixed or unknown
-                    } else {
-                        // If it's just "Section A", assume general unless we know otherwise
-                        // But if we are already in Java/Python, maybe don't switch back to general on vague header?
-                        // For now heavily bias towards general if nothing else
-                        currentSection = 'general';
-                        currentSubsection = null;
-                    }
+                } else if (rawName.includes('computer science')) {
+                    currentSection = 'Computer Science';
+                    currentSubsection = null;
+                } else if (rawName.includes('logical reasoning')) {
+                    currentSection = 'Logical Reasoning';
+                    currentSubsection = null;
+                } else if (rawName.includes('miscellaneous')) {
+                    currentSection = 'Miscellaneous Logic';
+                    currentSubsection = null;
+                } else if (rawName.includes('grammar')) {
+                    currentSection = 'Grammar';
+                    currentSubsection = null;
                 }
-                continue;
+                // Don't continue here blindly, just in case it wasn't a section. 
+                // But if we matched specific keywords, we updated the state.
+                if (rawName.includes('java') || rawName.includes('python') ||
+                    rawName.includes('computer') || rawName.includes('logical') ||
+                    rawName.includes('miscellaneous') || rawName.includes('grammar')) {
+                    continue;
+                }
             }
 
-            // 2. Check for New Question Start
-            const qMatch = line.match(questionStartRegex);
-            if (qMatch) {
-                // Save previous question if valid
-                if (currentQuestion && currentQuestion.options.some(o => o)) {
-                    // Ensure 4 options
-                    while (currentQuestion.options.length < 4) currentQuestion.options.push('');
-                    questions.push(currentQuestion);
-                }
-
-                currentQuestion = {
-                    ...importData,
-                    section: currentSection,
-                    subsection: currentSubsection,
-                    question_text: qMatch[2],
-                    options: [],
-                    original_options: [], // Temporary storage
-                    correct_option: 'A',
-                    is_active: true
-                };
+            // 2. Check for Answer Key matches First (to avoid confusing with options if formatted weirdly)
+            const ansMatch = line.match(answerRegex);
+            if (ansMatch && currentQuestion) {
+                currentQuestion.correct_option = ansMatch[1].toUpperCase();
                 continue;
             }
 
@@ -168,26 +161,45 @@ export default function UploadQuestions() {
                 continue;
             }
 
-            // 4. Check for Answer Key
-            const ansMatch = line.match(answerRegex);
-            if (ansMatch && currentQuestion) {
-                currentQuestion.correct_option = ansMatch[2].toUpperCase();
+            // 4. Check for New Question Start
+            let qMatch = line.match(questionPrefixRegex) || line.match(questionNoPrefixRegex);
+
+            // Extra safety: Ensure this isn't inside a code block context if possible, 
+            // but the stricter regex should handle "1 + 2" or "10 / 0" correctly now.
+
+            if (qMatch) {
+                // Save previous question if valid
+                if (currentQuestion && currentQuestion.options.some(o => o)) {
+                    // Ensure 4 options
+                    while (currentQuestion.options.length < 4) currentQuestion.options.push('');
+                    questions.push(currentQuestion);
+                }
+
+                currentQuestion = {
+                    ...importData,
+                    section: currentSection,
+                    subsection: currentSubsection,
+                    question_text: qMatch[2] || '', // Capture text if on same line
+                    options: [],
+                    original_options: [], // Temporary storage
+                    correct_option: 'A',
+                    is_active: true
+                };
                 continue;
             }
 
-            // 5. Append continuation text to question or last option
+            // 5. Append continuation text to question
             // (If the line doesn't match anything else)
             if (currentQuestion) {
                 // If we haven't started options yet, append to question text
                 if (currentQuestion.options.length === 0 && !currentQuestion.options[0]) {
-                    currentQuestion.question_text += ' ' + line;
+                    if (currentQuestion.question_text) {
+                        currentQuestion.question_text += '\n' + line; // Use newline for better code formatting
+                    } else {
+                        currentQuestion.question_text = line;
+                    }
                 }
-                // Else append to the last found option (a bit risky but handles multi-line options)
-                /* 
-                 * Logic: We can't easily know which option this belongs to without state.
-                 * For safety, we'll skip appending to options to avoid messy data, 
-                 * unless we are sure. Let's ignore continuation lines for options for now to be safe.
-                 */
+                // Else ignore (or append to last option if we wanted multi-line options)
             }
         }
 
@@ -200,8 +212,6 @@ export default function UploadQuestions() {
         console.log(`Parsed ${questions.length} questions`);
 
         if (questions.length === 0) {
-            // Fallback: Try the block-based parser if line-based failed (e.g., widely different format)
-            // Or just log detailed info to help debug
             console.warn('Line-based parser found 0 questions. Text sample:', lines.slice(0, 10));
         }
 
@@ -220,12 +230,18 @@ export default function UploadQuestions() {
         setMessage({ type: '', text: '' });
 
         try {
-            console.log('📄 Parsing Word document...');
+            console.log(`📄 Parsing ${file.name}...`);
+            let text = '';
 
-            // Extract text from Word document using mammoth
-            const arrayBuffer = await file.arrayBuffer();
-            const result = await mammoth.extractRawText({ arrayBuffer });
-            const text = result.value;
+            if (file.name.endsWith('.docx')) {
+                // Extract text from Word document using mammoth
+                const arrayBuffer = await file.arrayBuffer();
+                const result = await mammoth.extractRawText({ arrayBuffer });
+                text = result.value;
+            } else if (file.name.endsWith('.txt')) {
+                // Read text file directly
+                text = await file.text();
+            }
 
             if (!text || text.trim().length === 0) {
                 throw new Error('No text found in document');
@@ -369,7 +385,7 @@ export default function UploadQuestions() {
                 {/* Header */}
                 <div>
                     <h1 className="text-3xl font-bold text-white mb-2">Upload Questions</h1>
-                    <p className="text-slate-400">Import questions from a Word document</p>
+                    <p className="text-slate-400">Import questions from a Word or Text document</p>
                 </div>
 
                 {/* Message */}
@@ -428,13 +444,13 @@ export default function UploadQuestions() {
                     {/* File Upload */}
                     <div>
                         <label className="block text-sm font-medium text-slate-300 mb-2">
-                            Word Document (.docx)
+                            Select Document (.docx or .txt)
                         </label>
                         <div className="relative">
                             <input
                                 id="file-input"
                                 type="file"
-                                accept=".docx"
+                                accept=".docx,.txt"
                                 onChange={handleFileChange}
                                 required
                                 className="hidden"
@@ -451,7 +467,7 @@ export default function UploadQuestions() {
                                 ) : (
                                     <>
                                         <Upload className="w-6 h-6 text-slate-400" />
-                                        <span className="text-slate-400">Click to select Word document</span>
+                                        <span className="text-slate-400">Click to select Word (.docx) or Text (.txt) file</span>
                                     </>
                                 )}
                             </label>
@@ -482,7 +498,7 @@ export default function UploadQuestions() {
                 <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-6">
                     <h3 className="font-bold text-white mb-3 flex items-center gap-2">
                         <FileText size={18} className="text-blue-400" />
-                        Document Format Guidelines
+                        Document Format Guidelines (.docx or .txt)
                     </h3>
                     <ul className="text-sm text-slate-300 space-y-2">
                         <li>• Questions should be numbered (1. 2. 3. or 1) 2) 3))</li>

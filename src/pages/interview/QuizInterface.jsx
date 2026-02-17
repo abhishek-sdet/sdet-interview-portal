@@ -507,7 +507,26 @@ export default function QuizInterface() {
 
         try {
             const interviewId = sessionStorage.getItem('interviewId');
-            const passingPercentage = parseInt(sessionStorage.getItem('passingPercentage') || '70');
+            const criteriaId = sessionStorage.getItem('criteriaId'); // Need criteriaId to fetch passing rules
+
+            // 1. Fetch Authoritative Passing Percentage from DB
+            // This prevents reliance on potentially stale sessionStorage data (e.g. 70% instead of 80%)
+            let passingPercentage = 70; // Default fallback
+
+            if (criteriaId) {
+                const { data: criteriaData, error: criteriaError } = await supabase
+                    .from('criteria')
+                    .select('passing_percentage')
+                    .eq('id', criteriaId)
+                    .single();
+
+                if (!criteriaError && criteriaData) {
+                    passingPercentage = criteriaData.passing_percentage;
+                    console.log(`[SCORING] Fetched authoritative passing percentage: ${passingPercentage}%`);
+                } else {
+                    console.warn('[SCORING] Failed to fetch string passing rules, using default.', criteriaError);
+                }
+            }
 
             let correctCount = 0;
             const answerRecords = [];
@@ -542,6 +561,8 @@ export default function QuizInterface() {
             // This ensures correct scoring even if the user hasn't loaded the specialization section yet
             const totalQuestions = totalExamQuestions > 0 ? totalExamQuestions : questions.length;
             const percentage = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0;
+
+            // STRICT COMPARISON: must be >= to passingPercentage
             const passed = percentage >= passingPercentage;
 
             console.log('[SCORING FINAL]');
@@ -634,7 +655,7 @@ export default function QuizInterface() {
 
     if (loading) {
         return (
-            <div className="min-h-screen w-full bg-universe flex items-center justify-center font-sans">
+            <div className="h-full w-full bg-universe flex items-center justify-center font-sans">
                 <div className="text-center">
                     <Loader2 className="w-10 h-10 text-brand-blue animate-spin mx-auto mb-4" />
                     <p className="text-slate-400">Loading Assessment...</p>
@@ -645,7 +666,7 @@ export default function QuizInterface() {
 
     if (error) {
         return (
-            <div className="min-h-screen w-full bg-universe flex items-center justify-center p-4 text-white">
+            <div className="h-full w-full bg-universe flex items-center justify-center p-4 text-white">
                 <div className="max-w-md w-full bg-white/10 backdrop-blur-md rounded-2xl border border-white/10 p-8 text-center">
                     <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
                         <AlertCircle className="w-8 h-8 text-red-400" />
@@ -666,7 +687,7 @@ export default function QuizInterface() {
     // --- Specialization Selection UI ---
     if (showSpecialization) {
         return (
-            <div className="min-h-screen w-full bg-universe flex flex-col items-center justify-center p-4 relative font-sans text-slate-100 overflow-hidden">
+            <div className="h-full w-full bg-universe flex flex-col items-center justify-center p-4 relative font-sans text-slate-100 overflow-hidden">
                 {/* Background */}
                 <div className="fixed inset-0 overflow-hidden pointer-events-none">
                     <div className="orb orb-1 opacity-50"></div>
@@ -788,7 +809,7 @@ export default function QuizInterface() {
     // Safety check to prevent blank screen crash
     if (!currentQuestion) {
         return (
-            <div className="min-h-screen w-full bg-universe flex items-center justify-center p-4 text-white">
+            <div className="h-full w-full bg-universe flex items-center justify-center p-4 text-white">
                 <div className="text-center p-8 bg-white/10 rounded-xl backdrop-blur-md border border-white/10">
                     <p className="text-xl font-bold mb-4 text-red-400">Debug Mode: No Question Loaded</p>
                     <div className="text-left space-y-2 font-mono text-sm text-slate-300 mb-6">
@@ -849,7 +870,7 @@ export default function QuizInterface() {
     const currentQuestionAnswered = answeredQuestions.has(currentQuestion?.id);
 
     return (
-        <div className="min-h-screen w-full bg-universe flex flex-col font-sans text-slate-100 selection:bg-brand-orange selection:text-white relative overflow-hidden">
+        <div className="h-full w-full bg-universe relative overflow-y-auto overflow-x-hidden font-sans text-slate-100 selection:bg-brand-orange selection:text-white">
 
             {/* Active Background Animation */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -921,8 +942,8 @@ export default function QuizInterface() {
                 </div>
             </div>
 
-            {/* Main Content Area */}
-            <div className="relative z-10 flex-grow flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 pt-24">
+            {/* Main Content Area - Scrollable Wrapper */}
+            <div className="min-h-full w-full flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 pt-24 relative z-10">
                 <div className={`w-full max-w-4xl transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
 
                     {/* Question Card - Premium Glassmorphism */}

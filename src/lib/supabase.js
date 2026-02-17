@@ -319,7 +319,14 @@ let client;
 
 if (supabaseUrl && supabaseAnonKey) {
     console.log('🚀 Using Real Supabase Client');
-    client = createClient(supabaseUrl, supabaseAnonKey);
+    client = createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+            storage: sessionStorage,
+            autoRefreshToken: true,
+            persistSession: true,
+            detectSessionInUrl: true
+        }
+    });
 } else {
     console.log('⚠ Using Mock Supabase Client (No environment variables found)');
     client = new MockSupabaseClient();

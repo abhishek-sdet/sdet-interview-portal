@@ -65,7 +65,7 @@ export default function AdminResults() {
                 .select(`
                     *,
                     candidates(full_name, email, phone),
-                    criteria(name)
+                    criteria(name, passing_percentage)
                 `)
                 .order('started_at', { ascending: false });
 
@@ -440,7 +440,7 @@ export default function AdminResults() {
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
-                                                    <span className={`font-bold ${percentage >= 70 ? 'text-green-400' : 'text-red-400'
+                                                    <span className={`font-bold ${percentage >= (result.criteria?.passing_percentage || 70) ? 'text-green-400' : 'text-red-400'
                                                         }`}>
                                                         {percentage}%
                                                     </span>

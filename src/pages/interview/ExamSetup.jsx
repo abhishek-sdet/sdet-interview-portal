@@ -110,7 +110,7 @@ export default function ExamSetup() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4">
+        <div className="h-full bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4 overflow-y-auto">
             <div className="max-w-4xl mx-auto py-12">
                 {/* Header */}
                 <div className="text-center mb-12">

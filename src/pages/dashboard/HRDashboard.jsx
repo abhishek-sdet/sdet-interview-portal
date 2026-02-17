@@ -361,7 +361,7 @@ export default function HRDashboard() {
 
 
     return (
-        <div className="min-h-screen relative overflow-x-hidden transition-colors duration-300 bg-universe">
+        <div className="h-full w-full relative overflow-y-auto overflow-x-hidden transition-colors duration-300 bg-universe">
             {/* Deep Space Animated Background - Dark Mode Only */}
             {theme === 'dark' && (
                 <div className="fixed inset-0 overflow-hidden pointer-events-none">

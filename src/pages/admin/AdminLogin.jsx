@@ -34,7 +34,7 @@ export default function AdminLogin() {
     };
 
     return (
-        <div className="min-h-screen w-full bg-universe flex items-center justify-center p-4 font-sans relative overflow-hidden">
+        <div className="h-full w-full bg-universe flex items-center justify-center p-4 font-sans relative overflow-hidden">
             {/* Background Effects */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
                 <div className="orb orb-1 opacity-30"></div>

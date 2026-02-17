@@ -32,7 +32,7 @@ export default function ResultsDashboard() {
     }
 
     return (
-        <div className={`min-h-screen ${bgClass} transition-colors duration-300`}>
+        <div className={`h-full w-full relative overflow-y-auto ${bgClass} transition-colors duration-300`}>
             {/* Animated Background */}
             {theme === 'dark' && (
                 <>

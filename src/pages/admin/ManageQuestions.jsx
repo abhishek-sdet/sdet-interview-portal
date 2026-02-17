@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SimpleLayout from '@/components/admin/SimpleLayout';
+import ConfirmModal from '@/components/ConfirmModal';
 import { supabase } from '@/lib/supabase';
 import { Search, Trash2, Edit2, Save, X, Filter, AlertCircle, CheckCircle, ChevronDown, ChevronRight } from 'lucide-react';
 
@@ -13,14 +14,15 @@ export default function ManageQuestions() {
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
     const [editingQuestion, setEditingQuestion] = useState(null);
+
+    // Modal States
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
     const [showDeleteSetConfirm, setShowDeleteSetConfirm] = useState(null); // { criteriaId, setName }
+    const [successModal, setSuccessModal] = useState(null); // { title, message }
 
     // Track expanded sets - default to all collapsed (empty object)
     // Keys will be `${criteriaId}-${setName}`
     const [expandedSets, setExpandedSets] = useState({});
-
-
 
     const checkAuth = async () => {
         const { data: { session } } = await supabase.auth.getSession();
@@ -162,15 +164,17 @@ export default function ManageQuestions() {
             // Refresh questions
             fetchQuestions();
             setShowDeleteConfirm(null);
+            setSuccessModal({
+                title: 'Success',
+                message: 'Question deleted successfully.'
+            });
         } catch (err) {
             console.error('Error deleting question:', err);
-            alert('Failed to delete question');
         }
     };
 
     const handleDeleteSetClick = (criteriaId, setName) => {
         if (!criteriaId) {
-            alert('Cannot delete set: Missing criteria ID');
             return;
         }
         setShowDeleteSetConfirm({ criteriaId, setName });
@@ -191,8 +195,6 @@ export default function ManageQuestions() {
             // Handle "Uncategorized" which might be NULL in DB
             if (setName === 'Uncategorized') {
                 // Delete rows where category IS NULL OR category IS 'Uncategorized'
-                // Supabase doesn't support OR easily in this chain without raw filter
-                // So we'll try to delete both cases or use a filter
                 query = query.or(`category.is.null,category.eq.Uncategorized`);
             } else {
                 query = query.eq('category', setName);
@@ -205,16 +207,27 @@ export default function ManageQuestions() {
             console.log(`Deleted ${count} questions`);
 
             if (count === 0) {
-                alert('No questions were deleted. This might be due to a permission issue or data mismatch.');
+                setSuccessModal({
+                    title: 'No Questions Deleted',
+                    message: 'No questions were deleted. This might be due to a permission issue or data mismatch.',
+                    type: 'info'
+                });
             } else {
-                alert(`Successfully deleted ${count} questions in "${setName}"`);
+                setSuccessModal({
+                    title: 'Success',
+                    message: `Successfully deleted ${count} questions in "${setName}"`
+                });
             }
 
             // Refresh questions
             fetchQuestions();
         } catch (err) {
             console.error('Error deleting question set:', err);
-            alert(`Failed to delete question set: ${err.message}`);
+            setSuccessModal({
+                title: 'Error',
+                message: `Failed to delete question set: ${err.message}`,
+                type: 'danger'
+            });
         }
     };
 
@@ -543,37 +556,39 @@ export default function ManageQuestions() {
                         })}
                     </div>
                 )}
-                {/* Set Delete Confirmation Modal */}
-                {showDeleteSetConfirm && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                        <div className="bg-[#0f172a] border border-white/10 rounded-xl max-w-md w-full p-6 shadow-2xl">
-                            <div className="flex items-center gap-3 text-red-400 mb-4">
-                                <AlertCircle size={24} />
-                                <h3 className="text-xl font-bold">Delete Entire Set?</h3>
-                            </div>
+                {/* Modals using generic ConfirmModal */}
+                <ConfirmModal
+                    isOpen={!!showDeleteSetConfirm}
+                    onClose={() => setShowDeleteSetConfirm(null)}
+                    onConfirm={confirmDeleteSet}
+                    title="Delete Entire Set?"
+                    message={showDeleteSetConfirm ? `Are you sure you want to delete all questions in "${showDeleteSetConfirm.setName}"? This action cannot be undone.` : ''}
+                    confirmText="Delete Set"
+                    cancelText="Cancel"
+                    type="danger"
+                />
 
-                            <p className="text-slate-300 mb-6">
-                                Are you sure you want to delete all questions in <span className="font-bold text-white">"{showDeleteSetConfirm.setName}"</span>?
-                                This action cannot be undone.
-                            </p>
+                <ConfirmModal
+                    isOpen={!!showDeleteConfirm}
+                    onClose={() => setShowDeleteConfirm(null)}
+                    onConfirm={() => showDeleteConfirm && handleDelete(showDeleteConfirm)}
+                    title="Delete Question?"
+                    message="Are you sure you want to delete this question? This action cannot be undone."
+                    confirmText="Delete"
+                    cancelText="Cancel"
+                    type="danger"
+                />
 
-                            <div className="flex gap-3 justify-end">
-                                <button
-                                    onClick={() => setShowDeleteSetConfirm(null)}
-                                    className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-all"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={confirmDeleteSet}
-                                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-all shadow-lg shadow-red-500/20"
-                                >
-                                    Delete Set
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                <ConfirmModal
+                    isOpen={!!successModal}
+                    onClose={() => setSuccessModal(null)}
+                    onConfirm={() => setSuccessModal(null)}
+                    title={successModal?.title || 'Success'}
+                    message={successModal?.message || ''}
+                    confirmText="OK"
+                    cancelText={null}
+                    type={successModal?.type || 'success'}
+                />
             </div>
         </SimpleLayout>
     );
