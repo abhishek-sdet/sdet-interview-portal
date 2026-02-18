@@ -30,7 +30,7 @@ function App() {
         <ThemeProvider>
             <Toaster position="top-right" />
             <Router>
-                <div className="h-full w-full flex flex-col overflow-hidden">
+                <div className="h-full w-full flex flex-col overflow-auto">
                     <AppSignature />
                     <Routes>
                         {/* Interview Portal Routes */}

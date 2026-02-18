@@ -115,9 +115,9 @@ export default function LandingPage() {
                         <div className="space-y-4 animate-hero">
                             <div className="inline-block p-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl shadow-2xl mb-4 hover:border-brand-blue/50 transition-colors duration-500 group">
                                 <img
-                                    src="/logo_new.png"
+                                    src="/sdet-logo.png"
                                     alt="SDET Logo"
-                                    className="h-16 md:h-20 w-auto object-contain brightness-110 group-hover:scale-105 transition-transform duration-500"
+                                    className="h-16 md:h-20 w-auto object-contain group-hover:scale-105 transition-transform duration-500"
                                 />
                             </div>
 

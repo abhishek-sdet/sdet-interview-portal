@@ -47,7 +47,7 @@ export default function AdminLogin() {
                 <div className="bg-[#0b101b]/90 backdrop-blur-3xl border border-white/10 rounded-2xl p-8 shadow-2xl">
                     {/* Logo & Title */}
                     <div className="text-center mb-8">
-                        <img src="/logo.jpg" alt="SDET Logo" className="h-16 w-auto mx-auto rounded-lg mb-4" />
+                        <img src="/sdet-logo.png" alt="SDET Logo" className="h-16 w-auto mx-auto object-contain mb-4" />
                         <h1 className="text-2xl font-bold text-white mb-2">Admin Portal</h1>
                         <p className="text-slate-400 text-sm">Fresher Drive System</p>
                     </div>

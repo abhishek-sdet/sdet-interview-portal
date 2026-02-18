@@ -57,7 +57,7 @@ export default function ThankYou() {
                 {/* Top Left - SDET Logo */}
                 <div className="absolute top-6 left-6 z-50 animate-fade-in-down hidden sm:block">
                     <div className="bg-white/10 backdrop-blur-md border border-white/20 p-3 rounded-xl shadow-xl">
-                        <img src="/logo.jpg" alt="SDET Logo" className="h-12 w-auto object-contain rounded-lg" />
+                        <img src="/sdet-logo.png" alt="SDET Logo" className="h-12 w-auto object-contain" />
                     </div>
                 </div>
 

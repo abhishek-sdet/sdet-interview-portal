@@ -11,13 +11,8 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
-    // Initialize theme from localStorage or default to 'dark'
-    const [theme, setTheme] = useState(() => {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem('theme') || 'dark';
-        }
-        return 'dark';
-    });
+    // Always default to 'dark' on page load (Admin uses dark theme)
+    const [theme, setTheme] = useState('dark');
 
     // Update document attribute and localStorage when theme changes
     useEffect(() => {

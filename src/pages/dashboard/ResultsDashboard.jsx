@@ -2,14 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import InsightLogo from '@/components/InsightLogo';
 
-import { useTheme } from '@/context/ThemeContext';
 
 export default function ResultsDashboard() {
     const [results, setResults] = useState([]);
     const [filteredResults, setFilteredResults] = useState([]);
     const [stats, setStats] = useState({ total: 0, qualified: 0, notQualified: 0, successRate: 0 });
     const [searchTerm, setSearchTerm] = useState('');
-    const { theme, toggleTheme } = useTheme();
+    // Dashboard manages its own theme (always starts light, independent of Admin dark theme)
+    const [theme, setTheme] = useState('light');
+    const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
     const [loading, setLoading] = useState(true);
 
     const bgClass = theme === 'dark'

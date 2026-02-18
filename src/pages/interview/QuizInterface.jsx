@@ -132,9 +132,8 @@ export default function QuizInterface() {
 
     // --- PROCTORING SHIELD ---
 
-    // 1. Tab Switch Detection (DISABLED FOR TESTING)
+    // 1. Tab Switch Detection
     useEffect(() => {
-        /* 
         const handleVisibilityChange = () => {
             if (document.hidden && !submitting && !showSpecialization) {
                 setTabSwitchWarnings(prev => {
@@ -150,14 +149,13 @@ export default function QuizInterface() {
         const cleanup = () => document.removeEventListener('visibilitychange', handleVisibilityChange);
         document.addEventListener('visibilitychange', handleVisibilityChange);
         return cleanup;
-        */
     }, [submitting, showSpecialization]);
 
-    // 2. Auto-submit on max warnings (DISABLED FOR TESTING)
+    // 2. Auto-submit on max warnings
     useEffect(() => {
         if (tabSwitchWarnings >= MAX_WARNINGS && !submitting) {
-            // showToast.error(`Test Auto-Submitted: Multiple tab switches detected.`);
-            // handleSubmit(true, 'tab_switch');
+            showToast.error(`Test Auto-Submitted: Multiple tab switches detected.`);
+            handleSubmit(true, 'tab_switch');
         }
     }, [tabSwitchWarnings]);
 
@@ -184,24 +182,43 @@ export default function QuizInterface() {
         };
     }, []);
 
-    // 4. Block Browser Back Navigation
+    // 4. Block Browser Back Navigation & Refresh
     useEffect(() => {
-        // Push state twice to create a buffer against rapid back clicks
-        window.history.pushState(null, document.title, window.location.href);
+        // Push state initially to trap the history
         window.history.pushState(null, document.title, window.location.href);
 
         const handlePopState = (event) => {
-            // Prevent back navigation by pushing the state again
+            // Re-push state immediately when back is clicked
             window.history.pushState(null, document.title, window.location.href);
             showToast.error("Navigation is disabled during the quiz. Please complete the assessment.", { id: 'nav-warning' });
         };
 
+        const handleBeforeUnload = (e) => {
+            if (!submitting) {
+                const message = "Assessment in progress. Leaving this page may disqualify your attempt. Are you sure you want to leave?";
+                e.preventDefault();
+                e.returnValue = message;
+                return message;
+            }
+        };
+
+        // Create a periodic "trap" that keeps the user at the current URL depth
+        // This prevents users from clicking "back" multiple times very fast to escape
+        const historyTrap = setInterval(() => {
+            if (!submitting) {
+                window.history.pushState(null, document.title, window.location.href);
+            }
+        }, 1000);
+
         window.addEventListener('popstate', handlePopState);
+        window.addEventListener('beforeunload', handleBeforeUnload);
 
         return () => {
             window.removeEventListener('popstate', handlePopState);
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+            clearInterval(historyTrap);
         };
-    }, []);
+    }, [submitting]);
 
     const fetchQuestions = async (criteriaId, savedTimeRemaining = null) => {
         try {
@@ -962,7 +979,7 @@ export default function QuizInterface() {
             {/* Top Left - SDET Logo - Compact & Non-overlapping */}
             <div className="fixed top-2 left-2 z-50 animate-hero hidden md:block">
                 <div className="bg-white/10 backdrop-blur-md border border-white/20 p-2 rounded-lg shadow-xl hover:border-brand-blue/50 transition-all duration-300 hover:scale-105 group">
-                    <img src="/logo.jpg" alt="SDET Logo" className="h-10 w-auto object-contain rounded-lg" />
+                    <img src="/sdet-logo.png" alt="SDET Logo" className="h-10 w-auto object-contain" />
                 </div>
             </div>
 

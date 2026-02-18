@@ -28,7 +28,7 @@ export default function SimpleLayout({ children }) {
                     <div className="flex items-center justify-between h-16">
                         {/* Logo */}
                         <div className="flex items-center gap-3">
-                            <img src="/logo.jpg" alt="SDET Logo" className="h-10 w-auto rounded-lg" />
+                            <img src="/sdet-logo.png" alt="SDET Logo" className="h-10 w-auto object-contain" />
                             <div>
                                 <h1 className="text-lg font-bold text-white">SDET Admin</h1>
                                 <p className="text-xs text-slate-400">Fresher Drive System</p>

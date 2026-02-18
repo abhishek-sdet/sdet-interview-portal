@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SimpleLayout from '@/components/admin/SimpleLayout';
 import { supabase } from '@/lib/supabase';
-import { Search, Download, CheckCircle2, XCircle, Calendar, Filter, Trash2, AlertTriangle } from 'lucide-react';
+import { Search, Download, CheckCircle2, XCircle, Calendar, Filter, Trash2, AlertTriangle, Eye, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function AdminResults() {
@@ -19,6 +19,11 @@ export default function AdminResults() {
     const [editingScoreId, setEditingScoreId] = useState(null);
     const [tempScore, setTempScore] = useState('');
     const [updatingScore, setUpdatingScore] = useState(false);
+
+    // Candidate Response Viewer State
+    const [selectedInterview, setSelectedInterview] = useState(null);
+    const [responseData, setResponseData] = useState([]);
+    const [loadingResponses, setLoadingResponses] = useState(false);
 
     useEffect(() => {
         checkAuth();
@@ -266,6 +271,29 @@ export default function AdminResults() {
         }
     };
 
+    const fetchCandidateResponses = async (interview) => {
+        setSelectedInterview(interview);
+        setLoadingResponses(true);
+        setResponseData([]);
+        try {
+            const { data, error } = await supabase
+                .from('answers')
+                .select(`
+                    *,
+                    questions(question_text, options, correct_answer, subsection, section)
+                `)
+                .eq('interview_id', interview.id);
+
+            if (error) throw error;
+            setResponseData(data || []);
+        } catch (err) {
+            console.error('Error fetching responses:', err);
+            toast.error('Failed to load candidate responses');
+        } finally {
+            setLoadingResponses(false);
+        }
+    };
+
     return (
         <SimpleLayout>
             <div className="space-y-6">
@@ -467,18 +495,27 @@ export default function AdminResults() {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
-                                                    <button
-                                                        onClick={() => handleDeleteInterview(result.id)}
-                                                        disabled={deletingId === result.id}
-                                                        className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all disabled:opacity-50"
-                                                        title="Delete this interview"
-                                                    >
-                                                        {deletingId === result.id ? (
-                                                            <div className="w-4 h-4 border-2 border-red-400/30 border-t-red-400 rounded-full animate-spin"></div>
-                                                        ) : (
-                                                            <Trash2 size={16} />
-                                                        )}
-                                                    </button>
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <button
+                                                            onClick={() => fetchCandidateResponses(result)}
+                                                            className="p-2 text-slate-400 hover:text-brand-blue hover:bg-brand-blue/10 rounded-lg transition-all"
+                                                            title="View candidate responses"
+                                                        >
+                                                            <Eye size={16} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteInterview(result.id)}
+                                                            disabled={deletingId === result.id}
+                                                            className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all disabled:opacity-50"
+                                                            title="Delete this interview"
+                                                        >
+                                                            {deletingId === result.id ? (
+                                                                <div className="w-4 h-4 border-2 border-red-400/30 border-t-red-400 rounded-full animate-spin"></div>
+                                                            ) : (
+                                                                <Trash2 size={16} />
+                                                            )}
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         );
@@ -521,6 +558,132 @@ export default function AdminResults() {
                                     className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all font-medium"
                                 >
                                     Yes, Reset All
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {/* Candidate Response Modal */}
+                {selectedInterview && (
+                    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <div className="bg-[#0f172a] border border-white/10 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl">
+                            {/* Modal Header */}
+                            <div className="flex items-start justify-between p-6 border-b border-white/10">
+                                <div>
+                                    <h3 className="text-xl font-bold text-white mb-1">
+                                        {selectedInterview.candidates?.full_name || 'N/A'} — Response Sheet
+                                    </h3>
+                                    <p className="text-sm text-slate-400">{selectedInterview.candidates?.email}</p>
+                                    <div className="flex items-center gap-3 mt-2">
+                                        <span className="text-xs font-mono text-slate-300">
+                                            Score: <strong className="text-white">{selectedInterview.score}/{selectedInterview.total_questions}</strong>
+                                        </span>
+                                        <span className="text-xs text-slate-500">•</span>
+                                        <span className="text-xs font-mono text-slate-300">
+                                            Criteria: <strong className="text-white">{selectedInterview.criteria?.name || 'N/A'}</strong>
+                                        </span>
+                                        <span className="text-xs text-slate-500">•</span>
+                                        {selectedInterview.passed ? (
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-500/10 border border-green-500/20 rounded-full text-green-400 text-xs font-bold">
+                                                <CheckCircle2 size={10} /> PASSED
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-500/10 border border-red-500/20 rounded-full text-red-400 text-xs font-bold">
+                                                <XCircle size={10} /> FAILED
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => { setSelectedInterview(null); setResponseData([]); }}
+                                    className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            {/* Modal Body */}
+                            <div className="overflow-y-auto flex-1 p-6 space-y-4">
+                                {loadingResponses ? (
+                                    <div className="flex items-center justify-center h-40">
+                                        <div className="w-8 h-8 border-2 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin"></div>
+                                    </div>
+                                ) : responseData.length === 0 ? (
+                                    <div className="text-center py-12 text-slate-500">
+                                        <Eye className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                                        <p>No response data found for this candidate.</p>
+                                        <p className="text-xs mt-1">Answers may not have been recorded for older submissions.</p>
+                                    </div>
+                                ) : (
+                                    responseData.map((answer, idx) => (
+                                        <div
+                                            key={answer.id}
+                                            className={`rounded-xl border p-4 ${answer.is_correct
+                                                ? 'border-green-500/20 bg-green-500/5'
+                                                : 'border-red-500/20 bg-red-500/5'
+                                                }`}
+                                        >
+                                            {/* Question Header */}
+                                            <div className="flex items-start justify-between gap-4 mb-3">
+                                                <div className="flex items-start gap-3">
+                                                    <span className="flex-shrink-0 w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-slate-300">
+                                                        {idx + 1}
+                                                    </span>
+                                                    <p className="text-sm font-medium text-white leading-relaxed">
+                                                        {answer.questions?.question_text || 'Question text unavailable'}
+                                                    </p>
+                                                </div>
+                                                {answer.is_correct ? (
+                                                    <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-green-400 text-xs font-bold">
+                                                        <CheckCircle2 size={10} /> Correct
+                                                    </span>
+                                                ) : (
+                                                    <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-1 bg-red-500/10 border border-red-500/20 rounded-full text-red-400 text-xs font-bold">
+                                                        <XCircle size={10} /> Wrong
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Answer Comparison */}
+                                            <div className="ml-10 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                <div className={`rounded-lg px-3 py-2 text-xs ${answer.is_correct
+                                                    ? 'bg-green-500/10 border border-green-500/20'
+                                                    : 'bg-red-500/10 border border-red-500/20'
+                                                    }`}>
+                                                    <span className="text-slate-400 block mb-0.5">Candidate's Answer</span>
+                                                    <span className={`font-semibold ${answer.is_correct ? 'text-green-300' : 'text-red-300'
+                                                        }`}>
+                                                        {answer.selected_answer || <em className="opacity-50">Not answered</em>}
+                                                    </span>
+                                                </div>
+                                                {!answer.is_correct && (
+                                                    <div className="rounded-lg px-3 py-2 text-xs bg-green-500/10 border border-green-500/20">
+                                                        <span className="text-slate-400 block mb-0.5">Correct Answer</span>
+                                                        <span className="font-semibold text-green-300">
+                                                            {answer.questions?.correct_answer || 'N/A'}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+
+                            {/* Modal Footer */}
+                            <div className="px-6 py-4 border-t border-white/10 flex items-center justify-between">
+                                <p className="text-xs text-slate-500">
+                                    {responseData.length} question{responseData.length !== 1 ? 's' : ''} recorded
+                                    &nbsp;•&nbsp;
+                                    {responseData.filter(a => a.is_correct).length} correct
+                                    &nbsp;•&nbsp;
+                                    {responseData.filter(a => !a.is_correct).length} wrong
+                                </p>
+                                <button
+                                    onClick={() => { setSelectedInterview(null); setResponseData([]); }}
+                                    className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 rounded-lg transition-all text-sm"
+                                >
+                                    Close
                                 </button>
                             </div>
                         </div>
