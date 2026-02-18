@@ -115,7 +115,7 @@ export default function SetSelection() {
 
                     {/* Sets Grid */}
                     {sets.length > 0 ? (
-                        <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-10">
+                        <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mb-8 sm:mb-10">
                             {sets.map((set) => {
                                 const isSelected = selectedSet?.id === set.id;
                                 const Icon = set.icon;
@@ -125,7 +125,7 @@ export default function SetSelection() {
                                         key={set.id}
                                         onClick={() => handleSetSelection(set)}
                                         className={`
-                                        relative group block w-full outline-none
+                                        relative group block w-48 sm:w-56 outline-none
                                         ${isSelected ? 'scale-[1.02]' : 'hover:scale-[1.01]'}
                                         transition-transform duration-300
                                     `}
@@ -146,17 +146,17 @@ export default function SetSelection() {
                                                 <div className="absolute inset-0 bg-brand-blue/5 animate-pulse"></div>
                                             )}
 
-                                            <div className="relative p-6 flex flex-col items-center justify-center text-center min-h-[180px]">
+                                            <div className="relative p-4 flex flex-col items-center justify-center text-center min-h-[140px]">
 
                                                 {/* Icon with Glass Backing */}
                                                 <div className={`
-                                                w-12 h-12 rounded-xl flex items-center justify-center mb-4 shadow-lg backdrop-blur-md border border-white/10
+                                                w-10 h-10 rounded-xl flex items-center justify-center mb-3 shadow-lg backdrop-blur-md border border-white/10
                                                 ${isSelected ? 'bg-brand-blue text-white' : 'bg-white/5 text-slate-300 group-hover:scale-110 transition-transform duration-500'}
                                             `}>
                                                     <Icon className="w-6 h-6" />
                                                 </div>
 
-                                                <h3 className={`text-2xl font-bold mb-1 tracking-tight ${isSelected ? 'text-white' : 'text-slate-200'} group-hover:text-white transition-colors`}>
+                                                <h3 className={`text-lg font-bold mb-1 tracking-tight ${isSelected ? 'text-white' : 'text-slate-200'} group-hover:text-white transition-colors`}>
                                                     {set.name}
                                                 </h3>
 

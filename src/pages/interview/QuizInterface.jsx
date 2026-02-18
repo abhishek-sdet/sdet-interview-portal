@@ -120,7 +120,7 @@ export default function QuizInterface() {
         const timer = setInterval(() => {
             setTimeRemaining((prev) => {
                 if (prev <= 1) {
-                    handleSubmit(true); // Auto-submit when time runs out
+                    // handleSubmit(true); // Auto-submit when time runs out (DISABLED FOR TESTING)
                     return 0;
                 }
                 return prev - 1;
@@ -132,8 +132,9 @@ export default function QuizInterface() {
 
     // --- PROCTORING SHIELD ---
 
-    // 1. Tab Switch Detection
+    // 1. Tab Switch Detection (DISABLED FOR TESTING)
     useEffect(() => {
+        /* 
         const handleVisibilityChange = () => {
             if (document.hidden && !submitting && !showSpecialization) {
                 setTabSwitchWarnings(prev => {
@@ -149,13 +150,14 @@ export default function QuizInterface() {
         const cleanup = () => document.removeEventListener('visibilitychange', handleVisibilityChange);
         document.addEventListener('visibilitychange', handleVisibilityChange);
         return cleanup;
+        */
     }, [submitting, showSpecialization]);
 
-    // 2. Auto-submit on max warnings
+    // 2. Auto-submit on max warnings (DISABLED FOR TESTING)
     useEffect(() => {
         if (tabSwitchWarnings >= MAX_WARNINGS && !submitting) {
-            showToast.error(`Test Auto-Submitted: Multiple tab switches detected.`);
-            handleSubmit(true, 'tab_switch');
+            // showToast.error(`Test Auto-Submitted: Multiple tab switches detected.`);
+            // handleSubmit(true, 'tab_switch');
         }
     }, [tabSwitchWarnings]);
 
@@ -184,7 +186,8 @@ export default function QuizInterface() {
 
     // 4. Block Browser Back Navigation
     useEffect(() => {
-        // Push a new state to the history stack
+        // Push state twice to create a buffer against rapid back clicks
+        window.history.pushState(null, document.title, window.location.href);
         window.history.pushState(null, document.title, window.location.href);
 
         const handlePopState = (event) => {
@@ -859,7 +862,14 @@ export default function QuizInterface() {
         // General questions - determine by subsection
         switch (question.subsection) {
             case 'computer_science':
-                return { name: 'Computer Science', color: 'blue', bgClass: 'bg-blue-500/10', borderClass: 'border-blue-500/20', textClass: 'text-blue-400' };
+                // Show "Software Testing" for Experienced, "Computer Science" for Fresher
+                return {
+                    name: criteriaType === 'Experienced' ? 'Software Testing' : 'Computer Science',
+                    color: 'blue',
+                    bgClass: 'bg-blue-500/10',
+                    borderClass: 'border-blue-500/20',
+                    textClass: 'text-blue-400'
+                };
             case 'logical_reasoning':
                 return { name: 'Logical Reasoning', color: 'green', bgClass: 'bg-green-500/10', borderClass: 'border-green-500/20', textClass: 'text-green-400' };
             case 'miscellaneous':

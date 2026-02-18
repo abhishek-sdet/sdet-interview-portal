@@ -4,6 +4,7 @@ import SimpleLayout from '@/components/admin/SimpleLayout';
 import { supabase } from '@/lib/supabase';
 import { Upload, FileText, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import mammoth from 'mammoth';
+import { preprocessDocumentText, detectSections, parseQuestionsInSection } from '@/utils/questionParser';
 
 export default function UploadQuestions() {
     const navigate = useNavigate();
@@ -57,182 +58,22 @@ export default function UploadQuestions() {
         }
     };
 
-    // Helper function to parse questions from text
-    const parseSimpleQuestions = (text, importData) => {
-        console.log('Starting parse of text length:', text.length);
+    // Helper to read text file with correct encoding (handles UTF-16LE BOM)
+    const readTextFile = async (file) => {
+        const buffer = await file.arrayBuffer();
+        const view = new DataView(buffer);
 
-        const questions = [];
-
-        // Normalize text
-        const cleanText = text
-            .replace(/\r\n/g, '\n')
-            .replace(/\r/g, '\n')
-            .replace(/\t/g, ' ')
-            .replace(/\u00A0/g, ' '); // Replace non-breaking spaces
-
-        // Split into lines for line-by-line analysis
-        const lines = cleanText.split('\n').map(l => l.trim()).filter(l => l);
-
-        // Default state
-        let currentSection = 'general';
-        let currentSubsection = null;
-        let currentQuestion = null;
-
-        // Regex patterns
-        // Section: [Computer Science], Section A, 🔹 MISCELLANEOUS LOGIC, [Java programming...]
-        // We capture the content inside [] or after cues
-        const sectionRegex = /^\[(.+)\]$|^(?:Section|Part|🔹)\s+(.+)|^([A-Z\s]+LOGIC)$/i;
-
-        // Question: #1. or Q1. or 1.
-        // 1. Prefix format: #1, Q1, Q 1 (allows space separator)
-        const questionPrefixRegex = /^(?:#|Q)\s*(\d+)[\.)\s]?\s*(.+)?/i;
-        // 2. No prefix format: 1. or 1) (MUST have DOT or PAREN, no space allowed as separator)
-        const questionNoPrefixRegex = /^(\d+)[\.)]\s*(.+)?/i;
-
-        // Option: A. or A)
-        const optionRegex = /^([A-D])[\.)\)]\s*(.+)/i;
-
-        // Answer: ✅ Answer: A or Answer: A or Ans: A
-        const answerRegex = /^(?:✅\s*)?(?:Answer|Ans|Correct)\s*[:\-]\s*([A-D])/i;
-
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-
-            // 1. Check for Section Headers
-            const sectionMatch = line.match(sectionRegex);
-            if (sectionMatch) {
-                // Extract the meaningful name from the match groups
-                const rawName = (sectionMatch[1] || sectionMatch[2] || sectionMatch[3]).trim();
-                const lowerName = rawName.toLowerCase();
-
-                // Safety: Exclude if it looks like a question or option or answer
-                if (/^Answer|^Ans|^Question|^\d/.test(rawName)) {
-                    // Do nothing, treat as text
-                } else {
-                    console.log(`[Parser] Found Section: "${rawName}"`);
-
-                    if (lowerName.includes('java')) {
-                        currentSection = 'elective';
-                        currentSubsection = 'java';
-                    } else if (lowerName.includes('python')) {
-                        currentSection = 'elective';
-                        currentSubsection = 'python';
-                    } else if (lowerName.includes('computer')) {
-                        currentSection = 'Computer Science';
-                        currentSubsection = null;
-                    } else if (lowerName.includes('logical')) {
-                        currentSection = 'Logical Reasoning';
-                        currentSubsection = null;
-                    } else if (lowerName.includes('miscellaneous')) {
-                        currentSection = 'Miscellaneous Logic';
-                        currentSubsection = null;
-                    } else if (lowerName.includes('grammar')) {
-                        currentSection = 'Grammar';
-                        currentSubsection = null;
-                    } else {
-                        // Default fallback for other headers
-                        currentSection = rawName;
-                        currentSubsection = null;
-                    }
-                    continue; // Skip this line
-                }
-            }
-
-            // 2. Check for Answer Key matches (Priority over options)
-            const ansMatch = line.match(answerRegex);
-            if (ansMatch && currentQuestion) {
-                currentQuestion.correct_option = ansMatch[1].toUpperCase();
-                continue;
-            }
-
-            // 3. Check for Options
-            const optMatch = line.match(optionRegex);
-            if (optMatch && currentQuestion) {
-                const letter = optMatch[1].toUpperCase();
-                const text = optMatch[2];
-
-                // Map letter to index
-                const map = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
-                if (map[letter] !== undefined) {
-                    currentQuestion.options[map[letter]] = text.replace(/\*/g, '').trim();
-
-                    // Check for inline asterisk
-                    if (text.includes('*')) {
-                        currentQuestion.correct_option = letter;
-                    }
-                }
-                continue;
-            }
-
-            // 4. Check for New Question Start
-            let qMatch = line.match(questionPrefixRegex) || line.match(questionNoPrefixRegex);
-
-            if (qMatch) {
-                // Save previous question if valid
-                if (currentQuestion) {
-                    // Fix: Be more lenient. If it has text, accept it. 
-                    // Fill missing options with empty strings.
-                    while (currentQuestion.options.length < 4) currentQuestion.options.push('');
-
-                    // Only push if we have at least ONE option or it looks like a question
-                    if (currentQuestion.options.some(o => o) || currentQuestion.question_text) {
-                        questions.push(currentQuestion);
-                    } else {
-                        console.warn('[Parser] Dropping empty question:', currentQuestion);
-                    }
-                }
-
-                currentQuestion = {
-                    ...importData,
-                    section: currentSection,
-                    subsection: currentSubsection,
-                    question_text: qMatch[2] || '', // Capture text if on same line
-                    options: [],
-                    original_options: [], // Temporary storage
-                    correct_option: 'A',
-                    is_active: true
-                };
-                continue;
-            }
-
-            // 5. Append continuation text to question
-            if (currentQuestion) {
-                // If we haven't started options yet, append to question text
-                if (currentQuestion.options.length === 0 && !currentQuestion.options[0]) {
-                    if (currentQuestion.question_text) {
-                        currentQuestion.question_text += '\n' + line;
-                    } else {
-                        currentQuestion.question_text = line;
-                    }
-                }
-                // If we ARE in options, but this line didn't match an option regex,
-                // it might be a multiline option. Append to the LAST option.
-                else {
-                    // Find the last filled option index
-                    let lastIdx = -1;
-                    for (let k = 3; k >= 0; k--) {
-                        if (currentQuestion.options[k]) {
-                            lastIdx = k;
-                            break;
-                        }
-                    }
-                    if (lastIdx !== -1) {
-                        currentQuestion.options[lastIdx] += ' ' + line;
-                    }
-                }
-            }
+        // Check for UTF-16LE BOM (FF FE)
+        if (view.getUint16(0, true) === 0xFEFF) {
+            return new TextDecoder('utf-16le').decode(buffer);
+        }
+        // Check for UTF-16BE BOM (FE FF)
+        if (view.getUint16(0, false) === 0xFEFF) {
+            return new TextDecoder('utf-16be').decode(buffer);
         }
 
-        // Add the last question
-        if (currentQuestion) {
-            while (currentQuestion.options.length < 4) currentQuestion.options.push('');
-            if (currentQuestion.options.some(o => o) || currentQuestion.question_text) {
-                questions.push(currentQuestion);
-            }
-        }
-
-        console.log(`[Parser] Successfully parsed ${questions.length} questions.`);
-        return questions;
+        // Default to UTF-8
+        return new TextDecoder('utf-8').decode(buffer);
     };
 
     const handleUpload = async (e) => {
@@ -256,8 +97,14 @@ export default function UploadQuestions() {
                 const result = await mammoth.extractRawText({ arrayBuffer });
                 text = result.value;
             } else if (file.name.endsWith('.txt')) {
-                // Read text file directly
-                text = await file.text();
+                // Read text file directly with encoding detection
+                text = await readTextFile(file);
+
+                // Fallback: If text contains null bytes (common when UTF-16 is read as UTF-8 or BOM missing), strip them
+                if (text.indexOf('\0') !== -1) {
+                    console.warn('Found null bytes in text, stripping to fix encoding...');
+                    text = text.replace(/\0/g, '');
+                }
             }
 
             if (!text || text.trim().length === 0) {
@@ -266,15 +113,26 @@ export default function UploadQuestions() {
 
             console.log(`✅ Extracted ${text.length} characters`);
 
-            // Simple parsing: split by lines and parse questions
+            // Use the shared robust parser
+            // 1. Preprocess (handle newlines etc)
+            text = preprocessDocumentText(text);
+
+            // 2. Detect sections
+            const sections = detectSections(text);
+            console.log(`Found ${sections.length} sections`);
+
             const importData = {
                 criteria_id: selectedCriteria,
                 category: setName.trim(),
                 difficulty: 'medium'
             };
 
-            // Parse questions from the text
-            const allQuestions = parseSimpleQuestions(text, importData);
+            // 3. Parse each section
+            let allQuestions = [];
+            for (const section of sections) {
+                const questions = parseQuestionsInSection(section, importData);
+                allQuestions = [...allQuestions, ...questions];
+            }
 
             if (allQuestions.length === 0) {
                 throw new Error('No valid questions found in document');
@@ -335,6 +193,7 @@ export default function UploadQuestions() {
                     subsection: dbSubsection,
                     question_text: q.question_text,
                     options: q.options, // This is an array, Supabase JSONB should handle it
+                    correct_option: q.correct_option || 'A', // Default to A if parsing fails
                     correct_answer: q.options[q.correct_option ? q.correct_option.charCodeAt(0) - 65 : 0] || q.options[0] || '',
                     difficulty: 'medium',
                     is_active: true,

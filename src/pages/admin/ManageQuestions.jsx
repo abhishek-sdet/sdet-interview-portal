@@ -45,8 +45,8 @@ export default function ManageQuestions() {
         }
     };
 
-    const fetchQuestions = async () => {
-        setLoading(true);
+    const fetchQuestions = async (showLoader = true) => {
+        if (showLoader) setLoading(true);
         try {
             let query = supabase
                 .from('questions')
@@ -54,7 +54,7 @@ export default function ManageQuestions() {
                     *,
                     criteria(name)
                 `)
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: true });
 
             if (selectedCriteria !== 'all') {
                 query = query.eq('criteria_id', selectedCriteria);
@@ -86,7 +86,7 @@ export default function ManageQuestions() {
         } catch (err) {
             console.error('Error fetching questions:', err);
         } finally {
-            setLoading(false);
+            if (showLoader) setLoading(false);
         }
     };
 
@@ -126,6 +126,7 @@ export default function ManageQuestions() {
     };
 
     const handleSaveEdit = async () => {
+        const questionId = editingQuestion.id;
         try {
             const { error } = await supabase
                 .from('questions')
@@ -143,9 +144,17 @@ export default function ManageQuestions() {
 
             if (error) throw error;
 
-            // Refresh questions
-            fetchQuestions();
+            // Refresh questions without showing loader
+            await fetchQuestions(false);
             setEditingQuestion(null);
+
+            // Restore scroll position by scrolling to the specific question
+            setTimeout(() => {
+                const element = document.getElementById(`q-${questionId}`);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 100);
         } catch (err) {
             console.error('Error updating question:', err);
             alert('Failed to update question');
@@ -161,8 +170,8 @@ export default function ManageQuestions() {
 
             if (error) throw error;
 
-            // Refresh questions
-            fetchQuestions();
+            // Refresh questions without showing loader
+            fetchQuestions(false);
             setShowDeleteConfirm(null);
             setSuccessModal({
                 title: 'Success',
@@ -219,8 +228,8 @@ export default function ManageQuestions() {
                 });
             }
 
-            // Refresh questions
-            fetchQuestions();
+            // Refresh questions without showing loader
+            fetchQuestions(false);
         } catch (err) {
             console.error('Error deleting question set:', err);
             setSuccessModal({
@@ -289,7 +298,7 @@ export default function ManageQuestions() {
         const currentOptions = isEditing ? editingQuestion.options : q.options;
 
         return (
-            <div key={q.id} className="bg-white/5 border border-white/10 rounded-xl p-6 hover:border-white/20 transition-all">
+            <div id={`q-${q.id}`} key={q.id} className="bg-white/5 border border-white/10 rounded-xl p-6 hover:border-white/20 transition-all">
                 <div className="flex items-start gap-4">
                     {/* Question Number */}
                     <div className="flex-shrink-0 w-10 h-10 bg-brand-blue/20 rounded-lg flex items-center justify-center">
@@ -313,7 +322,8 @@ export default function ManageQuestions() {
                         <div className="space-y-3">
                             {[0, 1, 2, 3].map((optIdx) => {
                                 const optionLetter = String.fromCharCode(65 + optIdx);
-                                const isCorrect = optionLetter === (isEditing ? editingQuestion.correct_option : q.correct_option);
+                                const correctOpt = (isEditing ? editingQuestion.correct_option : q.correct_option) || '';
+                                const isCorrect = optionLetter === correctOpt.toUpperCase();
                                 const optionText = currentOptions[optIdx] || '';
 
                                 return (
@@ -331,7 +341,7 @@ export default function ManageQuestions() {
                                             </button>
                                         )}
                                         <div className={`flex-1 flex items-start gap-3 px-4 py-3 rounded-lg transition-all ${isCorrect
-                                            ? 'bg-green-500/10 border-2 border-green-500/30'
+                                            ? 'bg-green-500/20 border-2 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.2)]'
                                             : 'bg-white/5 border border-white/10'
                                             }`}>
                                             <span className={`font-bold flex-shrink-0 mt-0.5 ${isCorrect ? 'text-green-400' : 'text-slate-400'}`}>
@@ -367,7 +377,16 @@ export default function ManageQuestions() {
                         <div className="flex items-center gap-4 text-xs text-slate-500">
                             {q.section && <span className="px-2 py-1 bg-white/5 rounded capitalize">Section: {q.section}</span>}
                             {q.subsection && <span className="px-2 py-1 bg-white/5 rounded capitalize">{q.subsection}</span>}
-                            <span className="px-2 py-1 bg-green-500/10 text-green-400 rounded font-medium">✓ Correct: {q.correct_option}</span>
+                            {(() => {
+                                const optLetter = q.correct_option ? q.correct_option.toUpperCase() : '?';
+                                const optIdx = optLetter.charCodeAt(0) - 65;
+                                const optText = (q.options && q.options[optIdx]) ? q.options[optIdx] : '';
+                                return (
+                                    <span className="px-2 py-1 bg-green-500/10 text-green-400 rounded font-medium">
+                                        ✓ Correct: {optLetter} {optText ? <span className="text-green-300 ml-1">({optText})</span> : ''}
+                                    </span>
+                                );
+                            })()}
                         </div>
                     </div>
 

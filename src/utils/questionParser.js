@@ -14,8 +14,9 @@ export function preprocessDocumentText(text) {
     // Case 1: Letter followed by dot/paren and space
     text = text.replace(/([^\n])\s*([A-Da-d][\.)\]])\s+/g, '$1\n$2 ');
 
-    // Case 2: "Answer:" or "Ans:" pattern
-    text = text.replace(/([^\n])\s*(Answer|Ans|Correct)\s*:/gi, '$1\n$2:');
+    // Case 2: "Answer:" or "Ans:" pattern - robustly handle any prefix (emojis, etc.)
+    // Expanded to handle Correct Option, Correct Answer, Answer Key, and multiple separators (-, ., ), :)
+    text = text.replace(/([^\n])\s*([^a-zA-Z0-9\n]*(?:Correct\s+Answer|Correct\s+Option|Answer\s+Key|Correct|Answer|Ans)[^a-zA-Z0-9\n]*)/gi, '$1\n$2');
 
     return text;
 }
@@ -42,7 +43,7 @@ export function detectSections(text) {
         // - "JAVA Based Questions (Optional - Choose 3 out of 6)"
         // - "Python Based Questions"
         // - Standalone markers: "JAVA", "Python", "Java", "PYTHON"
-        const sectionMatch = line.match(/^(?:Section\s+[A-Z][\s:\-–—]+|[A-Z][A-Za-z\s]+(?:Questions?|Based|MCQ|Answer)|^(?:JAVA|Python|Java|PYTHON)$)/i);
+        const sectionMatch = line.match(/^(?:\[.+\]|Section\s+[\w\s:\-–—]+|[A-Z][A-Za-z\s]+(?:Questions?|Based|MCQ|Answer)|(?:JAVA|Python|Java|PYTHON)|\W*(?:MISCELLANEOUS|General|Aptitude|Technical|Logical|Grammar|Computer|Verbal)\b.*)/i);
 
         // Additional check: line should be relatively short (section headers) and not start with a number
         const looksLikeSection = sectionMatch && line.length < 150 && !line.match(/^\d+[\.)]/)
@@ -108,7 +109,14 @@ function detectSubsection(sectionName) {
     if (lower.includes('python')) return 'python';
     if (lower.includes('aptitude')) return 'aptitude';
     if (lower.includes('sql') || lower.includes('database')) return 'sql';
-    return null; // for general sections
+
+    // Mappings for Fresher Drive Set
+    if (lower.includes('computer') || lower.includes('cs') || lower.includes('technical') || lower.includes('testing') || lower.includes('software')) return 'computer_science';
+    if (lower.includes('logical') || lower.includes('reasoning')) return 'logical_reasoning';
+    if (lower.includes('miscellaneous')) return 'miscellaneous';
+    if (lower.includes('grammar') || lower.includes('english') || lower.includes('verbal')) return 'grammar';
+
+    return null; // for general sections (will default to computer_science in UI if not caught above)
 }
 
 /**
@@ -260,7 +268,7 @@ export function parseQuestionsInSection(section, importData) {
                 if (markerMatch) {
                     // Check for Answer at end
                     let content = cleanP.substring(markerMatch[0].length).trim();
-                    const ansMatch = content.match(/(?:Correct|Answer|Ans)[\s:]+([A-Da-d])/i);
+                    const ansMatch = content.match(/(?:Correct\s+Answer|Correct\s+Option|Answer\s+Key|Correct|Answer|Ans|Ans\.?)[\s:\-\)\.]+(?:\(?)\s*([A-Da-d])/i);
                     if (ansMatch) {
                         foundAnswer = ansMatch[1].toUpperCase();
                         content = content.replace(ansMatch[0], '').trim();
@@ -355,83 +363,61 @@ export function parseQuestionsInSection(section, importData) {
             }
         }
 
-        // 1. Detect Question Start
-        // Pattern A: Numbered (1. Question...)
-        const numberedMatch = line.match(/^(?:Q\.?\s*)?(\d+)[\.)\s]+(.+)/);
+        // 1. Detect Option (Priority check)
+        const optionMatch = line.match(/^([A-Da-d])[\.)\]\s]+(.+)/);
+        const answerMatch = line.match(/^(?:[^a-zA-Z0-9]*)(?:Correct\s+Answer|Correct\s+Option|Answer\s+Key|Correct|Answer|Ans|Ans\.?)[\s:\-\)\.]+(?:\(?)\s*([A-Da-d])/i);
 
-        // Pattern B: Unnumbered but looks like a question
-        const isQuestionText = line.includes('?') ||
-            /^(What|Who|Where|When|Why|How|Which|Define|Explain)\s/.test(line);
+        // 2. Detect Question Start
+        // Unified Regex to handle all valid formats:
+        // - Standard: "1." or "1)"
+        // - Prefix: "#1", "Q1"
+        // - Flexible Separator: Dot, Start Paren, or Space (if Space, requires careful check)
+        // Regex Breakdown:
+        // ^(?:Q\.?|#)?   -> Optional Prefix (Q, Q., #)
+        // \s*            -> Optional indentation
+        // (\d+)          -> Capture Digits (Group 1)
+        // (?:[\.)]|\s)   -> Separator: Dot OR Closing Paren OR Space
+        // \s*            -> Optional space after separator
+        // (.*)           -> Capture Rest of Line (Group 2)
 
-        if (numberedMatch) {
+        const numberedMatch = line.match(/^(?:Q\.?|#)?\s*(\d+)(?:[\.)]|\s)\s*(.*)/);
+
+        // Validation:
+        // We assume ANY line starting with "Number + Separator" is a question
+        // UNLESS it was already caught as an Option using specific Option Regex above.
+        // The only risk is "100 apples". But usually numbers at start of line in these files imply lists.
+
+        if (numberedMatch && !optionMatch && !answerMatch) {
             saveCurrentQuestion();
-            // Check for inline options immediately in the captured text
-            const { qText, foundOptions, foundAnswer } = extractInlineOptions(numberedMatch[2].trim());
-            currentQuestion = qText;
-            if (foundOptions.length > 0) {
-                currentOptions = foundOptions;
-                if (foundAnswer) {
-                    const idx = foundAnswer.charCodeAt(0) - 65;
-                    if (currentOptions[idx]) correctAnswer = currentOptions[idx];
-                }
-            }
-            lastLine = line;
-            continue;
-        } else if (isQuestionText && currentOptions.length === 0) {
-            // Treat as new question if we don't have active options OR if it looks distinct
-            // If we already have a question but NO options, append to it (multiline question)
-            if (currentQuestion && !line.match(/^[A-D][\.)]/)) {
-                currentQuestion += ' ' + line;
-            } else {
-                saveCurrentQuestion(); // Save previous if exists
-
-                // EXTRACT INLINE OPTIONS FROM UNNUMBERED QUESTION TOO
-                const { qText, foundOptions, foundAnswer } = extractInlineOptions(line);
-                currentQuestion = qText;
-                if (foundOptions.length > 0) {
-                    currentOptions = foundOptions;
-                    if (foundAnswer) {
-                        const idx = foundAnswer.charCodeAt(0) - 65;
-                        if (currentOptions[idx]) correctAnswer = currentOptions[idx];
-                    }
-                }
-            }
+            // If text exists, use it. If empty, initialize empty string
+            const text = numberedMatch[2] ? numberedMatch[2].trim() : '';
+            currentQuestion = text;
             lastLine = line;
             continue;
         }
 
-        // 2. Detect Options (Priority check)
-        // Format: "A. Option" or "a) Option"
-        const optionMatch = line.match(/^([A-Da-d])[\.)\]\s]+(.+)/);
-
+        // 3. Handle Options
         if (optionMatch) {
             // RETROACTIVE DETECTION:
             // If we found an option "A." but have no current question, 
             // the PREVIOUS line must have been the question!
-            if (!currentQuestion && currentOptions.length === 0 && lastLine) {
+            if (currentQuestion === null && currentOptions.length === 0 && lastLine && !lastLine.match(/^(?:Choose|Select|Answer|Attempt)/i)) {
                 // Check if lastLine wasn't skipped/instruction
-                if (!lastLine.match(/^(?:Choose|Select|Answer|Attempt)/i)) {
-                    console.log('      💡 Retroactively detected question:', lastLine.substring(0, 30) + '...');
-                    currentQuestion = lastLine;
-                }
+                console.log('      💡 Retroactively detected question:', lastLine.substring(0, 30) + '...');
+                currentQuestion = lastLine;
             }
 
-            // Only add option if we have a question (detected now or before)
-            if (currentQuestion) {
+            if (currentQuestion !== null) {
                 currentOptions.push(optionMatch[2].trim());
 
-                // Inline answer check
-                const inlineAnsMatch = optionMatch[2].match(/Answer\s*:\s*([A-Da-d])/i);
-                if (inlineAnsMatch) {
-                    // We ignore inline logic for now to keep simple, relies on regex #3 below or manual fix
-                }
+                // Inline answer check (simple)
+                // const inlineAnsMatch = optionMatch[2].match(/Answer\s*:\s*([A-Da-d])/i);
                 lastLine = line;
                 continue;
             }
         }
 
-        // 3. Detect "Answer:" line
-        const answerMatch = line.match(/^(?:Correct|Answer|Ans)[\s:]+([A-Da-d])/i);
+        // 4. Handle Answer
         if (answerMatch) {
             const answerLetter = answerMatch[1].toUpperCase();
             const correctIndex = answerLetter.charCodeAt(0) - 65;
@@ -442,16 +428,26 @@ export function parseQuestionsInSection(section, importData) {
             continue;
         }
 
-        // 4. Handle Question Text (if not identified as option/answer)
-        if (isQuestionText && currentOptions.length === 0) {
-            if (currentQuestion && !line.match(/^[A-D][\.)]/)) {
-                currentQuestion += ' ' + line; // Append to existing
+        // 5. Append Text to Current Question (Multiline support)
+        // If we are "inside" a question (currentQuestion is not null) and haven't started options yet
+        // This handles code blocks, multi-line questions, etc.
+        if (currentQuestion !== null && currentOptions.length === 0) {
+            if (currentQuestion === '') {
+                currentQuestion = line; // First line of text after "37."
             } else {
-                saveCurrentQuestion();
-                currentQuestion = line;
+                currentQuestion += '\n' + line; // Append subsequent lines
             }
             lastLine = line;
             continue;
+        }
+
+        // 6. Generic Text Catch (if no question started yet)
+        if (currentQuestion === null && currentOptions.length === 0) {
+            const isQuestionText = line.includes('?') || /^(What|Who|Where|When|Why|How|Which|Define|Explain)\s/.test(line);
+            if (isQuestionText) {
+                saveCurrentQuestion();
+                currentQuestion = line;
+            }
         }
 
         // 5. Fallback: Identify text as question if we are "idle" (no current question)
