@@ -218,7 +218,7 @@ export default function AdminDashboard() {
                                             </td>
                                             <td className="px-6 py-4 text-center font-mono font-bold text-slate-300">
                                                 {activity.status === 'in_progress' ? (
-                                                    <span className="text-brand-blue animate-pulse italic">Active...</span>
+                                                    <span className="text-slate-500">-</span>
                                                 ) : (
                                                     `${activity.score}/${activity.total_questions}`
                                                 )}
