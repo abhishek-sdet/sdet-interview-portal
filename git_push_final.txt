@@ -1,0 +1,9 @@
+warning: in the working copy of 'git_email_out.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'git_log_out.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'git_name_out.txt', LF will be replaced by CRLF the next time Git touches it
+error: pathspec 'registration,' did not match any file(s) known to git
+error: pathspec 'scoring,' did not match any file(s) known to git
+error: pathspec 'and' did not match any file(s) known to git
+error: pathspec 'phone' did not match any file(s) known to git
+error: pathspec 'input' did not match any file(s) known to git
+error: pathspec 'restriction'' did not match any file(s) known to git

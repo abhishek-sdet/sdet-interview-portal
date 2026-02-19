@@ -1,0 +1,7 @@
+warning: in the working copy of 'git_push_final.txt', LF will be replaced by CRLF the next time Git touches it
+error: pathspec 'Fix' did not match any file(s) known to git
+error: pathspec 'registration' did not match any file(s) known to git
+error: pathspec 'scoring' did not match any file(s) known to git
+error: pathspec 'and' did not match any file(s) known to git
+error: pathspec 'phone' did not match any file(s) known to git
+error: pathspec 'restriction\ ' did not match any file(s) known to git

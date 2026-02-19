@@ -1,0 +1,33 @@
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   src/App.jsx
+	modified:   src/components/admin/SimpleLayout.jsx
+	modified:   src/pages/admin/AdminResults.jsx
+	modified:   src/pages/admin/UploadQuestions.jsx
+	modified:   src/pages/dashboard/HRDashboard.jsx
+	modified:   src/pages/interview/LandingPage.jsx
+	modified:   src/pages/interview/QuizInterface.jsx
+	modified:   src/utils/questionParser.js
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	build_check.txt
+	build_output.txt
+	git_apply_output.txt
+	git_log_graph.txt
+	git_stash_list_final.txt
+	git_status_out.txt
+	migrations/20260219_candidate_email_unique.sql
+	migrations/20260219_cleanup_duplicate_options.sql
+	migrations/20260219_create_access_control.sql
+	migrations/20260219_fix_registration_policies.sql
+	src/components/admin/AccessDenied.jsx
+	src/lib/accessControl.js
+	src/pages/admin/ManageAccess.jsx
+	stash_diff.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")

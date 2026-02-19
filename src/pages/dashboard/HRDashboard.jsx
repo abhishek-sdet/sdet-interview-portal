@@ -38,7 +38,7 @@ export default function HRDashboard() {
                     candidates(*),
                     criteria(name, passing_percentage)
                 `)
-                .order('completed_at', { ascending: false });
+                .order('started_at', { ascending: false });
 
             if (error) throw error;
             setInterviews(interviewData || []);
@@ -318,7 +318,7 @@ export default function HRDashboard() {
                                                 <td className="px-6 py-4 font-bold text-sm tracking-tight">{item.candidates?.full_name}</td>
                                                 <td className="px-6 py-4 text-xs font-semibold text-slate-500">{item.candidates?.email}</td>
                                                 <td className="px-6 py-4 text-[10px] font-bold font-mono text-slate-600">
-                                                    {new Date(item.completed_at).toLocaleString()}
+                                                    {new Date(item.completed_at || item.started_at).toLocaleString()}
                                                 </td>
                                             </tr>
                                         ))
@@ -522,7 +522,7 @@ function CandidateMiniCard({ item, status, current }) {
             <p className="text-sm font-bold truncate tracking-tight">{item.candidates?.full_name}</p>
             <p className="text-xs text-slate-500 truncate">{item.candidates?.email}</p>
             <div className="mt-2 pt-2 border-t border-white/5 flex items-center justify-between">
-                <span className="text-[9px] font-bold font-mono opacity-30 uppercase">{new Date(item.completed_at).toLocaleDateString()}</span>
+                <span className="text-[9px] font-bold font-mono opacity-30 uppercase">{new Date(item.completed_at || item.started_at).toLocaleDateString()}</span>
                 <span className="text-[9px] font-bold text-slate-400 capitalize">{item.criteria?.name?.split(' ')[0]}</span>
             </div>
         </div>

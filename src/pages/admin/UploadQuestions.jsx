@@ -192,16 +192,15 @@ export default function UploadQuestions() {
                     section: dbSection,
                     subsection: dbSubsection,
                     question_text: q.question_text,
-                    options: q.options, // This is an array, Supabase JSONB should handle it
-                    correct_option: q.correct_option || 'A', // Default to A if parsing fails
-                    correct_answer: q.options[q.correct_option ? q.correct_option.charCodeAt(0) - 65 : 0] || q.options[0] || '',
+                    options: q.options.map(opt => opt.trim()), // Ensure options are trimmed
+                    correct_option: q.correct_option || 'A',
+                    correct_answer: (q.correct_option
+                        ? (q.options[q.correct_option.charCodeAt(0) - 65] || q.options[0])
+                        : (q.options[0] || '')).trim(),
                     difficulty: 'medium',
                     is_active: true,
                     points: 1
                 };
-
-                // Remove temp fields
-                delete questionData.original_options;
 
                 const { error } = await supabase
                     .from('questions')

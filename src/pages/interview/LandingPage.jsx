@@ -21,7 +21,12 @@ export default function LandingPage() {
     }, []);
 
     const handleChange = (field) => (e) => {
-        setFormData({ ...formData, [field]: e.target.value });
+        let value = e.target.value;
+        if (field === 'phone') {
+            // Strip non-numeric characters
+            value = value.replace(/[^0-9]/g, '');
+        }
+        setFormData({ ...formData, [field]: value });
         setError('');
     };
 
@@ -62,31 +67,105 @@ export default function LandingPage() {
         setLoading(true);
 
         try {
-            const { data, error: insertError } = await supabase
+            console.log('[REGISTRATION] Checking for existing candidate:', formData.email.trim());
+            // 1. Check if candidate already exists
+            const { data: candidates, error: fetchError } = await supabase
                 .from('candidates')
-                .insert([
-                    {
-                        full_name: formData.fullName.trim(),
-                        email: formData.email.trim(),
-                        phone: formData.phone.trim()
+                .select('id, full_name')
+                .eq('email', formData.email.trim())
+                .limit(1);
+
+            if (fetchError) {
+                console.error('[REGISTRATION] Fetch candidate error:', fetchError);
+                throw fetchError;
+            }
+
+            const existingCandidate = candidates?.[0];
+            let candidateId = null;
+            let candidateName = null;
+
+            if (existingCandidate) {
+                console.log('[REGISTRATION] Existing candidate found:', existingCandidate.id);
+                // 2. Candidate exists, check for *active* or *completed* associated interview
+                // We just check if any interview exists at all for this candidate
+                const { data: interviews, error: interviewError } = await supabase
+                    .from('interviews')
+                    .select('id')
+                    .eq('candidate_id', existingCandidate.id)
+                    .limit(1);
+
+                if (interviewError) {
+                    console.error('[REGISTRATION] Fetch interview error:', interviewError);
+                    throw interviewError;
+                }
+
+                if (interviews && interviews.length > 0) {
+                    console.log('[REGISTRATION] Active interview exists. Blocking.');
+                    // Interview exists - block registration
+                    setError('This email has already been registered for an assessment.');
+                    setLoading(false);
+                    return;
+                } else {
+                    console.log('[REGISTRATION] No interview found for candidate. Updating info and proceeding.');
+                    // No interview exists (likely deleted by admin)
+                    // Update existing candidate and proceed
+                    const { data: updatedCandidate, error: updateError } = await supabase
+                        .from('candidates')
+                        .update({
+                            full_name: formData.fullName.trim(),
+                            phone: formData.phone.trim()
+                        })
+                        .eq('id', existingCandidate.id)
+                        .select()
+                        .maybeSingle();
+
+                    if (updateError) {
+                        console.error('[REGISTRATION] Update candidate error:', updateError);
+                        throw updateError;
                     }
-                ])
-                .select()
-                .single();
+                    candidateId = updatedCandidate.id;
+                    candidateName = updatedCandidate.full_name;
+                }
+            } else {
+                console.log('[REGISTRATION] Creating new candidate...');
+                // 3. New candidate, insert record
+                const { data: newCandidate, error: insertError } = await supabase
+                    .from('candidates')
+                    .insert([
+                        {
+                            full_name: formData.fullName.trim(),
+                            email: formData.email.trim(),
+                            phone: formData.phone.trim()
+                        }
+                    ])
+                    .select()
+                    .maybeSingle();
 
-            if (insertError) throw insertError;
+                if (insertError) {
+                    console.error('[REGISTRATION] Insert candidate error:', insertError);
+                    throw insertError;
+                }
+                candidateId = newCandidate.id;
+                candidateName = newCandidate.full_name;
+            }
 
-            sessionStorage.setItem('candidateId', data.id);
-            sessionStorage.setItem('candidateName', data.full_name);
+            // 4. Store session info and navigate
+            sessionStorage.setItem('candidateId', candidateId);
+            sessionStorage.setItem('candidateName', candidateName);
 
+            console.log('[REGISTRATION] Success! Navigating to rules.');
             navigate('/exam-rules', {
                 state: {
-                    candidateData: data
+                    candidateData: { id: candidateId, full_name: candidateName }
                 }
             });
         } catch (err) {
-            console.error('Error creating candidate:', err);
-            setError('Failed to register. Please try again.');
+            console.error('Final registration error object:', err);
+            if (err.code === '23505' || err.message?.includes('unique constraint')) {
+                setError('This email has already been registered for an assessment.');
+            } else {
+                setError(`Failed to register: ${err.message || 'Please try again.'}`);
+            }
         } finally {
             setLoading(false);
         }

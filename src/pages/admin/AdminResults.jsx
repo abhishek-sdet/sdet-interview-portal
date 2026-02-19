@@ -132,31 +132,32 @@ export default function AdminResults() {
         a.click();
     };
 
-    const handleDeleteInterview = async (interviewId) => {
-        setDeletingId(interviewId);
+    const handleDeleteInterview = async (result) => {
+        setDeletingId(result.id);
 
         try {
-            console.log('[DELETE] Attempting to delete interview:', interviewId);
+            console.log('[DELETE] Attempting to delete candidate and interview for:', result.candidates?.email);
 
+            // Deleting the candidate will cascade and delete the interview
             const { error } = await supabase
-                .from('interviews')
+                .from('candidates')
                 .delete()
-                .eq('id', interviewId);
+                .eq('id', result.candidate_id);
 
             if (error) {
                 console.error('[DELETE] Supabase error:', error);
                 throw error;
             }
 
-            console.log('[DELETE] Interview deleted successfully');
-            toast.success('Interview deleted successfully');
+            console.log('[DELETE] Candidate and interview deleted successfully');
+            toast.success('Record deleted successfully');
             fetchResults(); // Refresh list
         } catch (err) {
-            console.error('[DELETE] Error deleting interview:', err);
+            console.error('[DELETE] Error deleting record:', err);
 
             // Check if it's a permission error
             if (err.message?.includes('permission') || err.message?.includes('policy')) {
-                toast.error('Permission denied. Please run fix_delete_permissions.sql in Supabase Dashboard.');
+                toast.error('Permission denied. Please check Supabase RLS policies.');
             } else {
                 toast.error(`Failed to delete: ${err.message || 'Unknown error'}`);
             }
@@ -504,10 +505,10 @@ export default function AdminResults() {
                                                             <Eye size={16} />
                                                         </button>
                                                         <button
-                                                            onClick={() => handleDeleteInterview(result.id)}
+                                                            onClick={() => handleDeleteInterview(result)}
                                                             disabled={deletingId === result.id}
                                                             className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all disabled:opacity-50"
-                                                            title="Delete this interview"
+                                                            title="Delete this candidate and result"
                                                         >
                                                             {deletingId === result.id ? (
                                                                 <div className="w-4 h-4 border-2 border-red-400/30 border-t-red-400 rounded-full animate-spin"></div>

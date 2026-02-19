@@ -1,11 +1,29 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, LayoutDashboard, Upload, FileText, List, Settings } from 'lucide-react';
+import { LogOut, LayoutDashboard, Upload, FileText, List, Settings, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { accessControl } from '@/lib/accessControl';
+import AccessDenied from './AccessDenied';
 
 export default function SimpleLayout({ children }) {
     const navigate = useNavigate();
     const location = useLocation();
+    const [accessState, setAccessState] = useState({ loading: true, allowed: true, ip: null, deviceId: null });
+
+    useEffect(() => {
+        checkAccess();
+    }, [location.pathname]);
+
+    const checkAccess = async () => {
+        setAccessState(prev => ({ ...prev, loading: true }));
+        const result = await accessControl.verifyAccess();
+        setAccessState({
+            loading: false,
+            allowed: result.allowed,
+            ip: result.ip,
+            deviceId: result.deviceId
+        });
+    };
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
@@ -17,8 +35,21 @@ export default function SimpleLayout({ children }) {
         { path: '/admin/upload', label: 'Upload', icon: Upload },
         { path: '/admin/questions', label: 'Manage Questions', icon: List },
         { path: '/admin/criteria', label: 'Configuration', icon: Settings },
+        { path: '/admin/access', label: 'Access Control', icon: ShieldCheck },
         { path: '/admin/results', label: 'Results', icon: FileText }
     ];
+
+    if (accessState.loading) {
+        return (
+            <div className="h-screen w-full bg-universe flex items-center justify-center">
+                <div className="w-8 h-8 border-2 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin"></div>
+            </div>
+        );
+    }
+
+    if (!accessState.allowed) {
+        return <AccessDenied ip={accessState.ip} deviceId={accessState.deviceId} />;
+    }
 
     return (
         <div className="h-full w-full bg-universe font-sans text-slate-100 flex flex-col overflow-hidden">

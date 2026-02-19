@@ -464,16 +464,22 @@ export default function QuizInterface() {
     }, [answers]);
 
     const handleAnswerSelect = (questionId, answer) => {
+        console.log(`[ANSWER_SELECT] QID: ${questionId}, Answer: "${answer}"`);
         const newAnswers = {
             ...answers,
             [questionId]: answer
         };
         setAnswers(newAnswers);
-        // Ref is updated via useEffect, but for immediate safety in event loops:
+
+        // CRITICAL: Update Ref IMMEDIATELY to prevent stale closures in handleSubmit
         answersRef.current = newAnswers;
 
         // Mark this question as answered
-        setAnsweredQuestions(prev => new Set([...prev, questionId]));
+        setAnsweredQuestions(prev => {
+            const newSet = new Set(prev);
+            newSet.add(questionId);
+            return newSet;
+        });
     };
 
     const handleNext = () => {
@@ -591,21 +597,32 @@ export default function QuizInterface() {
             let correctCount = 0;
             const answerRecords = [];
 
-            questions.forEach((question) => {
+            console.log(`[SCORING] Starting calculation for ${questions.length} questions.`);
+            console.log('[SCORING] Current Answers state in Ref:', JSON.stringify(currentAnswers));
+
+            questions.forEach((question, index) => {
                 const selectedAnswer = currentAnswers[question.id];
 
-                // ROBUST NORMALIZATION: Trim and Lowercase for comparison
-                const normalize = (str) => str ? String(str).trim().toLowerCase() : '';
+                // ROBUST NORMALIZATION: Trim, Lowercase, and remove non-breaking spaces
+                const normalize = (str) => {
+                    if (str === null || str === undefined) return '';
+                    return String(str)
+                        .replace(/\u00A0/g, ' ') // Replace non-breaking spaces
+                        .trim()
+                        .toLowerCase();
+                };
 
                 const safeSelected = normalize(selectedAnswer);
                 const safeCorrect = normalize(question.correct_answer);
 
-                const isCorrect = safeSelected === safeCorrect;
+                const isCorrect = safeSelected !== '' && safeSelected === safeCorrect;
 
-                console.log(`[SCORING] QID: ${question.id}`);
-                console.log(`  - Selected: '${selectedAnswer}' (Norm: '${safeSelected}')`);
-                console.log(`  - Correct:  '${question.correct_answer}' (Norm: '${safeCorrect}')`);
-                console.log(`  - Result:   ${isCorrect ? 'CORRECT' : 'WRONG'}`);
+                console.log(`[SCORING] Question ${index + 1} (ID: ${question.id}):`);
+                console.log(`  - Original Selected: "${selectedAnswer}"`);
+                console.log(`  - Normalized Selected: "${safeSelected}"`);
+                console.log(`  - Original Correct:  "${question.correct_answer}"`);
+                console.log(`  - Normalized Correct:   "${safeCorrect}"`);
+                console.log(`  - Result: ${isCorrect ? '✅ CORRECT' : '❌ INCORRECT'}`);
 
                 if (isCorrect) correctCount++;
 

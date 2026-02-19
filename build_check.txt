@@ -1,0 +1,34 @@
+
+> fresher-drive-system@0.0.0 build
+> vite build
+
+[36mvite v5.4.21 [32mbuilding for production...[36m[39m
+transforming...
+
+/grid.svg referenced in /grid.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+[33m[vite:css] @import must precede all other statements (besides @charset or empty @layer)
+4  |  
+5  |  /* Import World-Class 3D Effects */
+6  |  @import './styles/3d-effects.css';
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+7  |  
+8  |  /* Import Deep Space Intelligence Theme */[39m
+[33m[vite:css] @import must precede all other statements (besides @charset or empty @layer)
+7  |  
+8  |  /* Import Deep Space Intelligence Theme */
+9  |  @import './styles/deep-space-theme.css';
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+10 |  
+11 |  @layer base {[39m
+[32m✓[39m 2311 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mdist/[22m[32mindex.html                 [39m[1m[2m    0.73 kB[22m[1m[22m[2m │ gzip:   0.45 kB[22m
+[2mdist/[22m[35massets/index-D93FsNbB.css  [39m[1m[2m   91.47 kB[22m[1m[22m[2m │ gzip:  13.89 kB[22m
+[2mdist/[22m[36massets/index-DiuYUhhc.js   [39m[1m[33m1,339.15 kB[39m[22m[2m │ gzip: 381.52 kB[22m
+[33m
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+[32m✓ built in 13.64s[39m

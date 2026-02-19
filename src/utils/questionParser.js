@@ -297,6 +297,26 @@ export function parseQuestionsInSection(section, importData) {
         }
 
         if (currentQuestion && currentOptions.length >= 2) {
+            // --- NEW: Deduplicate and Limit Options ---
+            // 1. Clean and deduplicate (case-insensitive, trim whitespace)
+            const seen = new Set();
+            const uniqueOptions = [];
+
+            currentOptions.forEach(opt => {
+                const normalized = opt.trim().toLowerCase();
+                if (normalized && !seen.has(normalized)) {
+                    seen.add(normalized);
+                    uniqueOptions.push(opt.trim());
+                }
+            });
+
+            // 2. Limit to exactly 4 options
+            const limitedOptions = uniqueOptions.slice(0, 4);
+
+            // 3. Update correctAnswer if it was one of the removed/duplicate ones
+            // (We'll re-map it in the push step below)
+            currentOptions = limitedOptions;
+
             questionNumber++;
 
             // Detect section and subsection from section header
@@ -364,7 +384,13 @@ export function parseQuestionsInSection(section, importData) {
         }
 
         // 1. Detect Option (Priority check)
+        // Refined regex: Ensure marker is at start of line and followed by specific delimiters
         const optionMatch = line.match(/^([A-Da-d])[\.)\]\s]+(.+)/);
+        // Special case: if line is just "A. OptionText" with no space after dot, mammoth might have merged it. 
+        // regex above handles "[.)]\s+" so maybe make space optional if dot/paren is present
+        const robustOptionMatch = line.match(/^([A-Da-d])[\.)\]]\s*(.+)/);
+        const finalOptionMatch = optionMatch || robustOptionMatch;
+
         const answerMatch = line.match(/^(?:[^a-zA-Z0-9]*)(?:Correct\s+Answer|Correct\s+Option|Answer\s+Key|Correct|Answer|Ans|Ans\.?)[\s:\-\)\.]+(?:\(?)\s*([A-Da-d])/i);
 
         // 2. Detect Question Start
@@ -387,7 +413,7 @@ export function parseQuestionsInSection(section, importData) {
         // UNLESS it was already caught as an Option using specific Option Regex above.
         // The only risk is "100 apples". But usually numbers at start of line in these files imply lists.
 
-        if (numberedMatch && !optionMatch && !answerMatch) {
+        if (numberedMatch && !finalOptionMatch && !answerMatch) {
             saveCurrentQuestion();
             // If text exists, use it. If empty, initialize empty string
             const text = numberedMatch[2] ? numberedMatch[2].trim() : '';
@@ -397,7 +423,10 @@ export function parseQuestionsInSection(section, importData) {
         }
 
         // 3. Handle Options
-        if (optionMatch) {
+        if (finalOptionMatch) {
+            const marker = finalOptionMatch[1].toUpperCase();
+            const text = finalOptionMatch[2].trim();
+
             // RETROACTIVE DETECTION:
             // If we found an option "A." but have no current question, 
             // the PREVIOUS line must have been the question!
@@ -408,10 +437,7 @@ export function parseQuestionsInSection(section, importData) {
             }
 
             if (currentQuestion !== null) {
-                currentOptions.push(optionMatch[2].trim());
-
-                // Inline answer check (simple)
-                // const inlineAnsMatch = optionMatch[2].match(/Answer\s*:\s*([A-Da-d])/i);
+                currentOptions.push(text);
                 lastLine = line;
                 continue;
             }
