@@ -21,14 +21,17 @@ export default function AdminDashboard() {
 
     const fetchTodayStats = async () => {
         try {
-            const today = new Date().toISOString().split('T')[0];
+            setLoading(true);
+            const now = new Date();
+            const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+            const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString();
 
-            // Get today's interviews
+            // Get today's interviews (using local day boundaries)
             const { data: interviews, error } = await supabase
                 .from('interviews')
                 .select('*')
-                .gte('started_at', `${today}T00:00:00`)
-                .lte('started_at', `${today}T23:59:59`);
+                .gte('started_at', startOfDay)
+                .lte('started_at', endOfDay);
 
             if (error) throw error;
 
@@ -37,7 +40,8 @@ export default function AdminDashboard() {
             const passed = interviews?.filter(i => i.passed === true).length || 0;
             const passRate = completed > 0 ? ((passed / completed) * 100).toFixed(1) : 0;
 
-            // Get recent 5 interviews for activity feed
+            // Get recent 5 interviews for activity feed - ordered by started_at 
+            // to show active sessions at the top
             const { data: recent, error: recentError } = await supabase
                 .from('interviews')
                 .select(`
@@ -45,7 +49,7 @@ export default function AdminDashboard() {
                     candidates(full_name),
                     criteria(name)
                 `)
-                .order('completed_at', { ascending: false })
+                .order('started_at', { ascending: false })
                 .limit(5);
 
             setStats({
@@ -213,17 +217,23 @@ export default function AdminDashboard() {
                                                 <div className="text-xs text-slate-400">{activity.criteria?.name}</div>
                                             </td>
                                             <td className="px-6 py-4 text-center font-mono font-bold text-slate-300">
-                                                {activity.score}/{activity.total_questions}
+                                                {activity.status === 'in_progress' ? (
+                                                    <span className="text-brand-blue animate-pulse italic">Active...</span>
+                                                ) : (
+                                                    `${activity.score}/${activity.total_questions}`
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 text-center">
-                                                {activity.passed ? (
+                                                {activity.status === 'in_progress' ? (
+                                                    <span className="inline-flex px-2 py-1 bg-brand-blue/10 border border-brand-blue/20 rounded-full text-brand-blue text-xs font-bold">In Progress</span>
+                                                ) : activity.passed ? (
                                                     <span className="inline-flex px-2 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-green-400 text-xs font-bold">Passed</span>
                                                 ) : (
                                                     <span className="inline-flex px-2 py-1 bg-red-500/10 border border-red-500/20 rounded-full text-red-400 text-xs font-bold">Failed</span>
                                                 )}
                                             </td>
                                             <td className="px-6 py-4 text-right text-sm text-slate-400">
-                                                {new Date(activity.completed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                {new Date(activity.completed_at || activity.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </td>
                                         </tr>
                                     ))
