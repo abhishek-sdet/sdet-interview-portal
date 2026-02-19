@@ -110,7 +110,7 @@ export default function AdminResults() {
     };
 
     const exportToCSV = () => {
-        const headers = ['Name', 'Email', 'Phone', 'Criteria', 'Score', 'Total', 'Percentage', 'Status', 'Date'];
+        const headers = ['Name', 'Email', 'Phone', 'Criteria', 'Score', 'Total', 'Percentage', 'Status', 'Fabricated', 'Date'];
         const rows = filteredResults.map(r => [
             r.candidates?.full_name || 'N/A',
             r.candidates?.email || 'N/A',
@@ -120,6 +120,7 @@ export default function AdminResults() {
             r.total_questions || 0,
             r.total_questions ? ((r.score / r.total_questions) * 100).toFixed(1) : '0',
             r.passed ? 'PASSED' : 'FAILED',
+            r.is_fabricated ? 'YES' : 'NO',
             r.completed_at ? new Date(r.completed_at).toLocaleString() : new Date(r.started_at).toLocaleString()
         ]);
 
@@ -254,7 +255,8 @@ export default function AdminResults() {
                 .from('interviews')
                 .update({
                     score: newScore,
-                    passed: newPassed
+                    passed: newPassed,
+                    is_fabricated: true
                 })
                 .eq('id', result.id);
 
@@ -465,6 +467,11 @@ export default function AdminResults() {
                                                             >
                                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
                                                             </button>
+                                                            {result.is_fabricated && (
+                                                                <span className="text-[10px] bg-amber-500/10 text-amber-500 px-1.5 py-0.5 rounded border border-amber-500/20 font-bold uppercase tracking-wider">
+                                                                    Fabricated
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     )}
                                                 </td>
@@ -593,6 +600,11 @@ export default function AdminResults() {
                                                 <XCircle size={10} /> FAILED
                                             </span>
                                         )}
+                                        {(selectedInterview.is_fabricated || (responseData.length > 0 && selectedInterview.score !== responseData.filter(a => a.is_correct).length)) && (
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-500 text-xs font-bold animate-pulse">
+                                                <AlertTriangle size={10} /> FABRICATED
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                                 <button
@@ -679,6 +691,11 @@ export default function AdminResults() {
                                     {responseData.filter(a => a.is_correct).length} correct
                                     &nbsp;•&nbsp;
                                     {responseData.filter(a => !a.is_correct).length} wrong
+                                    {(selectedInterview.is_fabricated || (responseData.length > 0 && selectedInterview.score !== responseData.filter(a => a.is_correct).length)) && (
+                                        <span className="ml-3 text-amber-500 font-bold uppercase tracking-widest text-[10px] bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                                            Fabricated Score
+                                        </span>
+                                    )}
                                 </p>
                                 <button
                                     onClick={() => { setSelectedInterview(null); setResponseData([]); }}

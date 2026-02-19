@@ -221,11 +221,18 @@ export default function AdminDashboard() {
                                                 {activity.score}/{activity.total_questions}
                                             </td>
                                             <td className="px-6 py-4 text-center">
-                                                {activity.passed ? (
-                                                    <span className="inline-flex px-2 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-green-400 text-xs font-bold">Passed</span>
-                                                ) : (
-                                                    <span className="inline-flex px-2 py-1 bg-red-500/10 border border-red-500/20 rounded-full text-red-400 text-xs font-bold">Failed</span>
-                                                )}
+                                                <div className="flex flex-col items-center gap-1">
+                                                    {activity.passed ? (
+                                                        <span className="inline-flex px-2 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-green-400 text-xs font-bold">Passed</span>
+                                                    ) : (
+                                                        <span className="inline-flex px-2 py-1 bg-red-500/10 border border-red-500/20 rounded-full text-red-400 text-xs font-bold">Failed</span>
+                                                    )}
+                                                    {activity.is_fabricated && (
+                                                        <span className="text-[10px] bg-amber-500/10 text-amber-500 px-1.5 py-0.5 rounded border border-amber-500/20 font-bold uppercase tracking-wider">
+                                                            Fabricated
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td className="px-6 py-4 text-right text-sm text-slate-400">
                                                 {new Date(activity.completed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
