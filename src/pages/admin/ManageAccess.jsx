@@ -103,7 +103,7 @@ export default function ManageAccess() {
                 <div className="flex justify-between items-center">
                     <div>
                         <h1 className="text-3xl font-bold text-white mb-2">Access Control</h1>
-                        <p className="text-slate-400">Manage authorized IPs and devices for the Admin panel.</p>
+                        <p className="text-slate-400">Manage authorized IPs and devices for the Interview Portal (Aspirant App).</p>
                     </div>
                     <button
                         onClick={fetchData}
@@ -227,9 +227,9 @@ export default function ManageAccess() {
                                             <tr>
                                                 <td colSpan="3" className="px-6 py-12 text-center">
                                                     <div className="flex flex-col items-center gap-3 text-slate-500">
-                                                        <AlertCircle size={40} className="text-brand-orange/50" />
-                                                        <p>No restrictions active. Access is open to everyone.</p>
-                                                        <p className="text-xs">Add an entry to enable restriction mode.</p>
+                                                        <ShieldCheck size={40} className="text-red-500/50" />
+                                                        <p className="text-red-400">Strict mode active. Everyone is currently blocked.</p>
+                                                        <p className="text-xs">Add an entry to authorize a specific IP or Device for the Interview Portal.</p>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -238,8 +238,8 @@ export default function ManageAccess() {
                                                 <tr key={item.id} className="hover:bg-white/5 transition-colors group">
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${item.type === 'ip'
-                                                                ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
-                                                                : 'bg-purple-500/10 border-purple-500/20 text-purple-400'
+                                                            ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                                                            : 'bg-purple-500/10 border-purple-500/20 text-purple-400'
                                                             }`}>
                                                             {item.type === 'ip' ? <Globe size={12} /> : <Monitor size={12} />}
                                                             {item.type.toUpperCase()}
@@ -251,6 +251,7 @@ export default function ManageAccess() {
                                                     </td>
                                                     <td className="px-6 py-4 text-right">
                                                         <button
+                                                            type="button"
                                                             onClick={() => handleDelete(item.id)}
                                                             className="p-2 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
                                                         >

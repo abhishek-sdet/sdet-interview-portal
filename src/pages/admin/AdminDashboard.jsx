@@ -16,40 +16,8 @@ export default function AdminDashboard() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        checkAuth();
         fetchTodayStats();
-
-        // Subscribe to real-time changes
-        console.log('Setting up real-time subscription for dashboard...');
-        const subscription = supabase
-            .channel('admin-dashboard-changes')
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'interviews' },
-                (payload) => {
-                    console.log('Real-time update received:', payload);
-                    fetchTodayStats();
-                }
-            )
-            .subscribe((status) => {
-                console.log('Subscription status:', status);
-                if (status === 'SUBSCRIBED') {
-                    // toast.success('Live updates enabled');
-                }
-            });
-
-        return () => {
-            console.log('Cleaning up subscription...');
-            subscription.unsubscribe();
-        };
     }, []);
-
-    const checkAuth = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-            navigate('/admin/login');
-        }
-    };
 
     const fetchTodayStats = async () => {
         try {

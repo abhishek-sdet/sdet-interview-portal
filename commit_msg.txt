@@ -1,1 +1,0 @@
-Fix registration scoring and phone restriction

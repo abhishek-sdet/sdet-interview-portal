@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LogOut, LayoutDashboard, Upload, FileText, List, Settings, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { accessControl } from '@/lib/accessControl';
-import AccessDenied from './AccessDenied';
 
 export default function SimpleLayout({ children }) {
     const navigate = useNavigate();
@@ -11,17 +9,39 @@ export default function SimpleLayout({ children }) {
     const [accessState, setAccessState] = useState({ loading: true, allowed: true, ip: null, deviceId: null });
 
     useEffect(() => {
-        checkAccess();
+        checkAuthAndAccess();
+
+        // Listen for auth state changes (e.g., session expiry, logout)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            console.log(`[AUTH] Event: ${event}`);
+            if (event === 'SIGNED_OUT' || !session) {
+                navigate('/admin/login');
+            }
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        };
     }, [location.pathname]);
 
-    const checkAccess = async () => {
+    const checkAuthAndAccess = async () => {
         setAccessState(prev => ({ ...prev, loading: true }));
-        const result = await accessControl.verifyAccess();
+
+        // 1. Check Authentication first
+        const { data: { session }, error: authError } = await supabase.auth.getSession();
+
+        if (authError || !session) {
+            console.warn('[AUTH] No active session found. Redirecting to login.');
+            navigate('/admin/login');
+            return;
+        }
+
+        // Access Control (IP/Device) removed - now handled in Aspirant app
         setAccessState({
             loading: false,
-            allowed: result.allowed,
-            ip: result.ip,
-            deviceId: result.deviceId
+            allowed: true,
+            ip: null,
+            deviceId: null
         });
     };
 
@@ -45,10 +65,6 @@ export default function SimpleLayout({ children }) {
                 <div className="w-8 h-8 border-2 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin"></div>
             </div>
         );
-    }
-
-    if (!accessState.allowed) {
-        return <AccessDenied ip={accessState.ip} deviceId={accessState.deviceId} />;
     }
 
     return (

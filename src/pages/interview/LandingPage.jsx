@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import GPTWBadge from '@/components/GPTWBadge';
 import { ArrowRight, CheckCircle2, ShieldCheck, Mail, Phone, User, Loader2 } from 'lucide-react';
+import { accessControl } from '@/lib/accessControl';
+import AccessDenied from '@/components/admin/AccessDenied';
 
 // World Class Landing Page
 export default function LandingPage() {
@@ -15,10 +17,23 @@ export default function LandingPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [mounted, setMounted] = useState(false);
+    const [accessState, setAccessState] = useState({ loading: true, allowed: true, ip: null, deviceId: null });
 
     useEffect(() => {
         setMounted(true);
+        checkAccess();
     }, []);
+
+    const checkAccess = async () => {
+        setAccessState(prev => ({ ...prev, loading: true }));
+        const result = await accessControl.verifyAccess();
+        setAccessState({
+            loading: false,
+            allowed: result.allowed,
+            ip: result.ip,
+            deviceId: result.deviceId
+        });
+    };
 
     const handleChange = (field) => (e) => {
         let value = e.target.value;
@@ -170,6 +185,18 @@ export default function LandingPage() {
             setLoading(false);
         }
     };
+
+    if (accessState.loading) {
+        return (
+            <div className="h-screen w-full bg-universe flex items-center justify-center">
+                <div className="w-8 h-8 border-2 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin"></div>
+            </div>
+        );
+    }
+
+    if (!accessState.allowed) {
+        return <AccessDenied ip={accessState.ip} deviceId={accessState.deviceId} showLogout={false} />;
+    }
 
     return (
         <div className="h-full w-full bg-universe relative overflow-y-auto overflow-x-hidden font-sans text-slate-100 selection:bg-brand-orange selection:text-white">

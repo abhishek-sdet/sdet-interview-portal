@@ -1,9 +1,9 @@
 import React from 'react';
-import { ShieldAlert, Globe, Monitor, LogOut } from 'lucide-react';
+import { ShieldAlert, Globe, Monitor, LogOut, RefreshCw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 
-export default function AccessDenied({ ip, deviceId }) {
+export default function AccessDenied({ ip, deviceId, showLogout = true }) {
     const navigate = useNavigate();
 
     const handleLogout = async () => {
@@ -28,10 +28,10 @@ export default function AccessDenied({ ip, deviceId }) {
                         </div>
                     </div>
 
-                    <h1 className="text-3xl font-bold text-white mb-2">Access Denied</h1>
+                    <h1 className="text-3xl font-bold text-white mb-2">Access Restricted</h1>
                     <p className="text-slate-400 mb-8">
-                        This environment is restricted to authorized IP addresses and devices only.
-                        Please contact your administrator to grant access.
+                        The Interview Portal is restricted to authorized office networks and devices only.
+                        Please ensure you are connected to the designated network or contact HR.
                     </p>
 
                     <div className="space-y-4 mb-8">
@@ -48,20 +48,30 @@ export default function AccessDenied({ ip, deviceId }) {
                                 <Monitor className="w-5 h-5 text-purple-400" />
                                 <span className="text-sm font-medium text-slate-300">Device Identifier</span>
                             </div>
-                            <span className="text-sm font-mono text-white bg-slate-800 px-3 py-1 rounded">
-                                {deviceId ? `${deviceId.substring(0, 8)}...` : 'Detecting...'}
+                            <span className="text-[10px] font-mono text-white bg-slate-800 px-3 py-1 rounded max-w-[180px] truncate" title={deviceId}>
+                                {deviceId || 'Detecting...'}
                             </span>
                         </div>
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-3">
-                        <button
-                            onClick={handleLogout}
-                            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-xl font-bold transition-all"
-                        >
-                            <LogOut size={18} />
-                            Sign Out
-                        </button>
+                        {showLogout ? (
+                            <button
+                                onClick={handleLogout}
+                                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-xl font-bold transition-all"
+                            >
+                                <LogOut size={18} />
+                                Sign Out
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-brand-blue/20 hover:bg-brand-blue/30 border border-brand-blue/30 text-brand-blue rounded-xl font-bold transition-all"
+                            >
+                                <RefreshCw size={18} />
+                                Retry Connection
+                            </button>
+                        )}
                     </div>
                 </div>
 
