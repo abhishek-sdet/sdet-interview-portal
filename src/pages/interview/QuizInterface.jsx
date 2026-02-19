@@ -38,6 +38,7 @@ export default function QuizInterface() {
     const generalQuestionsRef = useRef([]);
     const javaQuestionsRef = useRef([]);
     const pythonQuestionsRef = useRef([]);
+    const lastWarningTimeRef = useRef(0); // For debouncing tab switches
 
     useEffect(() => {
         setMounted(true);
@@ -136,8 +137,18 @@ export default function QuizInterface() {
     useEffect(() => {
         const handleVisibilityChange = () => {
             if (document.hidden && !submitting && !showSpecialization) {
+                const now = Date.now();
+                // 2 second cooldown to prevent accidental double-increments
+                if (now - lastWarningTimeRef.current < 2000) {
+                    console.log('[PROCTOR] Tab switch detected within cooldown, ignoring.');
+                    return;
+                }
+
+                lastWarningTimeRef.current = now;
+
                 setTabSwitchWarnings(prev => {
                     const newCount = prev + 1;
+                    console.log(`[PROCTOR] Tab switch detected! (Count: ${newCount}/${MAX_WARNINGS})`);
                     if (newCount < MAX_WARNINGS) {
                         showToast.error(`WARNING ${newCount}/${MAX_WARNINGS}: Please stay on the quiz page!`, { id: 'focus-warning' });
                     }
@@ -154,6 +165,7 @@ export default function QuizInterface() {
     // 2. Auto-submit on max warnings
     useEffect(() => {
         if (tabSwitchWarnings >= MAX_WARNINGS && !submitting) {
+            console.log('[PROCTOR] MAX WARNINGS REACHED! Triggering auto-submit.');
             showToast.error(`Test Auto-Submitted: Multiple tab switches detected.`);
             handleSubmit(true, 'tab_switch');
         }
