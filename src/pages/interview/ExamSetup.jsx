@@ -123,7 +123,7 @@ export default function ExamSetup() {
                         Exam Configuration
                     </h1>
                     <p className="text-slate-300 text-lg max-w-2xl mx-auto">
-                        Customize your assessment by selecting the appropriate Question Set and your preferred Elective Subject.
+                        Please select the question set assigned to you to begin the assessment.
                     </p>
                 </div>
 
