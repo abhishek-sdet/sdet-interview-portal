@@ -91,7 +91,7 @@ export default function ThankYou() {
                 </div>
 
                 {/* Content */}
-                <div className="relative z-10 w-full max-w-md px-4 my-8">
+                <div className="relative z-10 w-full max-w-2xl px-4 my-8">
                     <div className="bg-[#0b101b]/80 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 md:p-10 shadow-2xl text-center relative overflow-hidden group">
 
                         {/* Decorative Top Line */}
@@ -112,10 +112,26 @@ export default function ThankYou() {
                         </p>
 
                         {/* Generic Message */}
-                        <div className="p-5 bg-white/5 border border-white/10 rounded-xl mb-8">
+                        <div className="p-5 bg-white/5 border border-white/10 rounded-xl mb-6">
                             <p className="text-sm md:text-base text-slate-300">
                                 Thank you for your participation. Our HR team will review your results and get back to you shortly regarding the next steps.
                             </p>
+                        </div>
+
+                        {/* Scanner Section */}
+                        <div className="mb-8 p-6 bg-white/5 border border-white/10 rounded-2xl flex flex-col items-center">
+                            <div className="w-48 h-48 bg-white p-2 rounded-xl mb-4 shadow-xl">
+                                <img src="/Scanner.png" alt="Scanner QR Code" className="w-full h-full object-contain" />
+                            </div>
+                            <div className="text-left space-y-3">
+                                <p className="text-sm md:text-base text-slate-200 font-medium">
+                                    Scan the QR code above to finalize your submission for our records.
+                                </p>
+                                <p className="text-sm md:text-base text-slate-300 italic flex items-start gap-2">
+                                    <span className="text-brand-blue font-bold">Note:</span>
+                                    <span>Like the post: Confirms the authenticity of your LinkedIn profile for our records.</span>
+                                </p>
+                            </div>
                         </div>
 
                         {/* Action Button */}
