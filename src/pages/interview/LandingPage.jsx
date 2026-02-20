@@ -22,7 +22,28 @@ export default function LandingPage() {
     useEffect(() => {
         setMounted(true);
         checkAccess();
+        checkExistingSession();
     }, []);
+
+    const checkExistingSession = () => {
+        const candidateId = localStorage.getItem('candidateId');
+        const interviewId = localStorage.getItem('interviewId');
+
+        if (candidateId && !interviewId) {
+            // Logged in but haven't started quiz yet
+            navigate('/exam-rules', {
+                state: {
+                    candidateData: {
+                        id: candidateId,
+                        full_name: localStorage.getItem('candidateName')
+                    }
+                }
+            });
+        } else if (interviewId) {
+            // Already in a quiz session
+            navigate('/quiz');
+        }
+    };
 
     const checkAccess = async () => {
         setAccessState(prev => ({ ...prev, loading: true }));
@@ -165,8 +186,8 @@ export default function LandingPage() {
             }
 
             // 4. Store session info and navigate
-            sessionStorage.setItem('candidateId', candidateId);
-            sessionStorage.setItem('candidateName', candidateName);
+            localStorage.setItem('candidateId', candidateId);
+            localStorage.setItem('candidateName', candidateName);
 
             console.log('[REGISTRATION] Success! Navigating to rules.');
             navigate('/exam-rules', {

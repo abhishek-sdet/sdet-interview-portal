@@ -29,12 +29,18 @@ export default function ExamSetup() {
 
     useEffect(() => {
         if (!candidateData || !criteriaId) {
-            navigate('/');
-            return;
+            // Try localStorage fallback
+            const savedCandidateId = localStorage.getItem('candidateId');
+            const savedCriteriaId = localStorage.getItem('criteriaId');
+
+            if (!savedCandidateId || !savedCriteriaId) {
+                navigate('/');
+                return;
+            }
         }
 
         // Check for existing lock
-        const savedConfig = sessionStorage.getItem('examConfig');
+        const savedConfig = localStorage.getItem('examConfig');
         if (savedConfig) {
             try {
                 const config = JSON.parse(savedConfig);
@@ -83,7 +89,7 @@ export default function ExamSetup() {
         }
 
         // Store selection in session
-        sessionStorage.setItem('examConfig', JSON.stringify({
+        localStorage.setItem('examConfig', JSON.stringify({
             set: selectedSet,
             subject: selectedSubject
         }));

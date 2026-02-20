@@ -18,8 +18,14 @@ export default function SetSelection() {
     useEffect(() => {
         setMounted(true);
         if (!candidateData || !criteriaId) {
-            navigate('/');
-            return;
+            // Try localStorage fallback
+            const savedCandidateId = localStorage.getItem('candidateId');
+            const savedCriteriaId = localStorage.getItem('criteriaId');
+
+            if (!savedCandidateId || !savedCriteriaId) {
+                navigate('/');
+                return;
+            }
         }
 
         fetchSets();
@@ -62,8 +68,8 @@ export default function SetSelection() {
 
         setLoading(true);
 
-        sessionStorage.setItem('selectedSet', selectedSet.name);
-        sessionStorage.removeItem('selectedCategories');
+        localStorage.setItem('selectedSet', selectedSet.name);
+        localStorage.removeItem('selectedCategories');
 
         setTimeout(() => {
             navigate('/quiz', {

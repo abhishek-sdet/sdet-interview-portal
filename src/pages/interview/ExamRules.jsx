@@ -13,7 +13,12 @@ export default function ExamRules() {
     useEffect(() => {
         setMounted(true);
         if (!candidateData) {
-            navigate('/');
+            // Check localStorage fallback
+            const savedId = localStorage.getItem('candidateId');
+            const savedName = localStorage.getItem('candidateName');
+            if (!savedId) {
+                navigate('/');
+            }
         }
     }, [navigate, candidateData]);
 

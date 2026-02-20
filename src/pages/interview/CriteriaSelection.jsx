@@ -18,8 +18,8 @@ export default function CriteriaSelection() {
     useEffect(() => {
         setMounted(true);
         // Check if candidate is registered
-        const candidateId = sessionStorage.getItem('candidateId');
-        const name = sessionStorage.getItem('candidateName');
+        const candidateId = localStorage.getItem('candidateId');
+        const name = localStorage.getItem('candidateName');
 
         if (!candidateId) {
             navigate('/');
@@ -58,7 +58,7 @@ export default function CriteriaSelection() {
         setError('');
 
         try {
-            const candidateId = sessionStorage.getItem('candidateId');
+            const candidateId = localStorage.getItem('candidateId');
 
             // Create interview session
             const { data, error: insertError } = await supabase
@@ -76,9 +76,9 @@ export default function CriteriaSelection() {
             if (insertError) throw insertError;
 
             // Store interview ID and criteria info
-            sessionStorage.setItem('interviewId', data.id);
-            sessionStorage.setItem('criteriaId', selectedCriteria.id);
-            sessionStorage.setItem('passingPercentage', selectedCriteria.passing_percentage);
+            localStorage.setItem('interviewId', data.id);
+            localStorage.setItem('criteriaId', selectedCriteria.id);
+            localStorage.setItem('passingPercentage', selectedCriteria.passing_percentage);
 
             // Navigate to set selection
             navigate('/set-selection', {

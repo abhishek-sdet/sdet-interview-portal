@@ -42,8 +42,8 @@ export default function QuizInterface() {
 
     useEffect(() => {
         setMounted(true);
-        const interviewId = sessionStorage.getItem('interviewId');
-        const criteriaId = sessionStorage.getItem('criteriaId');
+        const interviewId = localStorage.getItem('interviewId');
+        const criteriaId = localStorage.getItem('criteriaId');
 
         console.log('[INIT] Interview ID:', interviewId);
         console.log('[INIT] Criteria ID:', criteriaId);
@@ -51,7 +51,7 @@ export default function QuizInterface() {
         if (!interviewId || !criteriaId) {
             console.error('[INIT ERROR] Missing session data:', { interviewId, criteriaId });
             setError('Session expired. Please start the interview again.');
-            setTimeout(() => navigate('/criteria-selection'), 2000);
+            setTimeout(() => navigate('/'), 2000);
             return;
         }
 
@@ -95,7 +95,7 @@ export default function QuizInterface() {
 
     // --- SAVE STATE TO LOCAL STORAGE ---
     useEffect(() => {
-        const interviewId = sessionStorage.getItem('interviewId');
+        const interviewId = localStorage.getItem('interviewId');
         if (!interviewId || loading || submitting) return;
 
         const storageKey = `quiz_state_${interviewId}`;
@@ -235,13 +235,13 @@ export default function QuizInterface() {
     const fetchQuestions = async (criteriaId, savedTimeRemaining = null) => {
         try {
             // Get interviewId from session storage
-            const interviewId = sessionStorage.getItem('interviewId');
+            const interviewId = localStorage.getItem('interviewId');
 
             // Get exam configuration from session (set by ExamSetup.jsx)
-            const examConfigStr = sessionStorage.getItem('examConfig');
+            const examConfigStr = localStorage.getItem('examConfig');
             const examConfig = examConfigStr ? JSON.parse(examConfigStr) : null;
 
-            const selectedSet = examConfig?.set || sessionStorage.getItem('selectedSet');
+            const selectedSet = examConfig?.set || localStorage.getItem('selectedSet');
             const selectedSubject = examConfig?.subject; // e.g., 'java', 'python'
 
             let query = supabase
@@ -588,8 +588,8 @@ export default function QuizInterface() {
         setError('');
 
         try {
-            const interviewId = sessionStorage.getItem('interviewId');
-            const criteriaId = sessionStorage.getItem('criteriaId'); // Need criteriaId to fetch passing rules
+            const interviewId = localStorage.getItem('interviewId');
+            const criteriaId = localStorage.getItem('criteriaId'); // Need criteriaId to fetch passing rules
 
             // 1. Fetch Authoritative Passing Percentage from DB
             // This prevents reliance on potentially stale sessionStorage data (e.g. 70% instead of 80%)
@@ -677,10 +677,10 @@ export default function QuizInterface() {
             console.log('[SUBMISSION] Answers inserted successfully');
 
             // Get question set safely
-            let questionSet = sessionStorage.getItem('selectedSet');
+            let questionSet = localStorage.getItem('selectedSet');
             if (!questionSet) {
                 try {
-                    const examConfig = sessionStorage.getItem('examConfig');
+                    const examConfig = localStorage.getItem('examConfig');
                     if (examConfig) {
                         questionSet = JSON.parse(examConfig)?.set;
                     }
@@ -728,10 +728,10 @@ export default function QuizInterface() {
             }
             console.log('[SUBMISSION] Interview updated successfully');
 
-            sessionStorage.setItem('score', correctCount);
-            sessionStorage.setItem('totalQuestions', totalQuestions);
-            sessionStorage.setItem('percentage', percentage.toFixed(2));
-            sessionStorage.setItem('passed', passed);
+            localStorage.setItem('score', correctCount);
+            localStorage.setItem('totalQuestions', totalQuestions);
+            localStorage.setItem('percentage', percentage.toFixed(2));
+            localStorage.setItem('passed', passed);
 
             // Clear Quiz State from Local Storage
             const storageKey = `quiz_state_${interviewId}`;

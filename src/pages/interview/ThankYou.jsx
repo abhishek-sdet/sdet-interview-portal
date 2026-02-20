@@ -8,11 +8,11 @@ export default function ThankYou() {
     const [results, setResults] = useState(null);
 
     useEffect(() => {
-        const score = sessionStorage.getItem('score');
-        const totalQuestions = sessionStorage.getItem('totalQuestions');
-        const percentage = sessionStorage.getItem('percentage');
-        const passed = sessionStorage.getItem('passed') === 'true';
-        const candidateName = sessionStorage.getItem('candidateName');
+        const score = localStorage.getItem('score');
+        const totalQuestions = localStorage.getItem('totalQuestions');
+        const percentage = localStorage.getItem('percentage');
+        const passed = localStorage.getItem('passed') === 'true';
+        const candidateName = localStorage.getItem('candidateName');
 
         if (!score || !totalQuestions) {
             navigate('/');
@@ -29,8 +29,30 @@ export default function ThankYou() {
     }, [navigate]);
 
     const handleFinish = () => {
-        // Clear session
+        // Clear all session data from localStorage
+        const keysToRemove = [
+            'candidateId',
+            'candidateName',
+            'interviewId',
+            'criteriaId',
+            'examConfig',
+            'score',
+            'totalQuestions',
+            'percentage',
+            'passed',
+            'selectedSet'
+        ];
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+
+        // Also clear quiz state specific to interviewId
+        const interviewId = localStorage.getItem('interviewId');
+        if (interviewId) {
+            localStorage.removeItem(`quiz_state_${interviewId}`);
+        }
+
+        // Just to be safe, clear sessionStorage too
         sessionStorage.clear();
+
         navigate('/');
     };
 
