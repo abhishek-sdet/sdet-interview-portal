@@ -272,7 +272,11 @@ export default function QuizInterface() {
                 return isGeneral && matchesSet;
             });
 
-            const electiveQs = data.filter(q => q.section === 'elective');
+            const electiveQs = data.filter(q => {
+                const isElective = q.section === 'elective';
+                const matchesSet = selectedSet ? q.category === selectedSet : true;
+                return isElective && matchesSet;
+            });
 
             console.log('[FETCH] Total questions fetched:', data.length);
             console.log('[FETCH] Selected Set:', selectedSet);
