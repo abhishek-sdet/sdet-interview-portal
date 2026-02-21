@@ -13,6 +13,50 @@ export default function ResultsDashboard() {
     const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
     const [loading, setLoading] = useState(true);
 
+    useEffect(() => {
+        fetchResults();
+    }, []);
+
+    const fetchResults = async () => {
+        try {
+            setLoading(true);
+            const { data, error } = await supabase
+                .from('interviews')
+                .select(`
+                    *,
+                    candidates(full_name, email, phone),
+                    criteria(name, passing_percentage)
+                `)
+                .order('status', { ascending: true })
+                .order('completed_at', { ascending: false })
+                .order('started_at', { ascending: false });
+
+            if (error) throw error;
+
+            setResults(data || []);
+            setFilteredResults(data || []);
+
+            // Calculate basic stats
+            const completed = (data || []).filter(i => i.status === 'completed');
+            const qualified = completed.filter(i => {
+                const passing = i.criteria?.passing_percentage || 70;
+                return i.percentage >= passing;
+            }).length;
+
+            setStats({
+                total: completed.length,
+                qualified: qualified,
+                notQualified: completed.length - qualified,
+                successRate: completed.length > 0 ? Math.round((qualified / completed.length) * 100) : 0
+            });
+
+        } catch (err) {
+            console.error('Error fetching results:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const bgClass = theme === 'dark'
         ? 'bg-slate-900 text-white'
         : 'bg-gray-100 text-gray-900';
