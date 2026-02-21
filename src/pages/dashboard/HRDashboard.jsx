@@ -39,8 +39,6 @@ export default function HRDashboard() {
                     candidates(*),
                     criteria(name, passing_percentage)
                 `)
-                .order('status', { ascending: true }) // 'completed' comes before 'in_progress'
-                .order('completed_at', { ascending: false })
                 .order('started_at', { ascending: false });
 
             if (error) throw error;

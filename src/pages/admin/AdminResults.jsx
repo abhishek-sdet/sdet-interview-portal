@@ -72,18 +72,16 @@ export default function AdminResults() {
                     candidates(full_name, email, phone),
                     criteria(name, passing_percentage)
                 `)
-                .order('status', { ascending: true }) // 'completed' comes before 'in_progress'
-                .order('completed_at', { ascending: false })
                 .order('started_at', { ascending: false });
 
             // Apply date filter
             if (dateFilter === 'today') {
                 const today = new Date().toISOString().split('T')[0];
-                query = query.gte('completed_at', `${today}T00:00:00`);
+                query = query.gte('started_at', `${today}T00:00:00`);
             } else if (dateFilter === 'week') {
                 const weekAgo = new Date();
                 weekAgo.setDate(weekAgo.getDate() - 7);
-                query = query.gte('completed_at', weekAgo.toISOString());
+                query = query.gte('started_at', weekAgo.toISOString());
             }
 
             const { data, error } = await query;

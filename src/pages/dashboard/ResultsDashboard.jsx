@@ -27,8 +27,6 @@ export default function ResultsDashboard() {
                     candidates(full_name, email, phone),
                     criteria(name, passing_percentage)
                 `)
-                .order('status', { ascending: true })
-                .order('completed_at', { ascending: false })
                 .order('started_at', { ascending: false });
 
             if (error) throw error;
