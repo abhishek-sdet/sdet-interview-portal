@@ -16,6 +16,7 @@ export default function HRDashboard() {
     const [interviews, setInterviews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
     const [activeTab, setActiveTab] = useState('fresher');
 
     useEffect(() => {
@@ -51,17 +52,6 @@ export default function HRDashboard() {
         }
     };
 
-    const filteredInterviews = interviews.filter(item => {
-        const query = searchTerm.toLowerCase();
-        const candidateName = item.candidates?.full_name?.toLowerCase() || '';
-        const candidateEmail = item.candidates?.email?.toLowerCase() || '';
-        return candidateName.includes(query) || candidateEmail.includes(query);
-    });
-
-    // Stats Calculation - CONSISTENT: Only count COMPLETED interviews
-    const completedInterviews = interviews.filter(i => i.status === 'completed');
-    const totalCandidates = completedInterviews.length;
-
     // Helper to check if an interview passed based on current threshold
     const checkPassed = (item) => {
         if (!item.total_questions) return false;
@@ -69,6 +59,26 @@ export default function HRDashboard() {
         const percentage = (item.score / item.total_questions) * 100;
         return percentage >= threshold;
     };
+
+    const filteredInterviews = interviews.filter(item => {
+        const query = searchTerm.toLowerCase();
+        const candidateName = item.candidates?.full_name?.toLowerCase() || '';
+        const candidateEmail = item.candidates?.email?.toLowerCase() || '';
+
+        const matchesSearch = candidateName.includes(query) || candidateEmail.includes(query);
+
+        if (statusFilter === 'all') return matchesSearch;
+
+        const isPassed = checkPassed(item);
+        const matchesStatus = statusFilter === 'qualified' ? isPassed : !isPassed;
+
+        return matchesSearch && matchesStatus;
+    });
+
+    // Stats Calculation - CONSISTENT: Only count COMPLETED interviews
+    const completedInterviews = interviews.filter(i => i.status === 'completed');
+    const totalCandidates = completedInterviews.length;
+
 
     const qualified = completedInterviews.filter(i => checkPassed(i)).length;
     const notQualified = totalCandidates - qualified;
@@ -287,16 +297,28 @@ export default function HRDashboard() {
                             </h3>
                             <p className="text-xs text-slate-500 mt-1">Found {filteredInterviews.length} indexed records</p>
                         </div>
-                        <div className="relative w-full max-w-md">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
-                            <input
-                                type="text"
-                                placeholder="Search by name or email address..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                        <div className="flex flex-col sm:flex-row items-center gap-4 w-full max-w-2xl">
+                            <div className="relative flex-1 w-full">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
+                                <input
+                                    type="text"
+                                    placeholder="Search by name or email address..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    style={{ backgroundColor: current.inputBg, border: `1px solid ${current.glassBorder}` }}
+                                    className="w-full pl-12 pr-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium text-sm"
+                                />
+                            </div>
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
                                 style={{ backgroundColor: current.inputBg, border: `1px solid ${current.glassBorder}` }}
-                                className="w-full pl-12 pr-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium text-sm"
-                            />
+                                className="px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium text-sm min-w-[160px] appearance-none cursor-pointer"
+                            >
+                                <option value="all">All Status</option>
+                                <option value="qualified">Qualified</option>
+                                <option value="not_qualified">Not Qualified</option>
+                            </select>
                         </div>
                     </div>
 
