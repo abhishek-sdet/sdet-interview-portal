@@ -544,7 +544,7 @@ function CandidateMiniCard({ item, status, current }) {
             <p className="text-sm font-bold truncate tracking-tight">{item.candidates?.full_name}</p>
             <p className="text-xs text-slate-500 truncate">{item.candidates?.email}</p>
             <div className="mt-2 pt-2 border-t border-white/5 flex items-center justify-between">
-                <span className="text-[9px] font-bold font-mono opacity-30 uppercase">{new Date(item.completed_at || item.started_at).toLocaleDateString()}</span>
+                <span className="text-[9px] font-bold font-mono opacity-30 uppercase">{new Date(item.completed_at || item.started_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
                 <span className="text-[9px] font-bold text-slate-400 capitalize">{item.criteria?.name?.split(' ')[0]}</span>
             </div>
         </div>
