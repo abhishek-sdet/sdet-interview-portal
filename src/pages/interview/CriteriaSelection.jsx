@@ -60,6 +60,9 @@ export default function CriteriaSelection() {
         try {
             const candidateId = localStorage.getItem('candidateId');
 
+            // CRITICAL: Ensure we clear any stale interview ID before creating a new one
+            localStorage.removeItem('interviewId');
+
             // Create interview session
             const { data, error: insertError } = await supabase
                 .from('interviews')

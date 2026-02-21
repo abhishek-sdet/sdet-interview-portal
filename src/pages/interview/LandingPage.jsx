@@ -25,12 +25,35 @@ export default function LandingPage() {
         checkExistingSession();
     }, []);
 
-    const checkExistingSession = () => {
+    const checkExistingSession = async () => {
         const candidateId = localStorage.getItem('candidateId');
         const interviewId = localStorage.getItem('interviewId');
 
-        if (candidateId && !interviewId) {
-            // Logged in but haven't started quiz yet
+        if (interviewId) {
+            // VERIFY: Does this interview ID actually exist in the database?
+            // This prevents "Submission Error" later if the DB was cleared but local storage has a stale ID.
+            const { data, error } = await supabase
+                .from('interviews')
+                .select('id, status')
+                .eq('id', interviewId)
+                .maybeSingle();
+
+            if (error || !data || data.status === 'completed') {
+                console.warn('[SESSION] Zombie or completed session detected. Clearing stale data.', { error, data });
+                localStorage.removeItem('interviewId');
+                localStorage.removeItem('criteriaId');
+                localStorage.removeItem('examConfig');
+                localStorage.removeItem('selectedSet');
+                // Don't redirect yet, let them log in or check candidateId
+            } else {
+                console.log('[SESSION] Valid active session found. Redirecting to quiz.');
+                navigate('/quiz');
+                return;
+            }
+        }
+
+        if (candidateId) {
+            // Candidate is registered but no active interview
             navigate('/exam-rules', {
                 state: {
                     candidateData: {
@@ -39,9 +62,6 @@ export default function LandingPage() {
                     }
                 }
             });
-        } else if (interviewId) {
-            // Already in a quiz session
-            navigate('/quiz');
         }
     };
 
@@ -101,6 +121,17 @@ export default function LandingPage() {
         }
 
         setLoading(true);
+
+        // CLEAR: Ensure any old session IDs are wiped before we start a fresh attempt
+        // This prevents the new session from inheriting a stale ID if registration fails later
+        localStorage.removeItem('interviewId');
+        localStorage.removeItem('criteriaId');
+        localStorage.removeItem('examConfig');
+        localStorage.removeItem('selectedSet');
+        localStorage.removeItem('score');
+        localStorage.removeItem('totalQuestions');
+        localStorage.removeItem('percentage');
+        localStorage.removeItem('passed');
 
         try {
             console.log('[REGISTRATION] Checking for existing candidate:', formData.email.trim());

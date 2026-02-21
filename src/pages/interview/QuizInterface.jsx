@@ -42,6 +42,33 @@ export default function QuizInterface() {
 
     useEffect(() => {
         setMounted(true);
+
+        const checkSession = async () => {
+            const intId = localStorage.getItem('interviewId');
+            if (!intId) {
+                console.warn('[SESSION] No interviewId found in storage. Redirecting.');
+                navigate('/');
+                return;
+            }
+
+            // Verify the interview exists and is NOT results-locked
+            const { data, error } = await supabase
+                .from('interviews')
+                .select('status')
+                .eq('id', intId)
+                .maybeSingle();
+
+            if (error || !data) {
+                console.error('[SESSION] Invalid or missing interview record.', error);
+                localStorage.removeItem('interviewId');
+                navigate('/');
+            } else if (data.status === 'completed') {
+                console.warn('[SESSION] Interview already completed. Redirecting to home.');
+                navigate('/');
+            }
+        };
+
+        checkSession();
         const interviewId = localStorage.getItem('interviewId');
         const criteriaId = localStorage.getItem('criteriaId');
 

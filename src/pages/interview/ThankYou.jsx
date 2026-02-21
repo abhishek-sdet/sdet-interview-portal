@@ -118,21 +118,6 @@ export default function ThankYou() {
                             </p>
                         </div>
 
-                        {/* Scanner Section */}
-                        <div className="mb-8 p-6 bg-white/5 border border-white/10 rounded-2xl flex flex-col items-center">
-                            <div className="w-48 h-48 bg-white p-2 rounded-xl mb-4 shadow-xl">
-                                <img src="/Scanner.png" alt="Scanner QR Code" className="w-full h-full object-contain" />
-                            </div>
-                            <div className="text-left space-y-3">
-                                <p className="text-sm md:text-base text-slate-200 font-medium">
-                                    Scan the QR code above to finalize your submission for our records.
-                                </p>
-                                <p className="text-sm md:text-base text-slate-300 italic flex items-start gap-2">
-                                    <span className="text-brand-blue font-bold">Note:</span>
-                                    <span>Like the post: Confirms the authenticity of your LinkedIn profile for our records.</span>
-                                </p>
-                            </div>
-                        </div>
 
                         {/* Action Button */}
                         <button
