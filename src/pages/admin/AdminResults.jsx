@@ -482,7 +482,7 @@ export default function AdminResults() {
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
-                                                    {result.passed ? (
+                                                    {percentage >= (result.criteria?.passing_percentage || 70) ? (
                                                         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-green-400 text-xs font-bold">
                                                             <CheckCircle2 size={14} />
                                                             PASSED

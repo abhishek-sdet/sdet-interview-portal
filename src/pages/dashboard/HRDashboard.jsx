@@ -56,10 +56,20 @@ export default function HRDashboard() {
         return candidateName.includes(query) || candidateEmail.includes(query);
     });
 
-    // Stats Calculation
-    const totalCandidates = interviews.length;
-    const qualified = interviews.filter(i => i.passed).length;
-    const notQualified = interviews.filter(i => i.status === 'completed' && !i.passed).length;
+    // Stats Calculation - CONSISTENT: Only count COMPLETED interviews
+    const completedInterviews = interviews.filter(i => i.status === 'completed');
+    const totalCandidates = completedInterviews.length;
+
+    // Helper to check if an interview passed based on current threshold
+    const checkPassed = (item) => {
+        if (!item.total_questions) return false;
+        const threshold = item.criteria?.passing_percentage || 70;
+        const percentage = (item.score / item.total_questions) * 100;
+        return percentage >= threshold;
+    };
+
+    const qualified = completedInterviews.filter(i => checkPassed(i)).length;
+    const notQualified = totalCandidates - qualified;
     const successRate = totalCandidates > 0 ? Math.round((qualified / totalCandidates) * 100) : 0;
 
     // Categorization Logic: Fresher vs Experience
@@ -69,12 +79,12 @@ export default function HRDashboard() {
             'Experience': { q: [], nq: [] }
         };
 
-        interviews.forEach(item => {
+        completedInterviews.forEach(item => {
             const criteriaName = item.criteria?.name?.toLowerCase() || '';
             const isExperience = criteriaName.includes('experience') || criteriaName.includes('experienced') || criteriaName.includes('exp');
             const target = isExperience ? 'Experience' : 'Fresher';
 
-            if (item.passed) categories[target].q.push(item);
+            if (checkPassed(item)) categories[target].q.push(item);
             else categories[target].nq.push(item);
         });
         return categories;
@@ -310,12 +320,22 @@ export default function HRDashboard() {
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${item.passed ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
-                                                        } border`}>
-                                                        {item.passed ? 'Qualified' : 'Not Qualified'}
-                                                    </span>
+                                                    {(() => {
+                                                        const isPassed = checkPassed(item);
+                                                        return (
+                                                            <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${isPassed ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                                                                } border`}>
+                                                                {isPassed ? 'Qualified' : 'Not Qualified'}
+                                                            </span>
+                                                        );
+                                                    })()}
                                                 </td>
-                                                <td className="px-6 py-4 font-bold text-sm tracking-tight">{item.candidates?.full_name}</td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex flex-col">
+                                                        <span className="font-bold text-sm tracking-tight">{item.candidates?.full_name}</span>
+                                                        <span className="text-[10px] font-mono text-slate-500">Score: {item.score}/{item.total_questions}</span>
+                                                    </div>
+                                                </td>
                                                 <td className="px-6 py-4 text-xs font-semibold text-slate-500">{item.candidates?.email}</td>
                                                 <td className="px-6 py-4 text-[10px] font-bold font-mono text-slate-600">
                                                     {new Date(item.completed_at || item.started_at).toLocaleString()}

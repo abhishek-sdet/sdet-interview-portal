@@ -111,11 +111,7 @@ export default function QuizSubmissionModal({ isOpen, onClose, onReview, onConfi
                             </button>
                             <button
                                 onClick={onConfirm}
-                                disabled={!isAllAnswered}
-                                className={`flex-1 px-4 py-3 rounded-xl font-bold transition-all text-sm uppercase tracking-wide ${isAllAnswered
-                                        ? 'bg-gradient-to-r from-brand-blue to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-lg shadow-blue-500/20 cursor-pointer'
-                                        : 'bg-gray-700 text-gray-500 cursor-not-allowed opacity-50'
-                                    }`}
+                                className="flex-1 px-4 py-3 rounded-xl font-bold transition-all text-sm uppercase tracking-wide bg-gradient-to-r from-brand-blue to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-lg shadow-blue-500/20 cursor-pointer"
                             >
                                 Submit Assessment
                             </button>
