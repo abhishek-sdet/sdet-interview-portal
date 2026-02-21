@@ -17,11 +17,8 @@ export default function LandingPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [mounted, setMounted] = useState(false);
-    const [accessState, setAccessState] = useState({ loading: true, allowed: true, ip: null, deviceId: null });
-
     useEffect(() => {
         setMounted(true);
-        checkAccess();
         checkExistingSession();
     }, []);
 
@@ -63,17 +60,6 @@ export default function LandingPage() {
                 }
             });
         }
-    };
-
-    const checkAccess = async () => {
-        setAccessState(prev => ({ ...prev, loading: true }));
-        const result = await accessControl.verifyAccess();
-        setAccessState({
-            loading: false,
-            allowed: result.allowed,
-            ip: result.ip,
-            deviceId: result.deviceId
-        });
     };
 
     const handleChange = (field) => (e) => {
@@ -238,17 +224,6 @@ export default function LandingPage() {
         }
     };
 
-    if (accessState.loading) {
-        return (
-            <div className="h-screen w-full bg-universe flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin"></div>
-            </div>
-        );
-    }
-
-    if (!accessState.allowed) {
-        return <AccessDenied ip={accessState.ip} deviceId={accessState.deviceId} showLogout={false} />;
-    }
 
     return (
         <div className="h-full w-full bg-universe relative overflow-y-auto overflow-x-hidden font-sans text-slate-100 selection:bg-brand-orange selection:text-white">

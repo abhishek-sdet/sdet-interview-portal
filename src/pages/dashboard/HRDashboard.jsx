@@ -39,6 +39,7 @@ export default function HRDashboard() {
                     candidates(*),
                     criteria(name, passing_percentage)
                 `)
+                .order('completed_at', { ascending: false })
                 .order('started_at', { ascending: false });
 
             if (error) throw error;

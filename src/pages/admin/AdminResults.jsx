@@ -72,6 +72,7 @@ export default function AdminResults() {
                     candidates(full_name, email, phone),
                     criteria(name, passing_percentage)
                 `)
+                .order('completed_at', { ascending: false })
                 .order('started_at', { ascending: false });
 
             // Apply date filter

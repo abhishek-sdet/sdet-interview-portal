@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import AppSignature from '@/components/AppSignature';
+import AccessGuard from '@/components/AccessGuard';
 
 // Interview Portal Pages
 import LandingPage from './pages/interview/LandingPage';
@@ -34,14 +35,16 @@ function App() {
                 <div className="h-full w-full flex flex-col overflow-auto">
                     <AppSignature />
                     <Routes>
-                        {/* Interview Portal Routes */}
-                        <Route path="/" element={<LandingPage />} />
-                        <Route path="/criteria-selection" element={<CriteriaSelection />} />
-                        <Route path="/set-selection" element={<SetSelection />} />
-                        <Route path="/exam-rules" element={<ExamRules />} />
-                        <Route path="/exam-setup" element={<ExamSetup />} />
-                        <Route path="/quiz" element={<QuizInterface />} />
-                        <Route path="/thank-you" element={<ThankYou />} />
+                        {/* Interview Portal Routes (Protected by AccessGuard) */}
+                        <Route element={<AccessGuard />}>
+                            <Route path="/" element={<LandingPage />} />
+                            <Route path="/criteria-selection" element={<CriteriaSelection />} />
+                            <Route path="/set-selection" element={<SetSelection />} />
+                            <Route path="/exam-rules" element={<ExamRules />} />
+                            <Route path="/exam-setup" element={<ExamSetup />} />
+                            <Route path="/quiz" element={<QuizInterface />} />
+                            <Route path="/thank-you" element={<ThankYou />} />
+                        </Route>
 
                         {/* Admin Portal Routes (New Simple Version) */}
                         <Route path="/admin/login" element={<AdminLogin />} />
