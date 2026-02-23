@@ -8,14 +8,14 @@ import QuestionStatusMap from './QuestionStatusMap';
  * QuizSubmissionModal Component
  * Premium styled confirmation dialog with QUESTION GRID
  */
-export default function QuizSubmissionModal({ isOpen, onClose, onReview, onConfirm, questions = [], answers = {} }) {
+export default function QuizSubmissionModal({ isOpen, onClose, onReview, onConfirm, questions = [], answers = {}, totalExpectedQuestions }) {
     if (!isOpen) return null;
 
     // Calculate Stats
-    const totalQuestions = questions.length;
+    const totalQuestions = totalExpectedQuestions || questions.length;
     const answeredCount = questions.filter(q => answers[q.id]).length;
     const unansweredCount = totalQuestions - answeredCount;
-    const isAllAnswered = unansweredCount === 0;
+    const isAllAnswered = answeredCount >= totalQuestions;
 
     return (
         <AnimatePresence>
@@ -110,8 +110,14 @@ export default function QuizSubmissionModal({ isOpen, onClose, onReview, onConfi
                                 Back to Review
                             </button>
                             <button
-                                onClick={onConfirm}
-                                className="flex-1 px-4 py-3 rounded-xl font-bold transition-all text-sm uppercase tracking-wide bg-gradient-to-r from-brand-blue to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-lg shadow-blue-500/20 cursor-pointer"
+                                onClick={isAllAnswered ? onConfirm : undefined}
+                                disabled={!isAllAnswered}
+                                className={`flex-1 px-4 py-3 rounded-xl font-bold transition-all text-sm uppercase tracking-wide
+                                    ${isAllAnswered
+                                        ? 'bg-gradient-to-r from-brand-blue to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-lg shadow-blue-500/20 cursor-pointer'
+                                        : 'bg-white/5 text-slate-500 cursor-not-allowed opacity-50'
+                                    }
+                                `}
                             >
                                 Submit Assessment
                             </button>

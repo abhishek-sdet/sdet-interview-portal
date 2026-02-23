@@ -6,9 +6,6 @@ import { supabase } from './supabase';
 export const accessControl = {
     /**
      * Get or generate a unique device ID for this browser.
-     */
-    /**
-     * Get or generate a unique device ID for this browser.
      * Uses both localStorage and Cookies for cross-persistence.
      */
     getDeviceId: () => {
@@ -56,15 +53,23 @@ export const accessControl = {
             return null;
         }
     },
-
     /**
      * Verify if the current session matches allowed IP or Device ID.
      * Returns { allowed: boolean, reason: string | null }
      */
-    verifyAccess: async () => {
+    verifyAccess: async (context = 'aspirant') => {
         try {
             const deviceId = accessControl.getDeviceId();
             const publicIp = await accessControl.getPublicIp();
+
+            if (!publicIp) {
+                return {
+                    allowed: false,
+                    reason: 'Could not verify your public IP address.',
+                    ip: 'Unknown',
+                    deviceId
+                };
+            }
 
             // Fetch allowed list
             const { data: allowedList, error } = await supabase
@@ -89,6 +94,10 @@ export const accessControl = {
             // Check Device
             const isDeviceAllowed = allowedList.some(item => item.type === 'device' && item.value === deviceId);
 
+            // STRICT MODE: For aspirants, we might want to require IP match even if device is known
+            // For now, either is sufficient as per current business logic, 
+            // but we ensure IP is available for verification.
+
             if (isIpAllowed || isDeviceAllowed) {
                 return { allowed: true, reason: null, ip: publicIp, deviceId };
             }
@@ -107,9 +116,15 @@ export const accessControl = {
                 return { allowed: false, reason: 'Authentication required. Please log in.', error: error.message };
             }
 
-            // Default to allowed for temporary network/API errors to prevent locking everyone out 
-            // but log the error. In a strict system, this would be 'false'.
-            return { allowed: true, reason: 'Error during verification', error: error.message };
+            // CHANGED: Default to DENIED for security. 
+            // In a production environment, we cannot risk allowing unauthorized access during network blips.
+            return {
+                allowed: false,
+                reason: 'A security error occurred during access verification. Please check your connection.',
+                error: error.message,
+                ip: 'Error',
+                deviceId: accessControl.getDeviceId()
+            };
         }
     }
 };

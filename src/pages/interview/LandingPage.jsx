@@ -15,12 +15,31 @@ export default function LandingPage() {
         phone: ''
     });
     const [loading, setLoading] = useState(false);
+    const [siteActive, setSiteActive] = useState(true);
+    const [checkingStatus, setCheckingStatus] = useState(true);
     const [error, setError] = useState('');
     const [mounted, setMounted] = useState(false);
     useEffect(() => {
         setMounted(true);
+        checkSiteStatus();
         checkExistingSession();
     }, []);
+
+    const checkSiteStatus = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('site_settings')
+                .select('is_site_active')
+                .single();
+            if (!error && data) {
+                setSiteActive(data.is_site_active);
+            }
+        } catch (err) {
+            console.warn('[SITE_STATUS] Failed to fetch status, defaulting to active');
+        } finally {
+            setCheckingStatus(false);
+        }
+    };
 
     const checkExistingSession = async () => {
         const candidateId = localStorage.getItem('candidateId');
@@ -109,7 +128,6 @@ export default function LandingPage() {
         setLoading(true);
 
         // CLEAR: Ensure any old session IDs are wiped before we start a fresh attempt
-        // This prevents the new session from inheriting a stale ID if registration fails later
         localStorage.removeItem('interviewId');
         localStorage.removeItem('criteriaId');
         localStorage.removeItem('examConfig');
@@ -140,10 +158,9 @@ export default function LandingPage() {
             if (existingCandidate) {
                 console.log('[REGISTRATION] Existing candidate found:', existingCandidate.id);
                 // 2. Candidate exists, check for *active* or *completed* associated interview
-                // We just check if any interview exists at all for this candidate
                 const { data: interviews, error: interviewError } = await supabase
                     .from('interviews')
-                    .select('id')
+                    .select('id, status')
                     .eq('candidate_id', existingCandidate.id)
                     .limit(1);
 
@@ -153,35 +170,51 @@ export default function LandingPage() {
                 }
 
                 if (interviews && interviews.length > 0) {
-                    console.log('[REGISTRATION] Active interview exists. Blocking.');
-                    // Interview exists - block registration
-                    setError('This email has already been registered for an assessment.');
+                    const latestInterview = interviews[0];
+                    console.log('[REGISTRATION] Interview exists. Status:', latestInterview.status);
+
+                    if (latestInterview.status === 'completed') {
+                        setError('You have already completed the assessment for this email.');
+                        setLoading(false);
+                        return;
+                    } else if (latestInterview.status === 'in_progress') {
+                        console.log('[REGISTRATION] Active session resumed.');
+                        localStorage.setItem('interviewId', latestInterview.id);
+                    }
+                }
+
+                console.log('[REGISTRATION] Updating candidate info.');
+                const { data: updatedCandidate, error: updateError } = await supabase
+                    .from('candidates')
+                    .update({
+                        full_name: formData.fullName.trim(),
+                        phone: formData.phone.trim()
+                    })
+                    .eq('id', existingCandidate.id)
+                    .select()
+                    .maybeSingle();
+
+                if (updateError) throw updateError;
+                candidateId = updatedCandidate.id;
+                candidateName = updatedCandidate.full_name;
+            } else {
+                // NEW: CHECK DEVICE ID for new email as well
+                const deviceId = accessControl.getDeviceId();
+                const { data: deviceInterviews, error: deviceError } = await supabase
+                    .from('interviews')
+                    .select('id, status')
+                    .eq('device_id', deviceId)
+                    .eq('status', 'completed')
+                    .limit(1);
+
+                if (!deviceError && deviceInterviews && deviceInterviews.length > 0) {
+                    console.warn('[REGISTRATION] Reattempt detected via Device ID:', deviceId);
+                    setError('This device has already been used to complete an assessment. Multiple attempts are not allowed.');
                     setLoading(false);
                     return;
-                } else {
-                    console.log('[REGISTRATION] No interview found for candidate. Updating info and proceeding.');
-                    // No interview exists (likely deleted by admin)
-                    // Update existing candidate and proceed
-                    const { data: updatedCandidate, error: updateError } = await supabase
-                        .from('candidates')
-                        .update({
-                            full_name: formData.fullName.trim(),
-                            phone: formData.phone.trim()
-                        })
-                        .eq('id', existingCandidate.id)
-                        .select()
-                        .maybeSingle();
-
-                    if (updateError) {
-                        console.error('[REGISTRATION] Update candidate error:', updateError);
-                        throw updateError;
-                    }
-                    candidateId = updatedCandidate.id;
-                    candidateName = updatedCandidate.full_name;
                 }
-            } else {
+
                 console.log('[REGISTRATION] Creating new candidate...');
-                // 3. New candidate, insert record
                 const { data: newCandidate, error: insertError } = await supabase
                     .from('candidates')
                     .insert([
@@ -224,6 +257,39 @@ export default function LandingPage() {
         }
     };
 
+
+    if (checkingStatus) {
+        return (
+            <div className="min-h-screen w-full bg-universe flex items-center justify-center font-sans text-slate-100">
+                <Loader2 className="w-10 h-10 text-brand-blue animate-spin" />
+            </div>
+        );
+    }
+
+    if (!siteActive) {
+        return (
+            <div className="min-h-screen w-full bg-universe flex items-center justify-center p-4 font-sans text-slate-100">
+                <div className="max-w-md w-full text-center space-y-6">
+                    <div className="inline-block p-4 bg-red-500/10 border border-red-500/20 rounded-3xl mb-4">
+                        <ShieldCheck className="w-16 h-16 text-red-400 mx-auto" />
+                    </div>
+                    <h1 className="text-3xl font-bold text-white">Portal Temporarily Offline</h1>
+                    <p className="text-slate-400">
+                        The interview portal is currently disabled by the administrator.
+                        Please try again during your scheduled interview slot.
+                    </p>
+                    <div className="pt-8">
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="px-6 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm transition-all"
+                        >
+                            Refresh Page
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="h-full w-full bg-universe relative overflow-y-auto overflow-x-hidden font-sans text-slate-100 selection:bg-brand-orange selection:text-white">

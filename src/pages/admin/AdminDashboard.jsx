@@ -168,6 +168,19 @@ export default function AdminDashboard() {
                                 <div className="text-sm text-slate-400">Check candidate scores and performance</div>
                             </div>
                         </button>
+
+                        <button
+                            onClick={() => navigate('/admin/drives')}
+                            className="flex items-center gap-4 p-6 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 rounded-xl transition-all group"
+                        >
+                            <div className="p-3 bg-emerald-500/20 rounded-lg group-hover:scale-110 transition-transform">
+                                <Calendar className="w-6 h-6 text-emerald-400" />
+                            </div>
+                            <div className="text-left">
+                                <div className="font-bold text-white mb-1">Manage Drives</div>
+                                <div className="text-sm text-slate-400">Organize and label interview batches</div>
+                            </div>
+                        </button>
                     </div>
                 </div>
 

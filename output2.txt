@@ -1,0 +1,13 @@
+[
+  {
+    "id": "7a318489-873e-4a4c-ba1e-fca320d8c29b",
+    "status": "completed",
+    "score": 0,
+    "total_questions": 30,
+    "criteria_id": "b9838035-9d3b-43cb-a598-3a120e1fc39e",
+    "scheduled_interview_id": "ccd4267f-7e34-48c1-ad23-529d63e052b7",
+    "criteria": {
+      "name": "Fresher"
+    }
+  }
+]

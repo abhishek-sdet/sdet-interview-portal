@@ -39,7 +39,14 @@ export default function CriteriaSelection() {
                 .order('name');
 
             if (fetchError) throw fetchError;
-            setCriteria(data || []);
+
+            // Filter out hidden/internal criteria from candidates
+            const filteredData = (data || []).filter(item =>
+                !item.metadata?.hidden_from_candidates &&
+                item.name !== 'Both'
+            );
+
+            setCriteria(filteredData);
         } catch (err) {
             console.error('Error fetching criteria:', err);
             setError('Failed to load interview categories. Please refresh the page.');
@@ -60,16 +67,38 @@ export default function CriteriaSelection() {
         try {
             const candidateId = localStorage.getItem('candidateId');
 
+            // 1. Find if there is an active drive for today
+            const today = new Date().toISOString().split('T')[0];
+            const { data: activeDrives, error: driveError } = await supabase
+                .from('scheduled_interviews')
+                .select('id')
+                .eq('is_active', true)
+                .eq('scheduled_date', today)
+                .order('created_at', { ascending: false });
+
+            if (driveError) {
+                console.warn('[DRIVE] Error fetching active drives:', driveError);
+            }
+
+            const activeDriveId = activeDrives?.[0]?.id || null;
+
+            if (!activeDriveId) {
+                setError('No active interview drive is scheduled for today. Please wait for an administrator to start the drive.');
+                setLoading(false);
+                return;
+            }
+
             // CRITICAL: Ensure we clear any stale interview ID before creating a new one
             localStorage.removeItem('interviewId');
 
-            // Create interview session
+            // 2. Create interview session
             const { data, error: insertError } = await supabase
                 .from('interviews')
                 .insert([
                     {
                         candidate_id: candidateId,
                         criteria_id: selectedCriteria.id,
+                        scheduled_interview_id: activeDriveId, // Link to drive!
                         status: 'in_progress'
                     }
                 ])
@@ -82,6 +111,9 @@ export default function CriteriaSelection() {
             localStorage.setItem('interviewId', data.id);
             localStorage.setItem('criteriaId', selectedCriteria.id);
             localStorage.setItem('passingPercentage', selectedCriteria.passing_percentage);
+            if (activeDriveId) {
+                localStorage.setItem('scheduledInterviewId', activeDriveId);
+            }
 
             // Navigate to set selection
             navigate('/set-selection', {

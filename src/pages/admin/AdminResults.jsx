@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SimpleLayout from '@/components/admin/SimpleLayout';
 import { supabase } from '@/lib/supabase';
-import { Search, Download, CheckCircle2, XCircle, Calendar, Filter, Trash2, AlertTriangle, Eye, X } from 'lucide-react';
+import { Search, Download, CheckCircle2, XCircle, Calendar, Filter, Trash2, AlertTriangle, Eye, X, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function AdminResults() {
@@ -12,8 +12,21 @@ export default function AdminResults() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [dateFilter, setDateFilter] = useState('all');
+    const [drives, setDrives] = useState([]);
+    const [driveFilter, setDriveFilter] = useState('all');
+
+    // Handle driveId from URL
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const driveId = params.get('driveId');
+        if (driveId) {
+            setDriveFilter(driveId);
+        }
+    }, []);
     const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const [reattemptConfirm, setReattemptConfirm] = useState(null);
     const [deletingId, setDeletingId] = useState(null);
+    const [resettingId, setResettingId] = useState(null);
 
     // Score Editing State
     const [editingScoreId, setEditingScoreId] = useState(null);
@@ -28,6 +41,7 @@ export default function AdminResults() {
     useEffect(() => {
         checkAuth();
         fetchResults();
+        fetchDrives();
 
         // Subscribe to real-time changes
         console.log('Setting up real-time subscription for results...');
@@ -38,18 +52,26 @@ export default function AdminResults() {
                 { event: '*', schema: 'public', table: 'interviews' },
                 (payload) => {
                     console.log('Real-time update received:', payload);
-                    fetchResults();
+                    setTimeout(() => {
+                        fetchResults(true); // true = background refresh, don't show loader
+                    }, 1000); // 1s buffer for DB replica sync
                 }
             )
             .subscribe((status) => {
                 console.log('Subscription status:', status);
             });
 
+        // Fallback polling every 10 seconds in case WebSockets fail or are blocked by network/ad-blockers
+        const pollInterval = setInterval(() => {
+            fetchResults(true);
+        }, 10000);
+
         return () => {
             console.log('Cleaning up subscription...');
             supabase.removeChannel(channel);
+            clearInterval(pollInterval);
         };
-    }, [dateFilter]);
+    }, [dateFilter, driveFilter]);
 
     useEffect(() => {
         filterResults();
@@ -62,27 +84,37 @@ export default function AdminResults() {
         }
     };
 
-    const fetchResults = async () => {
-        setLoading(true);
+    const fetchResults = async (isBackgroundRefresh = false) => {
+        if (!isBackgroundRefresh) {
+            setLoading(true);
+        }
         try {
             let query = supabase
                 .from('interviews')
                 .select(`
                     *,
                     candidates(full_name, email, phone),
-                    criteria(name, passing_percentage)
+                    criteria(name, passing_percentage),
+                    scheduled_interviews(description)
                 `)
                 .order('completed_at', { ascending: false })
                 .order('started_at', { ascending: false });
 
-            // Apply date filter
-            if (dateFilter === 'today') {
-                const today = new Date().toISOString().split('T')[0];
-                query = query.gte('started_at', `${today}T00:00:00`);
-            } else if (dateFilter === 'week') {
-                const weekAgo = new Date();
-                weekAgo.setDate(weekAgo.getDate() - 7);
-                query = query.gte('started_at', weekAgo.toISOString());
+            // Apply drive filter
+            if (driveFilter !== 'all') {
+                query = query.eq('scheduled_interview_id', driveFilter);
+            }
+
+            // Apply date filter (only if not filtering by specific drive)
+            if (driveFilter === 'all') {
+                if (dateFilter === 'today') {
+                    const today = new Date().toISOString().split('T')[0];
+                    query = query.gte('started_at', `${today}T00:00:00`);
+                } else if (dateFilter === 'week') {
+                    const weekAgo = new Date();
+                    weekAgo.setDate(weekAgo.getDate() - 7);
+                    query = query.gte('started_at', weekAgo.toISOString());
+                }
             }
 
             const { data, error } = await query;
@@ -94,6 +126,18 @@ export default function AdminResults() {
             console.error('Error fetching results:', err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchDrives = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('scheduled_interviews')
+                .select('id, description, scheduled_date')
+                .order('scheduled_date', { ascending: false });
+            if (!error) setDrives(data || []);
+        } catch (err) {
+            console.error('Error fetching drives:', err);
         }
     };
 
@@ -165,6 +209,36 @@ export default function AdminResults() {
             }
         } finally {
             setDeletingId(null);
+        }
+    };
+
+    const handleAllowReattempt = (result) => {
+        setReattemptConfirm(result);
+    };
+
+    const confirmAllowReattempt = async () => {
+        if (!reattemptConfirm) return;
+        const result = reattemptConfirm;
+        setReattemptConfirm(null);
+
+        setResettingId(result.id);
+        try {
+            console.log('[RESET] Attempting to allow reattempt for:', result.candidates?.email);
+
+            const { error } = await supabase
+                .from('interviews')
+                .delete()
+                .eq('id', result.id);
+
+            if (error) throw error;
+
+            toast.success(`${result.candidates?.full_name} can now reattempt the assessment.`);
+            fetchResults();
+        } catch (err) {
+            console.error('[RESET] Error allowing reattempt:', err);
+            toast.error(`Failed to allow reattempt: ${err.message || 'Unknown error'}`);
+        } finally {
+            setResettingId(null);
         }
     };
 
@@ -342,16 +416,35 @@ export default function AdminResults() {
                     </div>
 
                     {/* Date Filter */}
+                    {driveFilter === 'all' && (
+                        <div className="relative">
+                            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                            <select
+                                value={dateFilter}
+                                onChange={(e) => setDateFilter(e.target.value)}
+                                className="pl-11 pr-8 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all appearance-none cursor-pointer"
+                            >
+                                <option value="today" className="bg-[#0b101b]">Today</option>
+                                <option value="week" className="bg-[#0b101b]">Last 7 Days</option>
+                                <option value="all" className="bg-[#0b101b]">All Time</option>
+                            </select>
+                        </div>
+                    )}
+
+                    {/* Drive Filter */}
                     <div className="relative">
-                        <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                         <select
-                            value={dateFilter}
-                            onChange={(e) => setDateFilter(e.target.value)}
-                            className="pl-11 pr-8 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all appearance-none cursor-pointer"
+                            value={driveFilter}
+                            onChange={(e) => setDriveFilter(e.target.value)}
+                            className="pl-11 pr-8 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all appearance-none cursor-pointer max-w-[200px]"
                         >
-                            <option value="today" className="bg-[#0b101b]">Today</option>
-                            <option value="week" className="bg-[#0b101b]">Last 7 Days</option>
-                            <option value="all" className="bg-[#0b101b]">All Time</option>
+                            <option value="all" className="bg-[#0b101b]">Select Drive</option>
+                            {drives.map(d => (
+                                <option key={d.id} value={d.id} className="bg-[#0b101b]">
+                                    {d.description || `Drive ${new Date(d.scheduled_date).toLocaleDateString()}`}
+                                </option>
+                            ))}
                         </select>
                     </div>
                 </div>
@@ -506,6 +599,18 @@ export default function AdminResults() {
                                                 <td className="px-6 py-4 text-center">
                                                     <div className="flex items-center justify-center gap-2">
                                                         <button
+                                                            onClick={() => handleAllowReattempt(result)}
+                                                            disabled={resettingId === result.id}
+                                                            className="p-2 text-slate-400 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-all disabled:opacity-50"
+                                                            title="Allow Reattempt (Deletes current score)"
+                                                        >
+                                                            {resettingId === result.id ? (
+                                                                <div className="w-4 h-4 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin"></div>
+                                                            ) : (
+                                                                <RotateCcw size={16} />
+                                                            )}
+                                                        </button>
+                                                        <button
                                                             onClick={() => fetchCandidateResponses(result)}
                                                             className="p-2 text-slate-400 hover:text-brand-blue hover:bg-brand-blue/10 rounded-lg transition-all"
                                                             title="View candidate responses"
@@ -542,11 +647,49 @@ export default function AdminResults() {
                     </div>
                 )}
 
+                {/* Reattempt Confirmation Modal */}
+                {reattemptConfirm && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <div className="bg-[#0f172a] border border-amber-500/30 rounded-xl p-6 max-w-md w-full shadow-2xl animate-in fade-in duration-200">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-3 bg-amber-500/10 rounded-full text-amber-500">
+                                    <RotateCcw size={24} />
+                                </div>
+                                <h3 className="text-xl font-bold text-white">Allow Reattempt</h3>
+                            </div>
+                            <div className="space-y-4">
+                                <p className="text-slate-300">
+                                    Are you sure you want to allow <span className="font-bold text-amber-400">{reattemptConfirm.candidates?.full_name || 'this candidate'}</span> to reattempt this assessment?
+                                </p>
+                                <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-sm text-amber-200/80">
+                                    This action will <strong className="text-amber-400">permanently delete</strong> their current score and responses for this specific drive. Their candidate profile will remain.
+                                </div>
+                                <div className="flex gap-3 mt-6">
+                                    <button
+                                        onClick={() => setReattemptConfirm(null)}
+                                        className="flex-1 px-4 py-2 border border-slate-600 text-slate-300 rounded-lg hover:bg-white/5 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={confirmAllowReattempt}
+                                        className="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <RotateCcw size={18} />
+                                        Confirm
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Reset Confirmation Modal */}
                 {showResetConfirm && (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                         <div className="bg-[#0f172a] border border-red-500/30 rounded-xl p-6 max-w-md w-full shadow-2xl">
                             <div className="flex items-center gap-3 mb-4">
+
                                 <div className="p-3 bg-red-500/10 rounded-lg">
                                     <AlertTriangle className="w-6 h-6 text-red-400" />
                                 </div>

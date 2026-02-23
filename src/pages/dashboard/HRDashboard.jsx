@@ -17,22 +17,49 @@ export default function HRDashboard() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [driveFilter, setDriveFilter] = useState('all');
+    const [drives, setDrives] = useState([]);
     const [activeTab, setActiveTab] = useState('fresher');
 
     useEffect(() => {
         fetchData();
+        fetchDrives();
+
+        const channel = supabase
+            .channel('hr-dashboard-changes')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'interviews' },
+                () => {
+                    setTimeout(() => fetchData(true), 1000);
+                }
+            )
+            .subscribe();
+
         // Add fonts
         const link = document.createElement('link');
         link.href = 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap';
         link.rel = 'stylesheet';
         document.head.appendChild(link);
-        return () => document.head.removeChild(link);
+
+        // Fallback polling
+        const pollInterval = setInterval(() => {
+            fetchData(true);
+        }, 10000);
+
+        return () => {
+            document.head.removeChild(link);
+            supabase.removeChannel(channel);
+            clearInterval(pollInterval);
+        };
     }, []);
 
-    const fetchData = async () => {
-        setLoading(true);
+    const fetchData = async (isBackgroundRefresh = false) => {
+        if (!isBackgroundRefresh) {
+            setLoading(true);
+        }
         try {
-            const { data: interviewData, error } = await supabase
+            let query = supabase
                 .from('interviews')
                 .select(`
                     *,
@@ -42,12 +69,30 @@ export default function HRDashboard() {
                 .order('completed_at', { ascending: false })
                 .order('started_at', { ascending: false });
 
+            if (driveFilter !== 'all') {
+                query = query.eq('scheduled_interview_id', driveFilter);
+            }
+
+            const { data: interviewData, error } = await query;
+
             if (error) throw error;
             setInterviews(interviewData || []);
         } catch (error) {
             console.error('Error fetching data:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchDrives = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('scheduled_interviews')
+                .select('id, description, scheduled_date')
+                .order('scheduled_date', { ascending: false });
+            if (!error) setDrives(data || []);
+        } catch (err) {
+            console.error('Error fetching drives:', err);
         }
     };
 
@@ -316,7 +361,26 @@ export default function HRDashboard() {
                             >
                                 <option value="all">All Status</option>
                                 <option value="qualified">Qualified</option>
+                                <option value="qualified">Qualified</option>
                                 <option value="not_qualified">Not Qualified</option>
+                            </select>
+
+                            <select
+                                value={driveFilter}
+                                onChange={(e) => {
+                                    setDriveFilter(e.target.value);
+                                    // Trigger refetch since drive filter is handled at query level for perf
+                                    setTimeout(() => fetchData(), 10);
+                                }}
+                                style={{ backgroundColor: current.inputBg, border: `1px solid ${current.glassBorder}` }}
+                                className="px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium text-sm min-w-[160px] appearance-none cursor-pointer"
+                            >
+                                <option value="all">All Drives</option>
+                                {drives.map(d => (
+                                    <option key={d.id} value={d.id}>
+                                        {d.description || `Drive ${new Date(d.scheduled_date).toLocaleDateString()}`}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                     </div>

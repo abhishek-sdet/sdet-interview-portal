@@ -9,6 +9,8 @@ export default function ManageCriteria() {
     const navigate = useNavigate();
     const [criteria, setCriteria] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [siteStatus, setSiteStatus] = useState(true);
+    const [updatingSite, setUpdatingSite] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [editForm, setEditForm] = useState({
         name: '',
@@ -21,7 +23,48 @@ export default function ManageCriteria() {
     // Fetch Criteria
     useEffect(() => {
         fetchCriteria();
+        fetchSiteStatus();
     }, []);
+
+    const fetchSiteStatus = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('site_settings')
+                .select('is_site_active')
+                .single();
+            if (error) {
+                if (error.code === '42P01') {
+                    console.warn('site_settings table not found. Please run scripts/site_settings.sql');
+                } else {
+                    throw error;
+                }
+            } else if (data) {
+                setSiteStatus(data.is_site_active);
+            }
+        } catch (error) {
+            console.error('Error fetching site status:', error);
+        }
+    };
+
+    const toggleSiteStatus = async () => {
+        setUpdatingSite(true);
+        try {
+            const newStatus = !siteStatus;
+            const { error } = await supabase
+                .from('site_settings')
+                .update({ is_site_active: newStatus })
+                .eq('id', (await supabase.from('site_settings').select('id').single()).data.id);
+
+            if (error) throw error;
+            setSiteStatus(newStatus);
+            toast.success(`Aspirant site ${newStatus ? 'enabled' : 'disabled'}`);
+        } catch (error) {
+            console.error('Error updating site status:', error);
+            toast.error('Failed to update site status. Ensure SQL script was run.');
+        } finally {
+            setUpdatingSite(false);
+        }
+    };
 
     const fetchCriteria = async () => {
         setLoading(true);
@@ -115,6 +158,22 @@ export default function ManageCriteria() {
                     <div>
                         <h1 className="text-2xl font-bold text-white">Exam Configuration</h1>
                         <p className="text-slate-400 text-sm mt-1">Manage criteria, time limits, and rules.</p>
+                    </div>
+
+                    <div className="bg-[#0f172a]/80 backdrop-blur-md border border-slate-700/50 rounded-2xl px-6 py-4 flex items-center gap-4 shadow-xl">
+                        <div>
+                            <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Aspirant Site Status</div>
+                            <div className={`text-sm font-bold ${siteStatus ? 'text-green-400' : 'text-red-400'}`}>
+                                {siteStatus ? 'ACTIVE & ONLINE' : 'OFFLINE / DISABLED'}
+                            </div>
+                        </div>
+                        <button
+                            onClick={toggleSiteStatus}
+                            disabled={updatingSite}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${siteStatus ? 'bg-brand-blue' : 'bg-slate-700'}`}
+                        >
+                            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${siteStatus ? 'translate-x-5' : 'translate-x-0'}`} />
+                        </button>
                     </div>
                 </div>
 

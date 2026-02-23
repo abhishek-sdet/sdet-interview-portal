@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { showToast } from '@/components/Toast';
 import GPTWBadge from '@/components/GPTWBadge';
 import { Loader2, ArrowRight, ArrowLeft, Clock, CheckCircle2, Circle, AlertCircle, Code, Sparkles } from 'lucide-react';
+import { accessControl } from '@/lib/accessControl';
 import QuizSubmissionModal from '@/components/QuizSubmissionModal';
 import QuestionStatusMap from '@/components/QuestionStatusMap';
 
@@ -591,37 +592,35 @@ export default function QuizInterface() {
         setShowSubmitModal(false);
     };
 
+    const [submissionFailed, setSubmissionFailed] = useState(false);
+
     const handleSubmit = async (autoSubmit = false, reason = null) => {
         console.log('[handleSubmit] triggered', { autoSubmit, reason });
 
-        // Check if at least one answer has been provided (using Ref for latest state)
         const currentAnswers = answersRef.current;
-        const answeredQuestions = Object.keys(currentAnswers).filter(key => currentAnswers[key] !== null && currentAnswers[key] !== undefined && currentAnswers[key] !== '');
+        const answeredQuestions = Object.keys(currentAnswers).filter(key =>
+            currentAnswers[key] !== null &&
+            currentAnswers[key] !== undefined &&
+            currentAnswers[key] !== ''
+        );
 
-        if (answeredQuestions.length === 0 && !autoSubmit) {
-            showToast('Please answer at least one question before submitting', 'error');
-            return;
-        }
+        const expectedTotal = totalExamQuestions > 0 ? totalExamQuestions : questions.length;
 
-        // If Manual Submit -> Open Layout first
         if (!autoSubmit && !showSubmitModal) {
             setShowSubmitModal(true);
             return;
         }
 
-        // Proceed if Auto-Submit OR Confirmed via Modal
-        console.log('[handleSubmit] Proceeding to REAL submission...');
         setSubmitting(true);
+        setSubmissionFailed(false);
         setError('');
 
         try {
             const interviewId = localStorage.getItem('interviewId');
-            const criteriaId = localStorage.getItem('criteriaId'); // Need criteriaId to fetch passing rules
+            const criteriaId = localStorage.getItem('criteriaId');
+            const deviceId = accessControl.getDeviceId();
 
-            // 1. Fetch Authoritative Passing Percentage from DB
-            // This prevents reliance on potentially stale sessionStorage data (e.g. 70% instead of 80%)
-            let passingPercentage = 70; // Default fallback
-
+            let passingPercentage = 70;
             if (criteriaId) {
                 const { data: criteriaData, error: criteriaError } = await supabase
                     .from('criteria')
@@ -631,41 +630,22 @@ export default function QuizInterface() {
 
                 if (!criteriaError && criteriaData) {
                     passingPercentage = criteriaData.passing_percentage;
-                    console.log(`[SCORING] Fetched authoritative passing percentage: ${passingPercentage}%`);
-                } else {
-                    console.warn('[SCORING] Failed to fetch string passing rules, using default.', criteriaError);
                 }
             }
 
             let correctCount = 0;
             const answerRecords = [];
 
-            console.log(`[SCORING] Starting calculation for ${questions.length} questions.`);
-            console.log('[SCORING] Current Answers state in Ref:', JSON.stringify(currentAnswers));
-
-            questions.forEach((question, index) => {
+            questions.forEach((question) => {
                 const selectedAnswer = currentAnswers[question.id];
-
-                // ROBUST NORMALIZATION: Trim, Lowercase, and remove non-breaking spaces
                 const normalize = (str) => {
                     if (str === null || str === undefined) return '';
-                    return String(str)
-                        .replace(/\u00A0/g, ' ') // Replace non-breaking spaces
-                        .trim()
-                        .toLowerCase();
+                    return String(str).replace(/\u00A0/g, ' ').trim().toLowerCase();
                 };
 
                 const safeSelected = normalize(selectedAnswer);
                 const safeCorrect = normalize(question.correct_answer);
-
                 const isCorrect = safeSelected !== '' && safeSelected === safeCorrect;
-
-                console.log(`[SCORING] Question ${index + 1} (ID: ${question.id}):`);
-                console.log(`  - Original Selected: "${selectedAnswer}"`);
-                console.log(`  - Normalized Selected: "${safeSelected}"`);
-                console.log(`  - Original Correct:  "${question.correct_answer}"`);
-                console.log(`  - Normalized Correct:   "${safeCorrect}"`);
-                console.log(`  - Result: ${isCorrect ? '✅ CORRECT' : '❌ INCORRECT'}`);
 
                 if (isCorrect) correctCount++;
 
@@ -677,99 +657,61 @@ export default function QuizInterface() {
                 });
             });
 
-            // Use the calculated total exam questions (e.g., 18) instead of just loaded questions (e.g., 15)
-            // This ensures correct scoring even if the user hasn't loaded the specialization section yet
             const totalQuestions = totalExamQuestions > 0 ? totalExamQuestions : questions.length;
             const percentage = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0;
-
-            // STRICT COMPARISON: must be >= to passingPercentage
             const passed = percentage >= passingPercentage;
 
-            console.log('[SCORING FINAL]');
-            console.log(`  - Total: ${totalQuestions}`);
-            console.log(`  - Correct Count: ${correctCount}`);
-            console.log(`  - Percentage: ${percentage}%`);
-            console.log(`  - Passing Needed: ${passingPercentage}%`);
-            console.log(`  - PASSED: ${passed}`);
+            // 1. Delete existing answers if this is a retry (to avoid unique constraint errors if any records were partially saved)
+            // Note: This assumes we want to overwrite. If using a transaction-like approach, we'd do this.
+            await supabase.from('answers').delete().eq('interview_id', interviewId);
 
-            console.log('[SUBMISSION] Inserting answers...', answerRecords.length, 'records');
+            // 2. Insert answers
             const { error: answersError } = await supabase
                 .from('answers')
                 .insert(answerRecords);
 
-            if (answersError) {
-                console.error('[SUBMISSION ERROR] Failed to insert answers:', answersError);
-                throw answersError;
-            }
-            console.log('[SUBMISSION] Answers inserted successfully');
+            if (answersError) throw answersError;
 
-            // Get question set safely
-            let questionSet = localStorage.getItem('selectedSet');
-            if (!questionSet) {
-                try {
-                    const examConfig = localStorage.getItem('examConfig');
-                    if (examConfig) {
-                        questionSet = JSON.parse(examConfig)?.set;
-                    }
-                } catch (e) {
-                    console.warn('Failed to parse examConfig:', e);
-                }
-            }
-
-            console.log('[SUBMISSION] Updating interview record...', {
-                interviewId,
-                status: 'completed',
-                score: correctCount,
-                total_questions: totalQuestions,
-                percentage,
-                passed,
-                question_set: questionSet
-            });
+            // 3. Update interview
+            const questionSet = localStorage.getItem('selectedSet') ||
+                JSON.parse(localStorage.getItem('examConfig') || '{}')?.set;
 
             const updatePayload = {
                 status: 'completed',
                 completed_at: new Date().toISOString(),
                 score: correctCount,
                 total_questions: totalQuestions,
-                passed: passed
+                percentage: percentage,
+                passed: passed,
+                device_id: deviceId // Ensure device_id is recorded on submission for reattempt check
             };
 
-            // Only add question_set if it exists
-            if (questionSet) {
-                updatePayload.question_set = questionSet;
-            }
-
-            // Only add metadata if it's an auto-submit
-            if (autoSubmit) {
-                updatePayload.metadata = { auto_submitted: true, reason: reason };
-            }
+            if (questionSet) updatePayload.question_set = questionSet;
+            if (autoSubmit) updatePayload.metadata = { auto_submitted: true, reason: reason };
 
             const { error: updateError } = await supabase
                 .from('interviews')
                 .update(updatePayload)
                 .eq('id', interviewId);
 
-            if (updateError) {
-                console.error('[SUBMISSION ERROR] Failed to update interview:', updateError);
-                throw updateError;
-            }
-            console.log('[SUBMISSION] Interview updated successfully');
+            if (updateError) throw updateError;
 
+            // SUCCESS: Store results and clear state
             localStorage.setItem('score', correctCount);
             localStorage.setItem('totalQuestions', totalQuestions);
             localStorage.setItem('percentage', percentage.toFixed(2));
             localStorage.setItem('passed', passed);
 
-            // Clear Quiz State from Local Storage
             const storageKey = `quiz_state_${interviewId}`;
             localStorage.removeItem(storageKey);
-            console.log('[STORAGE] Cleared quiz state');
 
             navigate('/thank-you');
         } catch (err) {
-            console.error('Error submitting interview:', err);
-            setError('Failed to submit interview. Please try again.');
+            console.error('[SUBMISSION ERROR]', err);
+            setSubmissionFailed(true);
+            setError(err.message || 'Connection lost. We could not save your answers.');
             setSubmitting(false);
+            showToast('Submission failed. Please try again.', 'error');
         }
     };
 
@@ -787,18 +729,42 @@ export default function QuizInterface() {
     if (error) {
         return (
             <div className="h-full w-full bg-universe flex items-center justify-center p-4 text-white">
-                <div className="max-w-md w-full bg-white/10 backdrop-blur-md rounded-2xl border border-white/10 p-8 text-center">
+                <div className="max-w-md w-full bg-white/10 backdrop-blur-md rounded-2xl border border-white/10 p-8 text-center animate-fade-in">
                     <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
                         <AlertCircle className="w-8 h-8 text-red-400" />
                     </div>
-                    <h2 className="text-xl font-bold text-white mb-2">Submission Error</h2>
-                    <p className="text-slate-400 mb-6">{error || 'Failed to submit interview. Please try again.'}</p>
-                    <button
-                        onClick={() => navigate('/criteria-selection')}
-                        className="px-6 py-3 bg-brand-blue rounded-lg hover:bg-blue-600 transition-colors font-semibold"
-                    >
-                        Return to Selection
-                    </button>
+                    <h2 className="text-xl font-bold text-white mb-2">
+                        {submissionFailed ? 'Submission Failed' : 'Loading Error'}
+                    </h2>
+                    <p className="text-slate-400 mb-6">
+                        {error || 'An unexpected error occurred. Please try again.'}
+                    </p>
+
+                    <div className="flex flex-col gap-3">
+                        {submissionFailed ? (
+                            <button
+                                onClick={() => handleSubmit(false)}
+                                className="w-full px-6 py-3 bg-brand-blue rounded-lg hover:bg-blue-600 transition-colors font-semibold flex items-center justify-center gap-2"
+                            >
+                                <Sparkles className="w-5 h-5" />
+                                Retry Submission
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => navigate('/criteria-selection')}
+                                className="w-full px-6 py-3 bg-brand-blue rounded-lg hover:bg-blue-600 transition-colors font-semibold"
+                            >
+                                Return to Selection
+                            </button>
+                        )}
+
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="w-full px-6 py-3 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors font-semibold"
+                        >
+                            Refresh Page
+                        </button>
+                    </div>
                 </div>
             </div>
         );
@@ -1295,7 +1261,6 @@ export default function QuizInterface() {
                 </div>
             </div>
 
-            {/* Custom Submission Modal */}
             <QuizSubmissionModal
                 isOpen={showSubmitModal}
                 onClose={() => setShowSubmitModal(false)}
@@ -1306,6 +1271,7 @@ export default function QuizInterface() {
                 }}
                 questions={questions}
                 answers={answers}
+                totalExpectedQuestions={totalExamQuestions > 0 ? totalExamQuestions : questions.length}
             />
 
         </div>
