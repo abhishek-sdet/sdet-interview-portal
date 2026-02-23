@@ -72,6 +72,7 @@ export default function ManageCriteria() {
             const { data, error } = await supabase
                 .from('criteria')
                 .select('*')
+                .neq('name', 'Both') // Hide 'Both' from configuration page as it's only for drive routing
                 .order('created_at', { ascending: true });
 
             if (error) throw error;
