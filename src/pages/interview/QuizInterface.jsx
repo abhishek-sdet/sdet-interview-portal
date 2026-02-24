@@ -22,6 +22,7 @@ export default function QuizInterface() {
     const [mounted, setMounted] = useState(false);
     const [criteriaType, setCriteriaType] = useState(''); // 'Fresher' or 'Experienced'
     const [answeredQuestions, setAnsweredQuestions] = useState(new Set()); // Track answered question IDs
+    const [visitedQuestions, setVisitedQuestions] = useState(new Set([0])); // Track visited question indices
     const [showSubmitModal, setShowSubmitModal] = useState(false); // Custom Submission Modal State
     const [showProctorWarning, setShowProctorWarning] = useState(false); // Fullscreen/Focus Violation Modal
     // Specialization State
@@ -45,6 +46,16 @@ export default function QuizInterface() {
     const javaQuestionsRef = useRef([]);
     const pythonQuestionsRef = useRef([]);
     const lastWarningTimeRef = useRef(0); // For debouncing tab switches
+
+    // Track visited questions for accurate "Skipped" status without hopping bugs
+    useEffect(() => {
+        setVisitedQuestions(prev => {
+            if (prev.has(currentIndex)) return prev;
+            const newSet = new Set(prev);
+            newSet.add(currentIndex);
+            return newSet;
+        });
+    }, [currentIndex]);
 
     useEffect(() => {
         setMounted(true);

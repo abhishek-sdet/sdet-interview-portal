@@ -3,9 +3,9 @@ import React from 'react';
 
 /**
  * QuestionStatusMap Component
- * Reusable grid displaying question status (Answered/Unanswered/Current)
+ * Reusable grid displaying question status (Answered/Unanswered/Skipped/Current)
  */
-export default function QuestionStatusMap({ questions = [], answers = {}, currentIndex = null, onQuestionSelect = null }) {
+export default function QuestionStatusMap({ questions = [], answers = {}, currentIndex = null, onQuestionSelect = null, visitedQuestions = new Set() }) {
 
     if (!questions || questions.length === 0) return null;
 
@@ -31,8 +31,11 @@ export default function QuestionStatusMap({ questions = [], answers = {}, curren
                     } else if (currentIndex !== null && idx === currentIndex) {
                         // CURRENT: Bright neutral
                         statusColor = 'bg-white/10 border-white/20 text-white';
+                    } else if (visitedQuestions.has(idx)) {
+                        // SKIPPED: Visited but Unanswered (Red)
+                        statusColor = 'bg-red-500/10 border-red-500/20 text-red-400';
                     } else {
-                        // UNANSWERED: Grey (Dim)
+                        // UNANSWERED / NEVER VISITED: Grey (Dim)
                         statusColor = 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10 hover:text-slate-400';
                     }
 
@@ -85,8 +88,12 @@ export default function QuestionStatusMap({ questions = [], answers = {}, curren
                     <span>Answered</span>
                 </div>
                 <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-red-500/20 border border-red-500/50"></div>
+                    <span>Skipped</span>
+                </div>
+                <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full bg-white/5 border border-white/10"></div>
-                    <span>Unanswered</span>
+                    <span>Pending</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-lg border-2 border-white"></div>
