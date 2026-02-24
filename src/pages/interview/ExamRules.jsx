@@ -67,6 +67,14 @@ export default function ExamRules() {
             border: 'border-green-500/20',
             title: 'Review & Change Answers',
             description: 'You can navigate back and modify your answers at any time until you submit the assessment.'
+        },
+        {
+            icon: CheckCircle2,
+            color: 'text-emerald-400',
+            bg: 'bg-emerald-500/10',
+            border: 'border-emerald-500/20',
+            title: 'No Negative Marking',
+            description: 'There is no negative marking. You must attempt all the questions before the system allows submission.'
         }
     ];
 

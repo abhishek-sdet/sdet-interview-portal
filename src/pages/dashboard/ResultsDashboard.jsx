@@ -175,13 +175,13 @@ export default function ResultsDashboard() {
                             <tbody>
                                 {filteredResults.map((result) => (
                                     <tr
-                                        key={result.interview_id}
+                                        key={result.id}
                                         className={`border-b ${theme === 'dark' ? 'border-white/5 hover:bg-white/5' : 'border-gray-100 hover:bg-gray-50'} transition-colors`}
                                     >
                                         <td className="py-4 px-4">
                                             <span className={`px-3 py-1 rounded-full text-xs font-semibold ${theme === 'dark' ? 'bg-white/10 text-white' : 'bg-gray-200 text-gray-800'
                                                 }`}>
-                                                {result.criteria_name || 'N/A'}
+                                                {result.criteria?.name || 'N/A'}
                                             </span>
                                         </td>
                                         <td className="py-4 px-4">
@@ -193,10 +193,10 @@ export default function ResultsDashboard() {
                                             </span>
                                         </td>
                                         <td className={`py-4 px-4 font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                                            {result.full_name}
+                                            {result.candidates?.full_name || 'N/A'}
                                         </td>
                                         <td className={`py-4 px-4 ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>
-                                            {result.email || '-'}
+                                            {result.candidates?.email || '-'}
                                         </td>
                                         <td className={`py-4 px-4 text-sm font-mono ${theme === 'dark' ? 'text-slate-500' : 'text-gray-500'}`}>
                                             {new Date(result.completed_at).toLocaleString()}

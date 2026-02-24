@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import GPTWBadge from '@/components/GPTWBadge';
 import { ArrowRight, CheckCircle2, ShieldCheck, Mail, Phone, User, Loader2 } from 'lucide-react';
 import { accessControl } from '@/lib/accessControl';
+import { getHardwareId } from '@/lib/fingerprint';
 import AccessDenied from '@/components/admin/AccessDenied';
 
 // World Class Landing Page
@@ -17,6 +18,7 @@ export default function LandingPage() {
     const [loading, setLoading] = useState(false);
     const [siteActive, setSiteActive] = useState(true);
     const [checkingStatus, setCheckingStatus] = useState(true);
+    const [offlineMessage, setOfflineMessage] = useState('The interview portal is currently disabled by the administrator. Please try again during your scheduled interview slot.');
     const [error, setError] = useState('');
     const [mounted, setMounted] = useState(false);
     useEffect(() => {
@@ -27,13 +29,38 @@ export default function LandingPage() {
 
     const checkSiteStatus = async () => {
         try {
-            const { data, error } = await supabase
+            // 1. Check global site toggle
+            const { data: siteData, error: siteError } = await supabase
                 .from('site_settings')
                 .select('is_site_active')
                 .single();
-            if (!error && data) {
-                setSiteActive(data.is_site_active);
+
+            if (!siteError && siteData && !siteData.is_site_active) {
+                setSiteActive(false);
+                setOfflineMessage('The interview portal is currently disabled by the administrator. Please try again during your scheduled interview slot.');
+                setCheckingStatus(false);
+                return;
             }
+
+            // 2. Check for active drive today
+            const now = new Date();
+            const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            const { data: activeDrives, error: driveError } = await supabase
+                .from('scheduled_interviews')
+                .select('id')
+                .eq('is_active', true)
+                .eq('scheduled_date', today)
+                .order('created_at', { ascending: false });
+
+            if (!driveError && (!activeDrives || activeDrives.length === 0)) {
+                setSiteActive(false);
+                setOfflineMessage('No active interview drive is scheduled for today. Please wait for an administrator to start the drive.');
+                setCheckingStatus(false);
+                return;
+            }
+
+            // Both checks passed
+            setSiteActive(true);
         } catch (err) {
             console.warn('[SITE_STATUS] Failed to fetch status, defaulting to active');
         } finally {
@@ -84,39 +111,56 @@ export default function LandingPage() {
         setError('');
     };
 
+    const enterFullscreen = () => {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen().catch((err) => {
+                console.warn(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+            });
+        } else if (elem.webkitRequestFullscreen) { /* Safari */
+            elem.webkitRequestFullscreen();
+        } else if (elem.msRequestFullscreen) { /* IE11 */
+            elem.msRequestFullscreen();
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
 
+        const newErrors = [];
+
         if (!formData.fullName.trim()) {
-            setError('Full name is required');
-            return;
+            newErrors.push('Full name is required');
         }
 
         if (!formData.email.trim()) {
-            setError('Email is required');
-            return;
+            newErrors.push('Email is required');
+        } else {
+            // Basic email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(formData.email.trim())) {
+                newErrors.push('Valid email is required');
+            }
         }
 
-        // Basic email validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(formData.email.trim())) {
-            setError('Please enter a valid email address');
-            return;
-        }
-
-        // Phone number validation
         if (!formData.phone.trim()) {
-            setError('Phone number is required');
+            newErrors.push('Phone is required');
+        } else {
+            // Basic phone validation (10 digits)
+            const phoneRegex = /^[0-9]{10}$/;
+            if (!phoneRegex.test(formData.phone.trim())) {
+                newErrors.push('Valid 10-digit phone is required');
+            }
+        }
+
+        if (newErrors.length > 0) {
+            setError(newErrors.join(' • '));
             return;
         }
 
-        // Basic phone validation (10 digits)
-        const phoneRegex = /^[0-9]{10}$/;
-        if (!phoneRegex.test(formData.phone.trim())) {
-            setError('Please enter a valid 10-digit phone number');
-            return;
-        }
+        // TRIGGER FULLSCREEN on click
+        enterFullscreen();
 
         setLoading(true);
 
@@ -131,8 +175,62 @@ export default function LandingPage() {
         localStorage.removeItem('passed');
 
         try {
-            console.log('[REGISTRATION] Checking for existing candidate:', formData.email.trim());
-            // 1. Check if candidate already exists
+            console.log('[REGISTRATION] Initiating Security Checks...');
+
+            // 1. HARDWARE FINGERPRINT CHECK (Run for Every Submission)
+            let deviceId = await getHardwareId();
+            if (!deviceId) {
+                console.warn('[REGISTRATION] Falling back to legacy device ID generation');
+                deviceId = accessControl.getDeviceId();
+            }
+
+            // Store it globally right away so that it is available to CriteriaSelection
+            localStorage.setItem('sdet_admin_device_id', deviceId);
+
+            // Fetch IP Address for Dual-Lock
+            let ipAddress = null;
+            try {
+                const ipResponse = await fetch('https://api.ipify.org?format=json');
+                if (ipResponse.ok) {
+                    const ipData = await ipResponse.json();
+                    ipAddress = ipData.ip;
+                }
+            } catch (err) {
+                console.warn('[REGISTRATION] Failed to fetch IP address');
+            }
+            if (ipAddress) {
+                localStorage.setItem('sdet_admin_ip_address', ipAddress);
+            } else {
+                localStorage.removeItem('sdet_admin_ip_address');
+            }
+
+            // Check if this specific device or IP has already completed an assessment *TODAY*
+            const startOfToday = new Date();
+            startOfToday.setHours(0, 0, 0, 0);
+
+            // Supabase OR query format: .or(`column.eq."value",column2.eq."value"`)
+            let orQuery = `device_id.eq."${deviceId}"`;
+            if (ipAddress) {
+                orQuery = `${orQuery},ip_address.eq."${ipAddress}"`;
+            }
+
+            const { data: deviceInterviews, error: deviceError } = await supabase
+                .from('interviews')
+                .select('id, status, completed_at, device_id, ip_address')
+                .eq('status', 'completed')
+                .gte('completed_at', startOfToday.toISOString()) // Must be completed today
+                .or(orQuery)
+                .limit(1);
+
+            if (!deviceError && deviceInterviews && deviceInterviews.length > 0) {
+                console.warn('[REGISTRATION] Same-day reattempt blocked by hardware fingerprint or IP:', deviceId, ipAddress);
+                setError('A user from this device or network has already completed an assessment today. Please try again on a different scheduled drive day.');
+                setLoading(false);
+                return;
+            }
+
+            console.log('[REGISTRATION] Checking for existing candidate email:', formData.email.trim());
+            // 2. Check if candidate email already exists
             const { data: candidates, error: fetchError } = await supabase
                 .from('candidates')
                 .select('id, full_name')
@@ -191,22 +289,6 @@ export default function LandingPage() {
                 candidateId = updatedCandidate.id;
                 candidateName = updatedCandidate.full_name;
             } else {
-                // NEW: CHECK DEVICE ID for new email as well
-                const deviceId = accessControl.getDeviceId();
-                const { data: deviceInterviews, error: deviceError } = await supabase
-                    .from('interviews')
-                    .select('id, status')
-                    .eq('device_id', deviceId)
-                    .eq('status', 'completed')
-                    .limit(1);
-
-                if (!deviceError && deviceInterviews && deviceInterviews.length > 0) {
-                    console.warn('[REGISTRATION] Reattempt detected via Device ID:', deviceId);
-                    setError('This device has already been used to complete an assessment. Multiple attempts are not allowed.');
-                    setLoading(false);
-                    return;
-                }
-
                 console.log('[REGISTRATION] Creating new candidate...');
                 const { data: newCandidate, error: insertError } = await supabase
                     .from('candidates')
@@ -268,8 +350,7 @@ export default function LandingPage() {
                     </div>
                     <h1 className="text-3xl font-bold text-white">Portal Temporarily Offline</h1>
                     <p className="text-slate-400">
-                        The interview portal is currently disabled by the administrator.
-                        Please try again during your scheduled interview slot.
+                        {offlineMessage}
                     </p>
                     <div className="pt-8">
                         <button
@@ -285,7 +366,7 @@ export default function LandingPage() {
     }
 
     return (
-        <div className="h-full w-full bg-universe relative overflow-y-auto overflow-x-hidden font-sans text-slate-100 selection:bg-brand-orange selection:text-white">
+        <div className="min-h-screen w-full bg-universe relative overflow-y-auto overflow-x-hidden font-sans text-slate-100 selection:bg-brand-orange selection:text-white">
 
             {/* Active Background Animation */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -296,9 +377,9 @@ export default function LandingPage() {
             </div>
 
             {/* Scrollable Content Wrapper */}
-            <div className="min-h-full w-full flex items-center justify-center p-4 lg:p-8">
+            <div className="min-h-screen w-full flex flex-col justify-center items-center py-8 px-4 lg:p-8">
                 {/* Main Content Grid */}
-                <div className={`relative z-10 w-[90%] max-w-[90%] grid lg:grid-cols-12 gap-8 lg:gap-12 items-center transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+                <div className={`relative z-10 w-[95%] max-w-[95%] lg:w-[90%] lg:max-w-[90%] grid lg:grid-cols-12 gap-8 lg:gap-12 items-center my-auto transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
 
                     {/* Left Column: Brand Story (Span 7) */}
                     <div className="lg:col-span-7 space-y-8 text-center lg:text-left pt-6 lg:pt-0">

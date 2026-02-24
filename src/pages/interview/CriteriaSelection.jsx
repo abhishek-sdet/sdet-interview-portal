@@ -68,7 +68,8 @@ export default function CriteriaSelection() {
             const candidateId = localStorage.getItem('candidateId');
 
             // 1. Find if there is an active drive for today
-            const today = new Date().toISOString().split('T')[0];
+            const now = new Date();
+            const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
             const { data: activeDrives, error: driveError } = await supabase
                 .from('scheduled_interviews')
                 .select('id')
@@ -92,6 +93,9 @@ export default function CriteriaSelection() {
             localStorage.removeItem('interviewId');
 
             // 2. Create interview session
+            const deviceId = localStorage.getItem('sdet_admin_device_id');
+            const ipAddress = localStorage.getItem('sdet_admin_ip_address');
+
             const { data, error: insertError } = await supabase
                 .from('interviews')
                 .insert([
@@ -99,6 +103,8 @@ export default function CriteriaSelection() {
                         candidate_id: candidateId,
                         criteria_id: selectedCriteria.id,
                         scheduled_interview_id: activeDriveId, // Link to drive!
+                        device_id: deviceId, // CRITICAL: Save hardware fingerprint
+                        ip_address: ipAddress, // CRITICAL: Save network IP for dual-lock
                         status: 'in_progress'
                     }
                 ])

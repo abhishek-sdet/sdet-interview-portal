@@ -87,3 +87,19 @@ export function getCriteriaLabel(criteriaName) {
     if (criteriaName.includes('Experienced')) return 'Experienced';
     return 'Both';
 }
+
+/**
+ * Fisher-Yates Shuffle Algorithm
+ * Randomizes the order of elements in an array.
+ * @param {Array} array - The array to shuffle
+ * @returns {Array} A new shuffled array
+ */
+export function shuffleArray(array) {
+    if (!array || !Array.isArray(array)) return [];
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+}

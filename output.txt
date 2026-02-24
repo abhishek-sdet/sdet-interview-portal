@@ -1,5 +1,0 @@
-Drives: [ 'test drive', 'Saturday Fresher Drive (Feb 21)' ]
-Found Test Drive ID: ccd4267f-7e34-48c1-ad23-529d63e052b7
-Found candidate ID: 7619ad75-dad3-4dc2-b9c3-ee97be46cc5b
-Found interview: 7a318489-873e-4a4c-ba1e-fca320d8c29b Current drive: ccd4267f-7e34-48c1-ad23-529d63e052b7
-Interview is already linked to the test drive.

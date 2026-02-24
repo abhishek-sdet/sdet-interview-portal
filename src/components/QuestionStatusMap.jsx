@@ -29,13 +29,10 @@ export default function QuestionStatusMap({ questions = [], answers = {}, curren
                         statusColor = 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400';
                         statusShadow = 'shadow-[0_0_10px_rgba(52,211,153,0.1)]';
                     } else if (currentIndex !== null && idx === currentIndex) {
-                        // CURRENT: Grey (Neutral) - Active Ring handled below
+                        // CURRENT: Bright neutral
                         statusColor = 'bg-white/10 border-white/20 text-white';
-                    } else if (currentIndex !== null && idx < currentIndex) {
-                        // SKIPPED: Red (Warning)
-                        statusColor = 'bg-red-500/10 border-red-500/20 text-red-400';
                     } else {
-                        // FUTURE: Grey (Dim)
+                        // UNANSWERED: Grey (Dim)
                         statusColor = 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10 hover:text-slate-400';
                     }
 
@@ -88,12 +85,8 @@ export default function QuestionStatusMap({ questions = [], answers = {}, curren
                     <span>Answered</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-red-500/20 border border-red-500/50"></div>
-                    <span>Skipped</span>
-                </div>
-                <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full bg-white/5 border border-white/10"></div>
-                    <span>Pending</span>
+                    <span>Unanswered</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-lg border-2 border-white"></div>

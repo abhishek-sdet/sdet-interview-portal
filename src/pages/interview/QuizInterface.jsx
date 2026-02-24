@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { showToast } from '@/components/Toast';
 import GPTWBadge from '@/components/GPTWBadge';
-import { Loader2, ArrowRight, ArrowLeft, Clock, CheckCircle2, Circle, AlertCircle, Code, Sparkles } from 'lucide-react';
+import { Loader2, ArrowRight, ArrowLeft, Clock, CheckCircle2, Circle, AlertCircle, Code, Sparkles, ShieldAlert } from 'lucide-react';
 import { accessControl } from '@/lib/accessControl';
 import QuizSubmissionModal from '@/components/QuizSubmissionModal';
 import QuestionStatusMap from '@/components/QuestionStatusMap';
+import FormattedQuestionText from '@/components/FormattedQuestionText';
+import { shuffleArray } from '@/utils/questionHelpers';
 
 export default function QuizInterface() {
     const navigate = useNavigate();
@@ -21,7 +23,7 @@ export default function QuizInterface() {
     const [criteriaType, setCriteriaType] = useState(''); // 'Fresher' or 'Experienced'
     const [answeredQuestions, setAnsweredQuestions] = useState(new Set()); // Track answered question IDs
     const [showSubmitModal, setShowSubmitModal] = useState(false); // Custom Submission Modal State
-
+    const [showProctorWarning, setShowProctorWarning] = useState(false); // Fullscreen/Focus Violation Modal
     // Specialization State
     const [showSpecialization, setShowSpecialization] = useState(false);
     const [specialization, setSpecialization] = useState(null); // 'Java' or 'Python'
@@ -30,9 +32,12 @@ export default function QuizInterface() {
     // Specialization Confirmation State
     const [showConfirmSpecialization, setShowConfirmSpecialization] = useState(false);
     const [pendingSpecialization, setPendingSpecialization] = useState(null);
+    const [pendingMapIndex, setPendingMapIndex] = useState(null); // Tracks intercepted map navigation
 
     // Proctoring State
     const [tabSwitchWarnings, setTabSwitchWarnings] = useState(0);
+    const [proctorCountdown, setProctorCountdown] = useState(10);
+    const [allowScreenshots, setAllowScreenshots] = useState(false); // Default to secure
     const MAX_WARNINGS = 3;
 
     // Refs to hold cached questions needed for the second phase
@@ -161,45 +166,150 @@ export default function QuizInterface() {
 
     // --- PROCTORING SHIELD ---
 
-    // 1. Tab Switch Detection
+    // Force Fullscreen API Helper
+    const enterFullscreen = () => {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen().catch(() => { });
+        } else if (elem.webkitRequestFullscreen) { /* Safari */
+            elem.webkitRequestFullscreen();
+        } else if (elem.msRequestFullscreen) { /* IE11 */
+            elem.msRequestFullscreen();
+        }
+    };
+
+    // 1. Strict Compliance Loop (Interval Fallback for Split-Screen)
     useEffect(() => {
-        const handleVisibilityChange = () => {
-            if (document.hidden && !submitting && !showSpecialization) {
-                const now = Date.now();
-                // 2 second cooldown to prevent accidental double-increments
-                if (now - lastWarningTimeRef.current < 2000) {
-                    console.log('[PROCTOR] Tab switch detected within cooldown, ignoring.');
-                    return;
+        if (submitting || showSpecialization || loading) return;
+
+        const complianceCheck = setInterval(() => {
+            let violation = false;
+
+            // Check 1: Must be in Fullscreen (prevents split-screen entirely)
+            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+            if (!isFullscreen) {
+                violation = true;
+            }
+
+            // Check 2: Must have focus
+            if (!document.hasFocus() || document.hidden) {
+                violation = true;
+            }
+
+            // If a violation is caught and the modal isn't showing yet, trigger the strike system
+            if (violation && !showProctorWarning) {
+                if (tabSwitchWarnings >= MAX_WARNINGS - 1) { // -1 because this IS the final strike
+                    console.log('[PROCTOR] Max strikes reached. Auto-submitting.');
+                    showToast.error("Exam Auto-Submitted due to maximum security violations (3/3).");
+                    handleSubmit(true, 'proctor_max_strikes');
+                } else {
+                    console.log('[PROCTOR] Violation detected. Triggering security modal countdown.');
+                    setProctorCountdown(10); // Reset timer
+                    setShowProctorWarning(true);
                 }
+            }
+        }, 1000);
 
-                lastWarningTimeRef.current = now;
+        return () => clearInterval(complianceCheck);
+    }, [submitting, showSpecialization, showProctorWarning, loading, tabSwitchWarnings]);
 
-                setTabSwitchWarnings(prev => {
-                    const newCount = prev + 1;
-                    console.log(`[PROCTOR] Tab switch detected! (Count: ${newCount}/${MAX_WARNINGS})`);
-                    if (newCount < MAX_WARNINGS) {
-                        showToast.error(`WARNING ${newCount}/${MAX_WARNINGS}: Please stay on the quiz page!`, { id: 'focus-warning' });
+    // 1.b. Countdown Timer for Proctor Warning
+    useEffect(() => {
+        let timer;
+        if (showProctorWarning && proctorCountdown > 0 && !submitting) {
+            timer = setInterval(() => {
+                setProctorCountdown(prev => prev - 1);
+            }, 1000);
+        } else if (showProctorWarning && proctorCountdown <= 0 && !submitting) {
+            console.log('[PROCTOR] Countdown expired. Auto-submitting.');
+            showToast.error("Exam Auto-Submitted due to prolonged absence from the secure environment.");
+            handleSubmit(true, 'proctor_timeout');
+        }
+        return () => clearInterval(timer);
+    }, [showProctorWarning, proctorCountdown, submitting]);
+
+    // 2. Instant Event Listeners (For instantaneous reaction)
+    useEffect(() => {
+        if (submitting || showSpecialization) return;
+
+        const handleFocusLoss = () => {
+            if (document.hidden || !document.hasFocus()) {
+                if (!showProctorWarning) {
+                    if (tabSwitchWarnings >= MAX_WARNINGS - 1) {
+                        showToast.error("Exam Auto-Submitted due to maximum security violations (3/3).");
+                        handleSubmit(true, 'proctor_max_strikes');
+                    } else {
+                        console.log('[PROCTOR] Focus lost/tab switched. Triggering security modal.');
+                        setProctorCountdown(10);
+                        setShowProctorWarning(true);
                     }
-                    return newCount;
-                });
+                }
             }
         };
 
-        const cleanup = () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-        return cleanup;
-    }, [submitting, showSpecialization]);
+        const handleFullscreenChange = () => {
+            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+            if (!isFullscreen && !showProctorWarning) {
+                if (tabSwitchWarnings >= MAX_WARNINGS - 1) {
+                    showToast.error("Exam Auto-Submitted due to maximum security violations (3/3).");
+                    handleSubmit(true, 'proctor_max_strikes');
+                } else {
+                    console.log('[PROCTOR] Exam exited fullscreen. Triggering security modal.');
+                    setProctorCountdown(10);
+                    setShowProctorWarning(true);
+                }
+            }
+        };
 
-    // 2. Auto-submit on max warnings
+        document.addEventListener('visibilitychange', handleFocusLoss);
+        window.addEventListener('blur', handleFocusLoss);
+
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleFocusLoss);
+            window.removeEventListener('blur', handleFocusLoss);
+
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+            document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+            document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+        };
+    }, [submitting, showSpecialization, showProctorWarning, tabSwitchWarnings]);
+
+    // 2.b DevTools Honeypot Detection (Time-based debugger trap)
     useEffect(() => {
-        if (tabSwitchWarnings >= MAX_WARNINGS && !submitting) {
-            console.log('[PROCTOR] MAX WARNINGS REACHED! Triggering auto-submit.');
-            showToast.error(`Test Auto-Submitted: Multiple tab switches detected.`);
-            handleSubmit(true, 'tab_switch');
-        }
-    }, [tabSwitchWarnings]);
+        if (submitting || showSpecialization) return;
 
-    // 3. Content Protection (Disable Right-click, Copy, Paste)
+        const devToolsCheck = setInterval(() => {
+            const start = performance.now();
+            // The debugger statement forces the browser to pause execution IF DevTools is open.
+            // If it is closed, this statement is ignored by the engine and takes 0ms.
+            debugger;
+            const end = performance.now();
+
+            // If execution was paused for >100ms, DevTools is open.
+            if (end - start > 100) {
+                console.warn('[PROCTOR] DevTools/Inspect Element detected!');
+                if (!showProctorWarning) {
+                    if (tabSwitchWarnings >= MAX_WARNINGS - 1) {
+                        showToast.error("Exam Auto-Submitted due to prohibited Developer Tools usage.");
+                        handleSubmit(true, 'proctor_devtools_max_strikes');
+                    } else {
+                        setProctorCountdown(10);
+                        setShowProctorWarning(true);
+                    }
+                }
+            }
+        }, 1500);
+
+        return () => clearInterval(devToolsCheck);
+    }, [submitting, showSpecialization, showProctorWarning, tabSwitchWarnings]);
+
+    // 3. Content Protection (Disable Right-click, Copy, Paste, Keyboard)
     useEffect(() => {
         const preventAction = (e) => {
             e.preventDefault();
@@ -207,11 +317,54 @@ export default function QuizInterface() {
             // Commenting out toast to avoid spamming if user persists
         };
 
+        const preventKeyboard = (e) => {
+            // Check for screenshot attempts if not explicitly allowed
+            if (!allowScreenshots && (e.key === 'PrintScreen' || e.code === 'PrintScreen')) {
+                console.warn('[PROCTOR] Screenshot attempt detected!');
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Attempt to clear clipboard aggressively 
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText('Screenshots are strictly prohibited during this exam.').catch(err => console.log('Clipboard clear failed', err));
+                }
+
+                // Trigger Proctor Strike
+                if (!showProctorWarning) {
+                    if (tabSwitchWarnings >= MAX_WARNINGS - 1) {
+                        showToast.error("Exam Auto-Submitted due to prohibited Screen Capture attempt.");
+                        handleSubmit(true, 'proctor_screenshot_strike');
+                    } else {
+                        setProctorCountdown(10);
+                        setShowProctorWarning(true);
+                    }
+                }
+                return false;
+            }
+
+            // Block other known cheating shortcuts, but otherwise let typing happen naturally (e.g. if there were text inputs)
+            // Actually, since this is a multiple choice quiz, we can block almost everything except navigation, 
+            // but we need to be careful not to break accessibility or standard browser function if not needed.
+            // Existing logic blocked ALL keys which is extremely aggressive. Let's keep it but enhance it.
+
+            // Allow basic navigation (Tab, Enter, Space, Arrows) if needed for accessibility, 
+            // but to be safe and true to original code, we block by default unless it's a known safe key.
+            const allowedKeys = ['Tab', 'Enter', ' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+            if (!allowedKeys.includes(e.key)) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        };
+
         document.addEventListener('contextmenu', preventAction);
         document.addEventListener('copy', preventAction);
         document.addEventListener('paste', preventAction);
         document.addEventListener('cut', preventAction);
         document.addEventListener('selectstart', preventAction);
+        document.addEventListener('keydown', preventKeyboard, true);
+        document.addEventListener('keyup', preventKeyboard, true);
+        document.addEventListener('keypress', preventKeyboard, true);
 
         return () => {
             document.removeEventListener('contextmenu', preventAction);
@@ -219,8 +372,11 @@ export default function QuizInterface() {
             document.removeEventListener('paste', preventAction);
             document.removeEventListener('cut', preventAction);
             document.removeEventListener('selectstart', preventAction);
+            document.removeEventListener('keydown', preventKeyboard, true);
+            document.removeEventListener('keyup', preventKeyboard, true);
+            document.removeEventListener('keypress', preventKeyboard, true);
         };
-    }, []);
+    }, [allowScreenshots, showProctorWarning, tabSwitchWarnings]);
 
     // 4. Block Browser Back Navigation & Refresh
     useEffect(() => {
@@ -271,6 +427,16 @@ export default function QuizInterface() {
 
             const selectedSet = examConfig?.set || localStorage.getItem('selectedSet');
             const selectedSubject = examConfig?.subject; // e.g., 'java', 'python'
+
+            // Fetch Site Settings for Security (Screenshots)
+            const { data: siteSettings } = await supabase
+                .from('site_settings')
+                .select('allow_screenshots')
+                .single();
+
+            if (siteSettings) {
+                setAllowScreenshots(siteSettings.allow_screenshots || false);
+            }
 
             let query = supabase
                 .from('questions')
@@ -387,10 +553,23 @@ export default function QuizInterface() {
                 electiveQuestionsToShow = [];
             }
 
-            const allQuestions = [...generalQuestionsRef.current, ...electiveQuestionsToShow];
-            setQuestions(allQuestions);
+            const rawAllQuestions = [...generalQuestionsRef.current, ...electiveQuestionsToShow];
 
-            console.log('[FETCH] Loaded all questions upfront:', allQuestions.length);
+            // Security Enhancement: True Randomization of Test
+            // 1. Shuffle the options within each question (A/B/C/D order randomized)
+            const questionsWithOptionsShuffled = rawAllQuestions.map(q => {
+                if (q.options && Array.isArray(q.options)) {
+                    return { ...q, options: shuffleArray(q.options) };
+                }
+                return q;
+            });
+
+            // 2. Shuffle the entire question order
+            const finalShuffledQuestions = shuffleArray(questionsWithOptionsShuffled);
+
+            setQuestions(finalShuffledQuestions);
+
+            console.log('[FETCH] Loaded all questions upfront (Shuffled):', finalShuffledQuestions.length);
             console.log('[FETCH] General questions:', generalQuestionsRef.current.length);
             console.log('[FETCH] Elective questions:', electiveQuestionsToShow.length);
 
@@ -402,7 +581,8 @@ export default function QuizInterface() {
             }
 
             // Check for scheduled interview for today
-            const today = new Date().toISOString().split('T')[0];
+            const now = new Date();
+            const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
             console.log('[TIMER] Checking for scheduled interview on:', today);
             const { data: scheduledInterview, error: scheduleError } = await supabase
                 .from('scheduled_interviews')
@@ -565,8 +745,13 @@ export default function QuizInterface() {
             return [...generalQs, ...newElectiveQuestions];
         });
 
-        // Move to next question immediately
-        setCurrentIndex(currentIndex + 1);
+        // Resume intercepted navigation or move to next sequentially
+        if (pendingMapIndex !== null) {
+            setCurrentIndex(pendingMapIndex);
+            setPendingMapIndex(null);
+        } else {
+            setCurrentIndex(currentIndex + 1);
+        }
 
         // Auto-set the specialization state for record keeping if needed
         setSpecialization(type);
@@ -580,6 +765,17 @@ export default function QuizInterface() {
     const handlePrevious = () => {
         if (currentIndex > 0) {
             setCurrentIndex(currentIndex - 1);
+        }
+    };
+
+    const handleMapQuestionSelect = (idx) => {
+        // If clicking on an elective question (index >= general questions length) AND no specialization selected
+        if (idx >= generalQuestionsRef.current.length && !specialization) {
+            console.log('[NAVIGATION] Intercepted jump to elective question. Triggering Specialization Modal.');
+            setPendingMapIndex(idx);
+            setShowSpecialization(true);
+        } else {
+            setCurrentIndex(idx);
         }
     };
 
@@ -924,6 +1120,14 @@ export default function QuizInterface() {
         }
     };
 
+    const candidateId = localStorage.getItem('candidateId') || 'ID_UNKNOWN';
+    const candidateName = localStorage.getItem('candidateName') || 'CANDIDATE';
+
+    // Generate a simple SVG watermark string
+    const watermarkText = `${candidateName} - ${candidateId}`.replace(/['"]/g, '');
+    // Using encodeURIComponent for the text to ensure it's valid in the data URI
+    const watermarkSvg = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='350' height='350'><text x='50%' y='50%' fill='rgba(255,255,255,0.025)' font-size='18' font-family='sans-serif' text-anchor='middle' dominant-baseline='middle' transform='rotate(-45 175 175)'>${encodeURIComponent(watermarkText)}</text></svg>`;
+
     const currentQuestion = questions[currentIndex];
     const currentSectionInfo = currentQuestion ? getSectionInfo(currentQuestion) : null;
 
@@ -991,7 +1195,16 @@ export default function QuizInterface() {
     const currentQuestionAnswered = answeredQuestions.has(currentQuestion?.id);
 
     return (
-        <div className="h-full w-full bg-universe relative overflow-y-auto overflow-x-hidden font-sans text-slate-100 selection:bg-brand-orange selection:text-white">
+        <div className="h-screen w-full bg-universe relative overflow-hidden flex flex-col font-sans text-slate-100 selection:bg-brand-orange selection:text-white">
+
+            {/* DYNAMIC SCREEN WATERMARK - ANTI-LEAK */}
+            <div
+                className="fixed inset-0 pointer-events-none z-[60]"
+                style={{
+                    backgroundImage: `url("${watermarkSvg}")`,
+                    backgroundRepeat: 'repeat'
+                }}
+            />
 
             {/* Active Background Animation */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -1076,12 +1289,12 @@ export default function QuizInterface() {
                 </div>
             </div>
 
-            {/* Main Content Area - Scrollable Wrapper - 75% Width */}
-            <div className="min-h-full w-full flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 pt-24 relative z-10">
-                <div className={`w-[75%] max-w-6xl transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            {/* Main Content Area - Flex Wrapper (No Outer Scroll) */}
+            <div className="flex-1 w-full flex flex-col items-center overflow-hidden p-3 sm:p-6 lg:p-8 pt-16 sm:pt-20 relative z-10">
+                <div className={`w-[90%] max-w-6xl flex-1 min-h-0 transition-all duration-700 flex flex-col gap-4 sm:gap-6 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
 
-                    {/* Question Card - Premium Glassmorphism */}
-                    <div className="bg-[#0b101b]/90 backdrop-blur-3xl border border-white/10 rounded-2xl p-6 shadow-2xl relative overflow-hidden group hover:border-white/20 transition-all duration-500">
+                    {/* Question Card - Premium Glassmorphism (Flex-1 to fill space, internally scrollable) */}
+                    <div className="flex-1 min-h-0 flex flex-col bg-[#0b101b]/90 backdrop-blur-3xl border border-white/10 rounded-2xl p-4 sm:p-5 shadow-2xl relative overflow-hidden group hover:border-white/20 transition-all duration-500">
 
                         {/* Ambient Background Glow */}
                         <div className="absolute top-0 right-0 w-96 h-96 bg-brand-blue/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
@@ -1090,104 +1303,108 @@ export default function QuizInterface() {
                         {/* Top Accent Line */}
                         <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-blue/50 to-transparent opacity-50"></div>
 
-                        {/* Question Text Area */}
-                        <div className="mb-8 relative z-10">
-                            <div className="flex items-start gap-4">
-                                {/* Question Number Box */}
-                                <div className="hidden sm:flex flex-shrink-0 w-12 h-12 rounded-xl bg-white/5 border border-white/10 items-center justify-center text-white font-bold text-lg shadow-lg">
-                                    <span className="bg-gradient-to-br from-cyan-400 to-brand-blue bg-clip-text text-transparent">
-                                        {String(currentIndex + 1).padStart(2, '0')}
-                                    </span>
-                                </div>
+                        {/* Inner Scrollable Area for Card Content */}
+                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 relative z-10 space-y-4 sm:space-y-6">
 
-                                <div className="space-y-4 w-full">
-                                    {/* Badges & Metadata */}
-                                    <div className="flex flex-wrap gap-2 items-center">
-                                        {/* Category Chip */}
-                                        {currentQuestion.category && (
-                                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold tracking-wider text-blue-400 uppercase">
-                                                {currentQuestion.category}
-                                            </div>
-                                        )}
-
-                                        {/* Set Type Chip (Fresher/Experience) */}
-                                        {criteriaType && (
-                                            <div className={`
-                                                flex items-center gap-1.5 px-3 py-1 rounded-md border text-[10px] font-bold tracking-wider uppercase
-                                                ${criteriaType === 'Fresher'
-                                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                                    : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}
-                                            `}>
-                                                <Sparkles className="w-3 h-3" />
-                                                {criteriaType} Set
-                                            </div>
-                                        )}
-
-                                        {/* Section Name Chip - NEW */}
-                                        {currentSectionInfo && (
-                                            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-md border text-[10px] font-bold tracking-wider uppercase ${currentSectionInfo.bgClass} ${currentSectionInfo.borderClass} ${currentSectionInfo.textClass}`}>
-                                                <Code className="w-3 h-3" />
-                                                {currentSectionInfo.name}
-                                            </div>
-                                        )}
+                            {/* Question Text Area */}
+                            <div>
+                                <div className="flex items-start gap-4">
+                                    {/* Question Number Box */}
+                                    <div className="hidden sm:flex flex-shrink-0 w-10 h-10 rounded-xl bg-white/5 border border-white/10 items-center justify-center text-white font-bold text-base shadow-lg">
+                                        <span className="bg-gradient-to-br from-cyan-400 to-brand-blue bg-clip-text text-transparent">
+                                            {String(currentIndex + 1).padStart(2, '0')}
+                                        </span>
                                     </div>
 
-                                    <h2 className="text-xl sm:text-2xl font-bold text-white leading-relaxed tracking-tight drop-shadow-sm">
-                                        {currentQuestion.question_text}
-                                    </h2>
+                                    <div className="space-y-3 w-full">
+                                        {/* Badges & Metadata */}
+                                        <div className="flex flex-wrap gap-2 items-center">
+                                            {/* Category Chip */}
+                                            {currentQuestion.category && (
+                                                <div className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold tracking-wider text-blue-400 uppercase">
+                                                    {currentQuestion.category}
+                                                </div>
+                                            )}
+
+                                            {/* Set Type Chip (Fresher/Experience) */}
+                                            {criteriaType && (
+                                                <div className={`
+                                                flex items-center gap-1.5 px-3 py-1 rounded-md border text-[10px] font-bold tracking-wider uppercase
+                                                ${criteriaType === 'Fresher'
+                                                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                                        : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}
+                                            `}>
+                                                    <Sparkles className="w-3 h-3" />
+                                                    {criteriaType} Set
+                                                </div>
+                                            )}
+
+                                            {/* Section Name Chip - NEW */}
+                                            {currentSectionInfo && (
+                                                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-md border text-[10px] font-bold tracking-wider uppercase ${currentSectionInfo.bgClass} ${currentSectionInfo.borderClass} ${currentSectionInfo.textClass}`}>
+                                                    <Code className="w-3 h-3" />
+                                                    {currentSectionInfo.name}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="text-xl sm:text-2xl font-bold text-white leading-relaxed tracking-tight drop-shadow-sm">
+                                            <FormattedQuestionText text={currentQuestion.question_text} />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Answer Options - Animated List */}
-                        <div className="space-y-3 relative z-10">
-                            {currentQuestion.options?.map((option, idx) => {
-                                const isSelected = answers[currentQuestion.id] === option;
+                            {/* Answer Options - Animated List */}
+                            <div className="space-y-2 sm:space-y-3 relative z-10">
+                                {currentQuestion.options?.map((option, idx) => {
+                                    const isSelected = answers[currentQuestion.id] === option;
 
-                                return (
-                                    <button
-                                        key={idx}
-                                        onClick={() => handleAnswerSelect(currentQuestion.id, option)}
-                                        disabled={submitting || timeRemaining === 0}
-                                        className={`
-                                            w-full text-left p-4 rounded-xl border transition-all duration-300 group/option relative overflow-hidden
+                                    return (
+                                        <button
+                                            key={idx}
+                                            onClick={() => handleAnswerSelect(currentQuestion.id, option)}
+                                            disabled={submitting || timeRemaining === 0}
+                                            className={`
+                                            w-full text-left p-3 sm:p-4 rounded-xl border transition-all duration-300 group/option relative overflow-hidden
                                             ${isSelected
-                                                ? 'bg-brand-blue/10 border-brand-blue shadow-[0_0_15px_rgba(0,119,255,0.2)] translate-x-1'
-                                                : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20 hover:translate-x-1'
-                                            }
+                                                    ? 'bg-brand-blue/10 border-brand-blue shadow-[0_0_15px_rgba(0,119,255,0.2)] translate-x-1'
+                                                    : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20 hover:translate-x-1'
+                                                }
                                             ${(submitting || timeRemaining === 0) ? 'cursor-not-allowed' : ''}
                                         `}
-                                    >
-                                        {/* Selection Gradient Background */}
-                                        <div className={`absolute inset-0 bg-gradient-to-r from-brand-blue/10 to-transparent transition-opacity duration-300 ${isSelected ? 'opacity-100' : 'opacity-0'}`}></div>
+                                        >
+                                            {/* Selection Gradient Background */}
+                                            <div className={`absolute inset-0 bg-gradient-to-r from-brand-blue/10 to-transparent transition-opacity duration-300 ${isSelected ? 'opacity-100' : 'opacity-0'}`}></div>
 
-                                        <div className="flex items-center gap-4 relative z-10">
-                                            {/* Custom Radio Indicator */}
-                                            <div className={`
+                                            <div className="flex items-center gap-4 relative z-10">
+                                                {/* Custom Radio Indicator */}
+                                                <div className={`
                                                 w-5 h-5 rounded-full border-[1.5px] flex items-center justify-center flex-shrink-0 transition-all duration-300
                                                 ${isSelected
-                                                    ? 'border-brand-blue bg-brand-blue scale-110 shadow-lg shadow-brand-blue/40'
-                                                    : 'border-slate-600 group-hover/option:border-slate-400 bg-transparent'
-                                                }
+                                                        ? 'border-brand-blue bg-brand-blue scale-110 shadow-lg shadow-brand-blue/40'
+                                                        : 'border-slate-600 group-hover/option:border-slate-400 bg-transparent'
+                                                    }
                                             `}>
-                                                <div className={`w-2 h-2 rounded-full bg-white transition-transform duration-300 ${isSelected ? 'scale-100' : 'scale-0'}`} />
-                                            </div>
+                                                    <div className={`w-2 h-2 rounded-full bg-white transition-transform duration-300 ${isSelected ? 'scale-100' : 'scale-0'}`} />
+                                                </div>
 
-                                            {/* Option Text */}
-                                            <span className={`text-sm sm:text-base font-medium transition-colors duration-300 ${isSelected ? 'text-white' : 'text-slate-300 group-hover/option:text-white'
-                                                }`}>
-                                                {option}
-                                            </span>
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
+                                                {/* Option Text */}
+                                                <span className={`text-sm sm:text-base font-medium transition-colors duration-300 ${isSelected ? 'text-white' : 'text-slate-300 group-hover/option:text-white'
+                                                    }`}>
+                                                    {option}
+                                                </span>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                        </div> {/* End Inner Scrollable Area */}
                     </div>
 
-                    {/* Navigation Actions */}
                     {/* Navigation Actions - Premium */}
-                    <div className="flex items-center justify-between mt-8 relative z-20">
+                    <div className="flex-shrink-0 flex items-center justify-between relative z-20">
                         <button
                             onClick={handlePrevious}
                             disabled={isFirstQuestion}
@@ -1249,12 +1466,12 @@ export default function QuizInterface() {
                     </div>
 
                     {/* Embed Question Map for Quick Access */}
-                    <div className="mt-10 px-4 sm:px-6">
+                    <div className="flex-shrink-0 px-2 sm:px-6 w-full max-w-3xl mx-auto pb-4">
                         <QuestionStatusMap
                             questions={questions}
                             answers={answers}
                             currentIndex={currentIndex}
-                            onQuestionSelect={(idx) => setCurrentIndex(idx)}
+                            onQuestionSelect={handleMapQuestionSelect}
                         />
                     </div>
 
@@ -1274,6 +1491,54 @@ export default function QuizInterface() {
                 totalExpectedQuestions={totalExamQuestions > 0 ? totalExamQuestions : questions.length}
             />
 
+            {/* Proctor Violation Modal */}
+            {showProctorWarning && (
+                <div className="fixed inset-0 z-[99999] bg-[#0b101b] flex items-center justify-center p-4 h-screen w-screen overflow-hidden">
+                    <div className="bg-[#0b101b] border border-red-500/30 rounded-2xl max-w-md w-full p-8 shadow-2xl shadow-red-500/20 text-center relative overflow-hidden">
+                        {/* Dramatic Red Scanline effect */}
+                        <div className="absolute inset-0 bg-red-500/5 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvc3ZnPg==')] opacity-50 pointer-events-none"></div>
+                        <div className="absolute top-0 left-0 w-full h-[2px] bg-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.8)] animate-[scanline_3s_linear_infinite] pointer-events-none"></div>
+
+                        <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
+                            <ShieldAlert className="w-10 h-10 text-red-500" />
+                        </div>
+                        <h2 className="text-3xl font-black text-white mb-2 tracking-tight">SECURITY WARNING</h2>
+
+                        <div className="mb-4 inline-block px-4 py-1.5 bg-red-500/20 text-red-400 font-bold rounded-full border border-red-500/30">
+                            STRIKE {tabSwitchWarnings + 1} OF {MAX_WARNINGS}
+                        </div>
+
+                        <p className="text-slate-300 mb-6 leading-relaxed font-medium">
+                            You have attempted to leave the secure fullscreen environment or switch tabs. This is a strict violation of exam rules.
+                            <br /><br />
+                            <span className="text-red-400 font-bold text-lg block mb-1">Return to the exam immediately.</span>
+                            Auto-submitting in <span className="text-white text-2xl font-black">{proctorCountdown}</span> seconds...
+                        </p>
+
+                        <div className="flex flex-col gap-4 relative z-10">
+                            <button
+                                onClick={() => {
+                                    setTabSwitchWarnings(prev => prev + 1); // Record the strike
+                                    setShowProctorWarning(false);
+                                    enterFullscreen();
+                                }}
+                                className="w-full py-4 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl transition-all shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)] transform hover:-translate-y-1"
+                            >
+                                RESUME EXAM (Accept Warning)
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowProctorWarning(false);
+                                    handleSubmit(true, 'proctor_quit');
+                                }}
+                                className="w-full py-3 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white font-bold rounded-xl transition-all border border-white/10"
+                            >
+                                Quit & Submit Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

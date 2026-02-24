@@ -21,6 +21,39 @@ export default function AccessGuard() {
         checkAccess();
     }, [location.pathname]);
 
+    // Auto-scaling Hook removed in favor of pure CSS responsive design.
+
+    // 2. Anti-Screenshot Hook
+    useEffect(() => {
+        const preventScreenshots = (e) => {
+            // Check for PrintScreen key or common screenshot shortcuts
+            // Note: e.key === 'PrintScreen' covers the PrtScn key.
+            // Mac shortcuts (Cmd+Shift+3/4) are harder to block at JS level, 
+            // but we can try to catch the key combinations.
+            if (
+                e.key === 'PrintScreen' ||
+                (e.ctrlKey && e.key === 'p') || // Ctrl+P (Print)
+                (e.metaKey && e.shiftKey && (e.key === '3' || e.key === '4' || e.key === '5')) || // Mac screenshot shortcuts
+                (e.metaKey && e.key === 'p') // Mac Print
+            ) {
+                e.preventDefault();
+                // Clear clipboard to corrupt snips if they rely on it
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText("Screenshots are disabled during the assessment.");
+                }
+                console.warn("[SECURITY] Screenshot attempt detected and blocked.");
+            }
+        };
+
+        window.addEventListener('keydown', preventScreenshots, true);
+        window.addEventListener('keyup', preventScreenshots, true);
+
+        return () => {
+            window.removeEventListener('keydown', preventScreenshots, true);
+            window.removeEventListener('keyup', preventScreenshots, true);
+        };
+    }, []);
+
     const checkAccess = async () => {
         try {
             setAccessState(prev => ({ ...prev, loading: true }));

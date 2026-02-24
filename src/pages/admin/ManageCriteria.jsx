@@ -10,7 +10,9 @@ export default function ManageCriteria() {
     const [criteria, setCriteria] = useState([]);
     const [loading, setLoading] = useState(true);
     const [siteStatus, setSiteStatus] = useState(true);
+    const [allowScreenshots, setAllowScreenshots] = useState(false);
     const [updatingSite, setUpdatingSite] = useState(false);
+    const [updatingScreenshots, setUpdatingScreenshots] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [editForm, setEditForm] = useState({
         name: '',
@@ -30,7 +32,7 @@ export default function ManageCriteria() {
         try {
             const { data, error } = await supabase
                 .from('site_settings')
-                .select('is_site_active')
+                .select('is_site_active, allow_screenshots')
                 .single();
             if (error) {
                 if (error.code === '42P01') {
@@ -40,9 +42,36 @@ export default function ManageCriteria() {
                 }
             } else if (data) {
                 setSiteStatus(data.is_site_active);
+                // Default to false if the column doesn't exist yet to prevent breaking
+                setAllowScreenshots(data.allow_screenshots || false);
             }
         } catch (error) {
             console.error('Error fetching site status:', error);
+        }
+    };
+
+    const toggleScreenshotStatus = async () => {
+        setUpdatingScreenshots(true);
+        try {
+            const newStatus = !allowScreenshots;
+            const { error } = await supabase
+                .from('site_settings')
+                .update({ allow_screenshots: newStatus })
+                .eq('id', (await supabase.from('site_settings').select('id').single()).data.id);
+
+            if (error) throw error;
+            setAllowScreenshots(newStatus);
+            toast.success(`Screenshots ${newStatus ? 'Allowed' : 'Blocked'}`);
+        } catch (error) {
+            console.error('Error updating screenshot status:', error);
+            // Ignore missing column errors gracefully for legacy compatibility
+            if (error.message?.includes('allow_screenshots')) {
+                toast.error('Database schema out of sync: "allow_screenshots" column missing.');
+            } else {
+                toast.error('Failed to update screenshot status.');
+            }
+        } finally {
+            setUpdatingScreenshots(false);
         }
     };
 
@@ -161,20 +190,40 @@ export default function ManageCriteria() {
                         <p className="text-slate-400 text-sm mt-1">Manage criteria, time limits, and rules.</p>
                     </div>
 
-                    <div className="bg-[#0f172a]/80 backdrop-blur-md border border-slate-700/50 rounded-2xl px-6 py-4 flex items-center gap-4 shadow-xl">
-                        <div>
-                            <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Aspirant Site Status</div>
-                            <div className={`text-sm font-bold ${siteStatus ? 'text-green-400' : 'text-red-400'}`}>
-                                {siteStatus ? 'ACTIVE & ONLINE' : 'OFFLINE / DISABLED'}
+                    <div className="flex flex-col sm:flex-row gap-4">
+                        {/* Screenshots Toggle */}
+                        <div className="bg-[#0f172a]/80 backdrop-blur-md border border-slate-700/50 rounded-2xl px-6 py-4 flex items-center gap-4 shadow-xl">
+                            <div>
+                                <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Exam Screenshots</div>
+                                <div className={`text-sm font-bold ${allowScreenshots ? 'text-amber-400' : 'text-blue-400'}`}>
+                                    {allowScreenshots ? 'ALLOWED (WARNING)' : 'BLOCKED (SECURE)'}
+                                </div>
                             </div>
+                            <button
+                                onClick={toggleScreenshotStatus}
+                                disabled={updatingScreenshots}
+                                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${allowScreenshots ? 'bg-amber-500' : 'bg-slate-700'}`}
+                            >
+                                <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${allowScreenshots ? 'translate-x-5' : 'translate-x-0'}`} />
+                            </button>
                         </div>
-                        <button
-                            onClick={toggleSiteStatus}
-                            disabled={updatingSite}
-                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${siteStatus ? 'bg-brand-blue' : 'bg-slate-700'}`}
-                        >
-                            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${siteStatus ? 'translate-x-5' : 'translate-x-0'}`} />
-                        </button>
+
+                        {/* Existing Site Status Toggle */}
+                        <div className="bg-[#0f172a]/80 backdrop-blur-md border border-slate-700/50 rounded-2xl px-6 py-4 flex items-center gap-4 shadow-xl">
+                            <div>
+                                <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Aspirant Site Status</div>
+                                <div className={`text-sm font-bold ${siteStatus ? 'text-green-400' : 'text-red-400'}`}>
+                                    {siteStatus ? 'ACTIVE & ONLINE' : 'OFFLINE / DISABLED'}
+                                </div>
+                            </div>
+                            <button
+                                onClick={toggleSiteStatus}
+                                disabled={updatingSite}
+                                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${siteStatus ? 'bg-brand-blue' : 'bg-slate-700'}`}
+                            >
+                                <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${siteStatus ? 'translate-x-5' : 'translate-x-0'}`} />
+                            </button>
+                        </div>
                     </div>
                 </div>
 
