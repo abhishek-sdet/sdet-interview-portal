@@ -69,15 +69,8 @@ export default function LandingPage() {
         }
 
         if (candidateId) {
-            // Candidate is registered but no active interview
-            navigate('/exam-rules', {
-                state: {
-                    candidateData: {
-                        id: candidateId,
-                        full_name: localStorage.getItem('candidateName')
-                    }
-                }
-            });
+            // Log that candidate is registered, but we stay on landing page to allow re-registration or brand viewing
+            console.log('[SESSION] Candidate info found, but staying on landing page for fresh entry.');
         }
     };
 
