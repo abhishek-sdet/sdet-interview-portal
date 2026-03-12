@@ -400,7 +400,7 @@ export default function LandingPage() {
                             </h1>
 
                             <p className="text-base md:text-lg text-slate-400 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-light">
-                                Welcome to the <span className="text-white font-medium">SDET Interview Portal</span>.
+                                Welcome to the <span className="text-white font-medium">SDET Interview/Exam Portal</span>.
                                 We believe in precision, excellence, and the relentless pursuit of quality.
                             </p>
                         </div>

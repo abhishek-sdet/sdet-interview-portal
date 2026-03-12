@@ -9,7 +9,9 @@ import { preprocessDocumentText, detectSections, parseQuestionsInSection } from 
 export default function UploadQuestions() {
     const navigate = useNavigate();
     const [criteria, setCriteria] = useState([]);
+    const [criteriaMode, setCriteriaMode] = useState('select'); // 'select' or 'create'
     const [selectedCriteria, setSelectedCriteria] = useState('');
+    const [newCriteriaName, setNewCriteriaName] = useState('');
     const [setName, setSetName] = useState('');
     const [file, setFile] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -79,8 +81,8 @@ export default function UploadQuestions() {
     const handleUpload = async (e) => {
         e.preventDefault();
 
-        if (!selectedCriteria || !setName || !file) {
-            setMessage({ type: 'error', text: 'Please fill all fields' });
+        if ((criteriaMode === 'select' && !selectedCriteria) || (criteriaMode === 'create' && !newCriteriaName.trim()) || !setName || !file) {
+            setMessage({ type: 'error', text: 'Please fill all required fields' });
             return;
         }
 
@@ -88,6 +90,26 @@ export default function UploadQuestions() {
         setMessage({ type: '', text: '' });
 
         try {
+            let currentCriteriaId = selectedCriteria;
+
+            // Handle new criteria creation
+            if (criteriaMode === 'create') {
+                const { data: newCriteria, error: criteriaError } = await supabase
+                    .from('criteria')
+                    .insert([{ name: newCriteriaName.trim() }])
+                    .select()
+                    .single();
+
+                if (criteriaError) {
+                    console.error('Error creating criteria:', criteriaError);
+                    throw new Error('Failed to create new criteria. It might already exist.');
+                }
+                currentCriteriaId = newCriteria.id;
+                
+                // Update criteria list so the new one is available in the dropdown
+                setCriteria(prev => [...prev, newCriteria]);
+            }
+
             console.log(`📄 Parsing ${file.name}...`);
             let text = '';
 
@@ -122,7 +144,7 @@ export default function UploadQuestions() {
             console.log(`Found ${sections.length} sections`);
 
             const importData = {
-                criteria_id: selectedCriteria,
+                criteria_id: currentCriteriaId,
                 category: setName.trim(),
                 difficulty: 'medium'
             };
@@ -144,7 +166,7 @@ export default function UploadQuestions() {
             const { error: deleteError } = await supabase
                 .from('questions')
                 .delete()
-                .eq('criteria_id', selectedCriteria)
+                .eq('criteria_id', currentCriteriaId)
                 .eq('category', setName.trim());
 
             if (deleteError) {
@@ -222,6 +244,11 @@ export default function UploadQuestions() {
             // Reset form
             setSetName('');
             setFile(null);
+            if (criteriaMode === 'create') {
+                setCriteriaMode('select');
+                setSelectedCriteria(currentCriteriaId);
+                setNewCriteriaName('');
+            }
             if (document.getElementById('file-input')) {
                 document.getElementById('file-input').value = '';
             }
@@ -262,23 +289,67 @@ export default function UploadQuestions() {
 
                 {/* Upload Form */}
                 <form onSubmit={handleUpload} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-8 space-y-6">
-                    {/* Criteria Selection */}
-                    <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">
-                            Select Criteria
+                    {/* Criteria Selection Redesign */}
+                    <div className="space-y-4">
+                        <label className="block text-sm font-medium text-slate-300">
+                            Interview Criteria
                         </label>
-                        <select
-                            value={selectedCriteria}
-                            onChange={(e) => setSelectedCriteria(e.target.value)}
-                            required
-                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
-                        >
-                            {criteria.map(c => (
-                                <option key={c.id} value={c.id} className="bg-[#0b101b]">
-                                    {c.name}
-                                </option>
-                            ))}
-                        </select>
+                        
+                        {/* Mode Toggle */}
+                        <div className="flex p-1 bg-white/5 border border-white/10 rounded-lg w-full">
+                            <button
+                                type="button"
+                                onClick={() => setCriteriaMode('select')}
+                                className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+                                    criteriaMode === 'select' 
+                                    ? 'bg-brand-blue text-white shadow-lg' 
+                                    : 'text-slate-400 hover:text-white'
+                                }`}
+                            >
+                                Select Existing
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setCriteriaMode('create')}
+                                className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+                                    criteriaMode === 'create' 
+                                    ? 'bg-brand-blue text-white shadow-lg' 
+                                    : 'text-slate-400 hover:text-white'
+                                }`}
+                            >
+                                Create New
+                            </button>
+                        </div>
+
+                        {criteriaMode === 'select' ? (
+                            <div className="animate-in fade-in slide-in-from-top-1">
+                                <select
+                                    value={selectedCriteria}
+                                    onChange={(e) => setSelectedCriteria(e.target.value)}
+                                    required={criteriaMode === 'select'}
+                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
+                                >
+                                    <option value="" disabled className="bg-[#0b101b]">Choose Criteria...</option>
+                                    {criteria.map(c => (
+                                        <option key={c.id} value={c.id} className="bg-[#0b101b]">
+                                            {c.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        ) : (
+                            <div className="animate-in fade-in slide-in-from-top-1">
+                                <input
+                                    type="text"
+                                    value={newCriteriaName}
+                                    onChange={(e) => setNewCriteriaName(e.target.value)}
+                                    placeholder="Enter new criteria name (e.g., Campus Drive 2024)"
+                                    required={criteriaMode === 'create'}
+                                    autoFocus
+                                    className="w-full px-4 py-3 bg-white/5 border border-brand-blue/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all shadow-inner shadow-brand-blue/5"
+                                />
+                            </div>
+                        )}
                     </div>
 
                     {/* Set Name */}

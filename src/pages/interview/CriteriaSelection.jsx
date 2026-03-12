@@ -32,15 +32,44 @@ export default function CriteriaSelection() {
 
     const fetchCriteria = async () => {
         try {
+            // Step 1: Find active drives scheduled for today
+            const now = new Date();
+            const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+            const { data: activeDrives, error: driveError } = await supabase
+                .from('scheduled_interviews')
+                .select('criteria_id')
+                .eq('is_active', true)
+                .eq('scheduled_date', today);
+
+            if (driveError) {
+                console.warn('[CRITERIA] Could not fetch active drives:', driveError);
+            }
+
+            // Step 2: Extract criteria IDs from today's active drives
+            const activeCriteriaIds = (activeDrives || [])
+                .map(d => d.criteria_id)
+                .filter(Boolean);
+
+            if (activeCriteriaIds.length === 0) {
+                // No drives today — show nothing (landing page should have caught this, but just in case)
+                setCriteria([]);
+                setError('No active assessments are scheduled for today.');
+                setLoading(false);
+                return;
+            }
+
+            // Step 3: Fetch only the criteria that are part of today's drives
             const { data, error: fetchError } = await supabase
                 .from('criteria')
                 .select('*')
                 .eq('is_active', true)
+                .in('id', activeCriteriaIds)
                 .order('name');
 
             if (fetchError) throw fetchError;
 
-            // Filter out hidden/internal criteria from candidates
+            // Filter out hidden/internal criteria
             const filteredData = (data || []).filter(item =>
                 !item.metadata?.hidden_from_candidates &&
                 item.name !== 'Both'
@@ -183,8 +212,8 @@ export default function CriteriaSelection() {
                         </div>
                     )}
 
-                    {/* Criteria Selection Grid */}
-                    <div className="grid md:grid-cols-2 gap-6 mb-12">
+                    {/* Criteria Selection Grid - Centered when only one item */}
+                    <div className={`grid gap-6 mb-12 ${criteria.length === 1 ? 'md:grid-cols-1 max-w-xl mx-auto' : 'md:grid-cols-2'}`}>
                         {criteria.map((item) => {
                             const isSelected = selectedCriteria?.id === item.id;
                             return (

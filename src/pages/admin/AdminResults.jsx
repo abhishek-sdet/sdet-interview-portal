@@ -27,6 +27,7 @@ export default function AdminResults() {
     const [reattemptConfirm, setReattemptConfirm] = useState(null);
     const [deletingId, setDeletingId] = useState(null);
     const [resettingId, setResettingId] = useState(null);
+    const [expandedDrives, setExpandedDrives] = useState({}); // Track expanded drive IDs
 
     // Score Editing State
     const [editingScoreId, setEditingScoreId] = useState(null);
@@ -76,6 +77,20 @@ export default function AdminResults() {
     useEffect(() => {
         filterResults();
     }, [searchTerm, results]);
+
+    // Auto-expand drive when filter changes
+    useEffect(() => {
+        if (driveFilter !== 'all') {
+            setExpandedDrives(prev => ({ ...prev, [driveFilter]: true }));
+        }
+    }, [driveFilter]);
+
+    const toggleDriveExpand = (driveId) => {
+        setExpandedDrives(prev => ({
+            ...prev,
+            [driveId]: !prev[driveId]
+        }));
+    };
 
     const checkAuth = async () => {
         const { data: { session } } = await supabase.auth.getSession();
@@ -135,7 +150,17 @@ export default function AdminResults() {
                 .from('scheduled_interviews')
                 .select('id, description, scheduled_date')
                 .order('scheduled_date', { ascending: false });
-            if (!error) setDrives(data || []);
+            
+            if (!error && data) {
+                setDrives(data);
+                
+                // If no drive filter is active from URL, and we haven't manually selected one,
+                // default to the most recent one to keep focus on the latest batch
+                const params = new URLSearchParams(window.location.search);
+                if (!params.get('driveId') && driveFilter === 'all' && data.length > 0) {
+                    setDriveFilter(data[0].id);
+                }
+            }
         } catch (err) {
             console.error('Error fetching drives:', err);
         }
@@ -155,11 +180,12 @@ export default function AdminResults() {
     };
 
     const exportToCSV = () => {
-        const headers = ['Name', 'Email', 'Phone', 'Criteria', 'Score', 'Total', 'Percentage', 'Status', 'Fabricated', 'Date'];
+        const headers = ['Name', 'Email', 'Phone', 'Drive', 'Criteria', 'Score', 'Total', 'Percentage', 'Status', 'Fabricated', 'Date'];
         const rows = filteredResults.map(r => [
             r.candidates?.full_name || 'N/A',
             r.candidates?.email || 'N/A',
             r.candidates?.phone || 'N/A',
+            r.scheduled_interviews?.description || 'N/A',
             r.criteria?.name || 'N/A',
             r.score || 0,
             r.total_questions || 0,
@@ -449,7 +475,7 @@ export default function AdminResults() {
                     </div>
                 </div>
 
-                {/* Results Table */}
+                {/* Results Table (Grouped by Drive) */}
                 {loading ? (
                     <div className="flex items-center justify-center h-64">
                         <div className="w-8 h-8 border-2 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin"></div>
@@ -460,190 +486,152 @@ export default function AdminResults() {
                         <p className="text-slate-400">No results found</p>
                     </div>
                 ) : (
-                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="bg-[#0f172a] border-b border-white/10 relative z-10 w-full">
-                                    <tr>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                            Candidate
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                            Phone
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                            Criteria
-                                        </th>
-                                        <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                            Score
-                                        </th>
-                                        <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                            Percentage
-                                        </th>
-                                        <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                            Status
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                            Date
-                                        </th>
-                                        <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                            Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-white/5">
-                                    {filteredResults.map((result) => {
-                                        const percentage = result.total_questions
-                                            ? ((result.score / result.total_questions) * 100).toFixed(1)
-                                            : 0;
+                    <div className="space-y-4">
+                        {/* Group logic: Filter results by drive and render groups */}
+                        {drives.filter(drive => driveFilter === 'all' || drive.id === driveFilter).map(drive => {
+                            const driveResults = filteredResults.filter(r => r.scheduled_interview_id === drive.id);
+                            if (driveResults.length === 0 && searchTerm) return null; // Hide empty groups during search
+                            
+                            const isExpanded = !!expandedDrives[drive.id];
+                            const hasResults = driveResults.length > 0;
 
-                                        return (
-                                            <tr key={result.id} className="hover:bg-white/5 transition-colors">
-                                                <td className="px-6 py-4">
-                                                    <div>
-                                                        <div className="font-medium text-white">
-                                                            {result.candidates?.full_name || 'N/A'}
-                                                        </div>
-                                                        <div className="text-sm text-slate-400">
-                                                            {result.candidates?.email || 'N/A'}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className="text-sm text-slate-300 font-mono">
-                                                        {result.candidates?.phone || 'N/A'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className="text-sm text-slate-300">
-                                                        {result.criteria?.name || 'N/A'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    {editingScoreId === result.id ? (
-                                                        <div className="flex items-center justify-center gap-2">
-                                                            <input
-                                                                type="number"
-                                                                value={tempScore}
-                                                                onChange={(e) => setTempScore(e.target.value)}
-                                                                className="w-16 bg-black/40 border border-brand-blue/50 rounded px-2 py-1 text-white text-center text-sm focus:outline-none"
-                                                                min="0"
-                                                                max={result.total_questions}
-                                                                autoFocus
-                                                            />
-                                                            <div className="flex flex-col gap-1">
-                                                                <button
-                                                                    onClick={() => saveScore(result)}
-                                                                    disabled={updatingScore}
-                                                                    className="p-1 bg-green-500/20 hover:bg-green-500/40 text-green-400 rounded transition-colors"
-                                                                    title="Save"
-                                                                >
-                                                                    <CheckCircle2 size={12} />
-                                                                </button>
-                                                                <button
-                                                                    onClick={cancelEditingScore}
-                                                                    className="p-1 bg-red-500/20 hover:bg-red-500/40 text-red-400 rounded transition-colors"
-                                                                    title="Cancel"
-                                                                >
-                                                                    <XCircle size={12} />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="group relative flex items-center justify-center gap-2">
-                                                            <span className="font-mono font-bold text-white">
-                                                                {result.score || 0}/{result.total_questions || 0}
-                                                            </span>
-                                                            <button
-                                                                onClick={() => startEditingScore(result)}
-                                                                className="p-1 text-slate-500 hover:text-brand-blue transition-all"
-                                                                title="Edit Score"
-                                                            >
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
-                                                            </button>
-                                                            {result.is_fabricated && (
-                                                                <span className="text-[10px] bg-amber-500/10 text-amber-500 px-1.5 py-0.5 rounded border border-amber-500/20 font-bold uppercase tracking-wider">
-                                                                    Fabricated
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <span className={`font-bold ${percentage >= (result.criteria?.passing_percentage || 70) ? 'text-green-400' : 'text-red-400'
-                                                        }`}>
-                                                        {percentage}%
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    {percentage >= (result.criteria?.passing_percentage || 70) ? (
-                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-green-400 text-xs font-bold">
-                                                            <CheckCircle2 size={14} />
-                                                            PASSED
-                                                        </span>
-                                                    ) : (
-                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-full text-red-400 text-xs font-bold">
-                                                            <XCircle size={14} />
-                                                            FAILED
-                                                        </span>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="text-sm text-slate-300">
-                                                        {result.completed_at ? new Date(result.completed_at).toLocaleDateString() : new Date(result.started_at).toLocaleDateString()}
-                                                    </div>
-                                                    <div className="text-xs text-slate-500">
-                                                        {result.completed_at ? new Date(result.completed_at).toLocaleTimeString() : new Date(result.started_at).toLocaleTimeString()}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        <button
-                                                            onClick={() => handleAllowReattempt(result)}
-                                                            disabled={resettingId === result.id}
-                                                            className="p-2 text-slate-400 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-all disabled:opacity-50"
-                                                            title="Allow Reattempt (Deletes current score)"
-                                                        >
-                                                            {resettingId === result.id ? (
-                                                                <div className="w-4 h-4 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin"></div>
-                                                            ) : (
-                                                                <RotateCcw size={16} />
-                                                            )}
-                                                        </button>
-                                                        <button
-                                                            onClick={() => fetchCandidateResponses(result)}
-                                                            className="p-2 text-slate-400 hover:text-brand-blue hover:bg-brand-blue/10 rounded-lg transition-all"
-                                                            title="View candidate responses"
-                                                        >
-                                                            <Eye size={16} />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDeleteInterview(result)}
-                                                            disabled={deletingId === result.id}
-                                                            className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all disabled:opacity-50"
-                                                            title="Delete this candidate and result"
-                                                        >
-                                                            {deletingId === result.id ? (
-                                                                <div className="w-4 h-4 border-2 border-red-400/30 border-t-red-400 rounded-full animate-spin"></div>
-                                                            ) : (
-                                                                <Trash2 size={16} />
-                                                            )}
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
+                            return (
+                                <div key={drive.id} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden transition-all duration-300">
+                                    {/* Drive Header / Toggle */}
+                                    <button 
+                                        onClick={() => toggleDriveExpand(drive.id)}
+                                        className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
+                                                <Calendar size={18} />
+                                            </div>
+                                            <div className="text-left">
+                                                <h3 className="text-lg font-bold text-white leading-none">
+                                                    {drive.description || 'Unnamed Drive'}
+                                                </h3>
+                                                <p className="text-xs text-slate-400 mt-1">
+                                                    {new Date(drive.scheduled_date).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })} • {driveResults.length} Candidate{driveResults.length !== 1 ? 's' : ''}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            {drive.id === drives[0]?.id && (
+                                                <span className="text-[10px] bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded border border-emerald-500/20 font-black uppercase tracking-widest">Latest</span>
+                                            )}
+                                            <div className={`text-slate-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                            </div>
+                                        </div>
+                                    </button>
 
-                        {/* Footer */}
-                        <div className="px-6 py-4 bg-white/5 border-t border-white/10">
-                            <p className="text-sm text-slate-400">
-                                Showing {filteredResults.length} result{filteredResults.length !== 1 ? 's' : ''}
-                            </p>
-                        </div>
+                                    {/* Collapsible Content */}
+                                    {isExpanded && (
+                                        <div className="border-t border-white/5 animate-in slide-in-from-top-2 duration-300">
+                                            {hasResults ? (
+                                                <div className="overflow-x-auto">
+                                                    <table className="w-full">
+                                                        <thead className="bg-[#0f172a]/50 border-b border-white/5">
+                                                            <tr>
+                                                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Candidate</th>
+                                                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Phone</th>
+                                                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Criteria</th>
+                                                                <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Score</th>
+                                                                <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Percentage</th>
+                                                                <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
+                                                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Date</th>
+                                                                <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Actions</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-white/5">
+                                                            {driveResults.map((result) => {
+                                                                const percentage = result.total_questions
+                                                                    ? ((result.score / result.total_questions) * 100).toFixed(1)
+                                                                    : 0;
+
+                                                                return (
+                                                                    <tr key={result.id} className="hover:bg-white/5 transition-colors">
+                                                                        <td className="px-6 py-4">
+                                                                            <div>
+                                                                                <div className="font-medium text-white">{result.candidates?.full_name || 'N/A'}</div>
+                                                                                <div className="text-sm text-slate-400">{result.candidates?.email || 'N/A'}</div>
+                                                                            </div>
+                                                                        </td>
+                                                                        <td className="px-6 py-4 text-sm text-slate-300 font-mono">{result.candidates?.phone || 'N/A'}</td>
+                                                                        <td className="px-6 py-4 text-sm text-slate-300">{result.criteria?.name || 'N/A'}</td>
+                                                                        <td className="px-6 py-4 text-center">
+                                                                            {editingScoreId === result.id ? (
+                                                                                <div className="flex items-center justify-center gap-2" onClick={e => e.stopPropagation()}>
+                                                                                    <input
+                                                                                        type="number"
+                                                                                        value={tempScore}
+                                                                                        onChange={(e) => setTempScore(e.target.value)}
+                                                                                        className="w-16 bg-black/40 border border-brand-blue/50 rounded px-2 py-1 text-white text-center text-sm focus:outline-none"
+                                                                                        min="0"
+                                                                                        max={result.total_questions}
+                                                                                        autoFocus
+                                                                                    />
+                                                                                    <div className="flex flex-col gap-1">
+                                                                                        <button onClick={() => saveScore(result)} disabled={updatingScore} className="p-1 bg-green-500/20 text-green-400 rounded hover:bg-green-500/40 transition-colors"><CheckCircle2 size={12} /></button>
+                                                                                        <button onClick={cancelEditingScore} className="p-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40 transition-colors"><XCircle size={12} /></button>
+                                                                                    </div>
+                                                                                </div>
+                                                                            ) : (
+                                                                                <div className="flex items-center justify-center gap-2 group">
+                                                                                    <span className="font-mono font-bold text-white">{result.score || 0}/{result.total_questions || 0}</span>
+                                                                                    <button onClick={() => startEditingScore(result)} className="p-1 text-slate-500 hover:text-brand-blue opacity-0 group-hover:opacity-100 transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button>
+                                                                                </div>
+                                                                            )}
+                                                                        </td>
+                                                                        <td className="px-6 py-4 text-center">
+                                                                            <span className={`font-bold ${percentage >= (result.criteria?.passing_percentage || 70) ? 'text-green-400' : 'text-red-400'}`}>{percentage}%</span>
+                                                                        </td>
+                                                                        <td className="px-6 py-4 text-center">
+                                                                            {percentage >= (result.criteria?.passing_percentage || 70) ? (
+                                                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-green-400 text-[10px] font-black tracking-widest uppercase"><CheckCircle2 size={12} /> Passed</span>
+                                                                            ) : (
+                                                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-full text-red-400 text-[10px] font-black tracking-widest uppercase"><XCircle size={12} /> Failed</span>
+                                                                            )}
+                                                                        </td>
+                                                                        <td className="px-6 py-4">
+                                                                            <div className="text-sm text-slate-300">
+                                                                                {result.completed_at ? new Date(result.completed_at).toLocaleDateString() : new Date(result.started_at).toLocaleDateString()}
+                                                                            </div>
+                                                                        </td>
+                                                                        <td className="px-6 py-4 text-center">
+                                                                            <div className="flex items-center justify-center gap-2">
+                                                                                <button onClick={() => handleAllowReattempt(result)} disabled={resettingId === result.id} className="p-2 text-slate-400 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-all"><RotateCcw size={16} /></button>
+                                                                                <button onClick={() => fetchCandidateResponses(result)} className="p-2 text-slate-400 hover:text-brand-blue hover:bg-brand-blue/10 rounded-lg transition-all"><Eye size={16} /></button>
+                                                                                <button onClick={() => handleDeleteInterview(result)} disabled={deletingId === result.id} className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"><Trash2 size={16} /></button>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                );
+                                                            })}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            ) : (
+                                                <div className="p-12 text-center text-slate-500">
+                                                    <p>No candidates found for this drive.</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                        
+                        {/* Handles Case where No Drives Match Filter (e.g. searching but all drives hidden) */}
+                        {drives.filter(drive => driveFilter === 'all' || drive.id === driveFilter).every(drive => {
+                            const driveResults = filteredResults.filter(r => r.scheduled_interview_id === drive.id);
+                            return driveResults.length === 0 && searchTerm;
+                        }) && searchTerm && (
+                            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-12 text-center">
+                                <Search className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                                <p className="text-slate-400">No matches found in any drive</p>
+                            </div>
+                        )}
                     </div>
                 )}
 
