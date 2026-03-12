@@ -39,6 +39,7 @@ export default function QuizInterface() {
     const [tabSwitchWarnings, setTabSwitchWarnings] = useState(0);
     const [proctorCountdown, setProctorCountdown] = useState(10);
     const [allowScreenshots, setAllowScreenshots] = useState(false); // Default to secure
+    const [proctoringStrict, setProctoringStrict] = useState(true); // Default to strict
     const MAX_WARNINGS = 3;
 
     // Refs to hold cached questions needed for the second phase
@@ -196,23 +197,24 @@ export default function QuizInterface() {
         const complianceCheck = setInterval(() => {
             let violation = false;
 
-            // Check 1: Must be in Fullscreen (prevents split-screen entirely)
-            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
-            if (!isFullscreen) {
-                violation = true;
-            }
+            // If strict proctoring is OFF, skip all checks
+            if (!proctoringStrict) return;
 
-            // Check 2: Must have focus
-            if (!document.hasFocus() || document.hidden) {
-                violation = true;
-            }
+            // Check 1: Must be in Fullscreen (prevents split-screen entirely)
 
             // If a violation is caught and the modal isn't showing yet, trigger the strike system
             if (violation && !showProctorWarning) {
                 if (tabSwitchWarnings >= MAX_WARNINGS - 1) { // -1 because this IS the final strike
-                    console.log('[PROCTOR] Max strikes reached. Auto-submitting.');
-                    showToast.error("Exam Auto-Submitted due to maximum security violations (3/3).");
-                    handleSubmit(true, 'proctor_max_strikes');
+                    console.log('[PROCTOR] Max strikes reached.');
+                    if (proctoringStrict) {
+                        showToast.error("Exam Auto-Submitted due to maximum security violations (3/3).");
+                        handleSubmit(true, 'proctor_max_strikes');
+                    } else {
+                        showToast.error("Security Warning (3/3): Prohibited action detected.");
+                        // If not strict, we don't auto-submit, but we still trigger the warning modal to block interactions momentarily
+                        setProctorCountdown(10);
+                        setShowProctorWarning(true);
+                    }
                 } else {
                     console.log('[PROCTOR] Violation detected. Triggering security modal countdown.');
                     setProctorCountdown(10); // Reset timer
@@ -232,23 +234,34 @@ export default function QuizInterface() {
                 setProctorCountdown(prev => prev - 1);
             }, 1000);
         } else if (showProctorWarning && proctorCountdown <= 0 && !submitting) {
-            console.log('[PROCTOR] Countdown expired. Auto-submitting.');
-            showToast.error("Exam Auto-Submitted due to prolonged absence from the secure environment.");
-            handleSubmit(true, 'proctor_timeout');
+            if (proctoringStrict) {
+                console.log('[PROCTOR] Countdown expired. Auto-submitting.');
+                showToast.error("Exam Auto-Submitted due to prolonged absence from the secure environment.");
+                handleSubmit(true, 'proctor_timeout');
+            } else {
+                console.log('[PROCTOR] Countdown expired. Strict mode OFF, skipping auto-submit.');
+                // Just keep the modal open until they click resume
+            }
         }
         return () => clearInterval(timer);
-    }, [showProctorWarning, proctorCountdown, submitting]);
+    }, [showProctorWarning, proctorCountdown, submitting, proctoringStrict]);
 
     // 2. Instant Event Listeners (For instantaneous reaction)
     useEffect(() => {
-        if (submitting || showSpecialization) return;
+        if (submitting || showSpecialization || !proctoringStrict) return;
 
         const handleFocusLoss = () => {
             if (document.hidden || !document.hasFocus()) {
                 if (!showProctorWarning) {
                     if (tabSwitchWarnings >= MAX_WARNINGS - 1) {
-                        showToast.error("Exam Auto-Submitted due to maximum security violations (3/3).");
-                        handleSubmit(true, 'proctor_max_strikes');
+                        if (proctoringStrict) {
+                            showToast.error("Exam Auto-Submitted due to maximum security violations (3/3).");
+                            handleSubmit(true, 'proctor_max_strikes');
+                        } else {
+                            showToast.error("Security Warning (3/3): Prohibited action detected.");
+                            setProctorCountdown(10);
+                            setShowProctorWarning(true);
+                        }
                     } else {
                         console.log('[PROCTOR] Focus lost/tab switched. Triggering security modal.');
                         setProctorCountdown(10);
@@ -262,8 +275,14 @@ export default function QuizInterface() {
             const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
             if (!isFullscreen && !showProctorWarning) {
                 if (tabSwitchWarnings >= MAX_WARNINGS - 1) {
-                    showToast.error("Exam Auto-Submitted due to maximum security violations (3/3).");
-                    handleSubmit(true, 'proctor_max_strikes');
+                    if (proctoringStrict) {
+                        showToast.error("Exam Auto-Submitted due to maximum security violations (3/3).");
+                        handleSubmit(true, 'proctor_max_strikes');
+                    } else {
+                        showToast.error("Security Warning (3/3): Fullscreen mode is required.");
+                        setProctorCountdown(10);
+                        setShowProctorWarning(true);
+                    }
                 } else {
                     console.log('[PROCTOR] Exam exited fullscreen. Triggering security modal.');
                     setProctorCountdown(10);
@@ -289,11 +308,11 @@ export default function QuizInterface() {
             document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
             document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
         };
-    }, [submitting, showSpecialization, showProctorWarning, tabSwitchWarnings]);
+    }, [submitting, showSpecialization, showProctorWarning, tabSwitchWarnings, proctoringStrict, loading]);
 
     // 2.b DevTools Honeypot Detection (Time-based debugger trap)
     useEffect(() => {
-        if (submitting || showSpecialization) return;
+        if (submitting || showSpecialization || !proctoringStrict) return;
 
         const devToolsCheck = setInterval(() => {
             const start = performance.now();
@@ -307,8 +326,14 @@ export default function QuizInterface() {
                 console.warn('[PROCTOR] DevTools/Inspect Element detected!');
                 if (!showProctorWarning) {
                     if (tabSwitchWarnings >= MAX_WARNINGS - 1) {
-                        showToast.error("Exam Auto-Submitted due to prohibited Developer Tools usage.");
-                        handleSubmit(true, 'proctor_devtools_max_strikes');
+                        if (proctoringStrict) {
+                            showToast.error("Exam Auto-Submitted due to prohibited Developer Tools usage.");
+                            handleSubmit(true, 'proctor_devtools_max_strikes');
+                        } else {
+                            showToast.error("Security Warning (3/3): Developer Tools are not permitted.");
+                            setProctorCountdown(10);
+                            setShowProctorWarning(true);
+                        }
                     } else {
                         setProctorCountdown(10);
                         setShowProctorWarning(true);
@@ -318,10 +343,12 @@ export default function QuizInterface() {
         }, 1500);
 
         return () => clearInterval(devToolsCheck);
-    }, [submitting, showSpecialization, showProctorWarning, tabSwitchWarnings]);
+    }, [submitting, showSpecialization, showProctorWarning, tabSwitchWarnings, proctoringStrict]);
 
     // 3. Content Protection (Disable Right-click, Copy, Paste, Keyboard)
     useEffect(() => {
+        if (!proctoringStrict) return;
+
         const preventAction = (e) => {
             e.preventDefault();
             // Optional: showToast.error("Action disabled during assessment."); 
@@ -341,10 +368,16 @@ export default function QuizInterface() {
                 }
 
                 // Trigger Proctor Strike
-                if (!showProctorWarning) {
+                if (!showProctorWarning && proctoringStrict) {
                     if (tabSwitchWarnings >= MAX_WARNINGS - 1) {
-                        showToast.error("Exam Auto-Submitted due to prohibited Screen Capture attempt.");
-                        handleSubmit(true, 'proctor_screenshot_strike');
+                        if (proctoringStrict) {
+                            showToast.error("Exam Auto-Submitted due to prohibited Screen Capture attempt.");
+                            handleSubmit(true, 'proctor_screenshot_strike');
+                        } else {
+                            showToast.error("Security Warning (3/3): Screen capture is prohibited.");
+                            setProctorCountdown(10);
+                            setShowProctorWarning(true);
+                        }
                     } else {
                         setProctorCountdown(10);
                         setShowProctorWarning(true);
@@ -387,10 +420,12 @@ export default function QuizInterface() {
             document.removeEventListener('keyup', preventKeyboard, true);
             document.removeEventListener('keypress', preventKeyboard, true);
         };
-    }, [allowScreenshots, showProctorWarning, tabSwitchWarnings]);
+    }, [allowScreenshots, showProctorWarning, tabSwitchWarnings, proctoringStrict]);
 
     // 4. Block Browser Back Navigation & Refresh
     useEffect(() => {
+        if (!proctoringStrict) return;
+
         // Push state initially to trap the history
         window.history.pushState(null, document.title, window.location.href);
 
@@ -425,7 +460,7 @@ export default function QuizInterface() {
             window.removeEventListener('beforeunload', handleBeforeUnload);
             clearInterval(historyTrap);
         };
-    }, [submitting]);
+    }, [submitting, proctoringStrict]);
 
     const fetchQuestions = async (criteriaId, savedTimeRemaining = null) => {
         try {
@@ -439,14 +474,15 @@ export default function QuizInterface() {
             const selectedSet = examConfig?.set || localStorage.getItem('selectedSet');
             const selectedSubject = examConfig?.subject; // e.g., 'java', 'python'
 
-            // Fetch Site Settings for Security (Screenshots)
+            // Fetch Site Settings for Security (Screenshots & Proctoring)
             const { data: siteSettings } = await supabase
                 .from('site_settings')
-                .select('allow_screenshots')
+                .select('allow_screenshots, proctoring_auto_submit')
                 .single();
 
             if (siteSettings) {
                 setAllowScreenshots(siteSettings.allow_screenshots || false);
+                setProctoringStrict(siteSettings.proctoring_auto_submit !== false);
             }
 
             let query = supabase
@@ -471,17 +507,26 @@ export default function QuizInterface() {
 
             // Categorize Questions by NEW structure: section + subsection
             // General/Aptitude: Must match selected Set if applicable
-            const generalQs = data.filter(q => {
+            let generalQs = data.filter(q => {
                 const isGeneral = q.section === 'general' || !q.section;
                 const matchesSet = selectedSet ? q.category === selectedSet : true;
                 return isGeneral && matchesSet;
             });
 
-            const electiveQs = data.filter(q => {
+            let electiveQs = data.filter(q => {
                 const isElective = q.section === 'elective';
                 const matchesSet = selectedSet ? q.category === selectedSet : true;
                 return isElective && matchesSet;
             });
+
+            // FALLBACK: If no section-categorized questions are found (e.g. custom exam like
+            // "Functional Assessment" uploaded without section metadata), use ALL questions
+            // directly under that criteria as general questions.
+            if (generalQs.length === 0 && electiveQs.length === 0) {
+                console.log('[FETCH] No section-filtered questions found. Using all criteria questions as general (custom exam mode).');
+                generalQs = data;
+                electiveQs = [];
+            }
 
             console.log('[FETCH] Total questions fetched:', data.length);
             console.log('[FETCH] Selected Set:', selectedSet);
@@ -496,66 +541,85 @@ export default function QuizInterface() {
 
             console.log('[FETCH] Selected elective questions:', selectedElectiveQs.length);
 
-            // Organize general questions by subsection (5-section structure)
-            // This ensures questions appear in the same order as the admin panel
+            // Organize general questions by subsection
             const computerScienceQs = generalQs.filter(q => q.subsection === 'computer_science');
             const logicalReasoningQs = generalQs.filter(q => q.subsection === 'logical_reasoning');
             const miscellaneousQs = generalQs.filter(q => q.subsection === 'miscellaneous');
             const grammarQs = generalQs.filter(q => q.subsection === 'grammar');
+            const aptitudeQs = generalQs.filter(q => q.subsection === 'aptitude');
+            // Catch-all: any questions that don't match known subsections (custom exam questions)
+            const knownSubsections = ['computer_science', 'logical_reasoning', 'miscellaneous', 'grammar', 'aptitude'];
+            const otherGeneralQs = generalQs.filter(q => !knownSubsections.includes(q.subsection));
 
             console.log('[FETCH] Computer Science questions:', computerScienceQs.length);
             console.log('[FETCH] Logical Reasoning questions:', logicalReasoningQs.length);
             console.log('[FETCH] Miscellaneous Logic questions:', miscellaneousQs.length);
             console.log('[FETCH] Grammar questions:', grammarQs.length);
+            console.log('[FETCH] Aptitude questions:', aptitudeQs.length);
+            console.log('[FETCH] Other/Custom questions:', otherGeneralQs.length);
 
-            // Combine in order: Computer Science → Logical Reasoning → Miscellaneous → Grammar
-            // This matches the 5-section structure in the admin panel
-            const orderedGeneralQs = [
+            // Combine in order. This now covers all possible subsections.
+            let orderedGeneralQs = [
                 ...computerScienceQs,
                 ...logicalReasoningQs,
                 ...miscellaneousQs,
-                ...grammarQs
+                ...grammarQs,
+                ...aptitudeQs,
+                ...otherGeneralQs
             ];
 
-            // Store in refs - Take first 23 general questions (in subsection order)
-            generalQuestionsRef.current = orderedGeneralQs.slice(0, 23);
-            console.log('[FETCH] Stored general questions (ordered by subsection):', generalQuestionsRef.current.length);
+            // Final safety fallback: if still empty but generalQs has questions, use them all
+            if (orderedGeneralQs.length === 0 && generalQs.length > 0) {
+                console.log('[FETCH] Final fallback: using all generalQs directly.');
+                orderedGeneralQs = generalQs;
+            }
+
+            // Store in refs - Take first 50 general questions if it's a custom/large test, otherwise 23
+            const maxGeneral = orderedGeneralQs.length >= 30 ? orderedGeneralQs.length : 23;
+            generalQuestionsRef.current = orderedGeneralQs.slice(0, maxGeneral);
+            console.log('[FETCH] Stored general questions:', generalQuestionsRef.current.length);
+
+            // Determine if we should SKIP the specialization phase
+            // We skip if we already have enough general questions (>= 30) or if it's functional assessment
+            const skipSpecialization = generalQuestionsRef.current.length >= 30;
 
             // For backward compatibility with old specialization flow, store by subject
-            // But now we use the selected subject directly
-            if (selectedSubject) {
+            if (selectedSubject && !skipSpecialization) {
                 // Store selected elective questions (take top 7)
                 if (selectedSubject === 'java') {
                     javaQuestionsRef.current = selectedElectiveQs.slice(0, 7);
                 } else if (selectedSubject === 'python') {
                     pythonQuestionsRef.current = selectedElectiveQs.slice(0, 7);
                 }
-                // Auto-set specialization since user already chose in ExamSetup
                 setSpecialization(selectedSubject.charAt(0).toUpperCase() + selectedSubject.slice(1));
-            } else {
+            } else if (!skipSpecialization) {
                 // Fallback: if no exam config, populate both for old flow
                 javaQuestionsRef.current = electiveQs.filter(q => q.subsection === 'java').slice(0, 7);
                 pythonQuestionsRef.current = electiveQs.filter(q => q.subsection === 'python').slice(0, 7);
             }
 
-
-            // Calculate EXPECTED total questions (General + Elective)
-            // We know we take 23 general and 7 elective
-            const expectedTotal = generalQuestionsRef.current.length + 7;
+            // Calculate EXPECTED total questions
+            // If skipping specialization, total is just general count. Otherwise general + 7.
+            const expectedTotal = skipSpecialization
+                ? generalQuestionsRef.current.length
+                : generalQuestionsRef.current.length + 7;
             setTotalExamQuestions(expectedTotal);
 
-            // NEW: Load ALL 30 questions upfront (23 general + 7 elective)
-            // This ensures the question map shows all questions from the start with a visual separator
-            let electiveQuestionsToShow = [];
+            // If we skip specialization, we mark it as "General" immediately
+            if (skipSpecialization) {
+                setSpecialization('General');
+            }
 
-            if (selectedSubject) {
-                // Use the selected subject's questions
-                electiveQuestionsToShow = selectedSubject === 'java'
-                    ? (javaQuestionsRef.current || [])
-                    : (pythonQuestionsRef.current || []);
-            } else {
-                // Default to Java if no selection yet, but ensure it's an array
-                electiveQuestionsToShow = javaQuestionsRef.current || [];
+            // NEW: Load questions upfront
+            let electiveQuestionsToShow = [];
+            if (!skipSpecialization) {
+                if (selectedSubject) {
+                    electiveQuestionsToShow = selectedSubject === 'java'
+                        ? (javaQuestionsRef.current || [])
+                        : (pythonQuestionsRef.current || []);
+                } else {
+                    electiveQuestionsToShow = javaQuestionsRef.current || [];
+                }
             }
 
             // Safety check: ensure we have valid arrays
@@ -566,29 +630,20 @@ export default function QuizInterface() {
 
             const rawAllQuestions = [...generalQuestionsRef.current, ...electiveQuestionsToShow];
 
-            // Security Enhancement: True Randomization of Test
-            // 1. Shuffle the options within each question (A/B/C/D order randomized)
-            const questionsWithOptionsShuffled = rawAllQuestions.map(q => {
-                if (q.options && Array.isArray(q.options)) {
-                    return { ...q, options: shuffleArray(q.options) };
-                }
-                return q;
-            });
+            // Disable Randomization: maintain original upload order
+            const finalQuestions = rawAllQuestions;
 
-            // 2. Shuffle the entire question order
-            const finalShuffledQuestions = shuffleArray(questionsWithOptionsShuffled);
+            setQuestions(finalQuestions);
 
-            setQuestions(finalShuffledQuestions);
-
-            console.log('[FETCH] Loaded all questions upfront (Shuffled):', finalShuffledQuestions.length);
+            console.log('[FETCH] Loaded all questions upfront (Original Order):', finalQuestions.length);
             console.log('[FETCH] General questions:', generalQuestionsRef.current.length);
             console.log('[FETCH] Elective questions:', electiveQuestionsToShow.length);
 
             // Note: Questions are already loaded upfront, no need to append elective questions later
 
-            // If total general < 12, we might have an issue, but we proceed with what we have
+            // If total general < 1, we have an issue
             if (generalQuestionsRef.current.length < 1) {
-                setError('Insufficient general questions configured.');
+                setError('No questions found for this assessment. Please contact the administrator.');
             }
 
             // Check for scheduled interview for today
@@ -718,10 +773,10 @@ export default function QuizInterface() {
     };
 
     const handleNext = () => {
-        // ID of the last general question (usually index 11 if we have 12)
         const isEndOfGeneral = currentIndex === generalQuestionsRef.current.length - 1;
+        const skipSpecialization = generalQuestionsRef.current.length >= 30 || specialization === 'General';
 
-        if (isEndOfGeneral && !specialization) {
+        if (isEndOfGeneral && !specialization && !skipSpecialization) {
             // Trigger Specialization Selection
             setShowSpecialization(true);
         } else if (currentIndex < questions.length - 1) {
@@ -1300,12 +1355,12 @@ export default function QuizInterface() {
                 </div>
             </div>
 
-            {/* Main Content Area - Flex Wrapper (No Outer Scroll) */}
-            <div className="flex-1 w-full flex flex-col items-center overflow-hidden p-3 sm:p-6 lg:p-8 pt-16 sm:pt-20 relative z-10">
-                <div className={`w-[90%] max-w-6xl flex-1 min-h-0 transition-all duration-700 flex flex-col gap-4 sm:gap-6 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            {/* Main Content Area - Question Card at Top, Map at Bottom */}
+            <div className="flex-1 w-full flex flex-col items-center overflow-auto p-2 sm:p-4 lg:p-6 pt-20 sm:pt-24 relative z-10 custom-scrollbar">
+                <div className={`w-[98%] max-w-7xl min-h-0 transition-all duration-700 flex flex-col gap-6 sm:gap-8 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
 
-                    {/* Question Card - Premium Glassmorphism (Flex-1 to fill space, internally scrollable) */}
-                    <div className="flex-1 min-h-0 flex flex-col bg-[#0b101b]/90 backdrop-blur-3xl border border-white/10 rounded-2xl p-4 sm:p-5 shadow-2xl relative overflow-hidden group hover:border-white/20 transition-all duration-500">
+                    {/* Question Card - Now the primary top element */}
+                    <div className="flex-shrink-0 flex flex-col bg-[#0b101b]/90 backdrop-blur-3xl border border-white/10 rounded-2xl p-4 sm:p-6 shadow-2xl relative overflow-hidden group hover:border-white/20 transition-all duration-500">
 
                         {/* Ambient Background Glow */}
                         <div className="absolute top-0 right-0 w-96 h-96 bg-brand-blue/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
@@ -1476,14 +1531,20 @@ export default function QuizInterface() {
                         )}
                     </div>
 
-                    {/* Embed Question Map for Quick Access */}
-                    <div className="flex-shrink-0 px-2 sm:px-6 w-full max-w-3xl mx-auto pb-4">
-                        <QuestionStatusMap
-                            questions={questions}
-                            answers={answers}
-                            currentIndex={currentIndex}
-                            onQuestionSelect={handleMapQuestionSelect}
-                        />
+                    {/* Question Map - Now at Bottom and Enlarged for 2-Row Focus */}
+                    <div className="flex-shrink-0 px-2 sm:px-6 w-full max-w-5xl mx-auto pb-10">
+                        <div className="bg-[#0b101b]/40 backdrop-blur-md rounded-2xl border border-white/5 p-4 sm:p-6 shadow-xl relative overflow-hidden group/map-container">
+                             {/* Accent Glow */}
+                             <div className="absolute bottom-0 left-1/4 w-1/2 h-px bg-gradient-to-r from-transparent via-brand-blue/30 to-transparent"></div>
+                             
+                             <QuestionStatusMap
+                                questions={questions}
+                                answers={answers}
+                                currentIndex={currentIndex}
+                                onQuestionSelect={handleMapQuestionSelect}
+                                visitedQuestions={visitedQuestions}
+                            />
+                        </div>
                     </div>
 
                 </div>
@@ -1523,7 +1584,11 @@ export default function QuizInterface() {
                             You have attempted to leave the secure fullscreen environment or switch tabs. This is a strict violation of exam rules.
                             <br /><br />
                             <span className="text-red-400 font-bold text-lg block mb-1">Return to the exam immediately.</span>
-                            Auto-submitting in <span className="text-white text-2xl font-black">{proctorCountdown}</span> seconds...
+                            {proctoringStrict ? (
+                                <>Auto-submitting in <span className="text-white text-2xl font-black">{proctorCountdown}</span> seconds...</>
+                            ) : (
+                                <span className="text-emerald-400">Security check in progress. Please resume to continue.</span>
+                            )}
                         </p>
 
                         <div className="flex flex-col gap-4 relative z-10">

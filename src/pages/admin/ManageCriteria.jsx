@@ -13,6 +13,9 @@ export default function ManageCriteria() {
     const [allowScreenshots, setAllowScreenshots] = useState(false);
     const [updatingSite, setUpdatingSite] = useState(false);
     const [updatingScreenshots, setUpdatingScreenshots] = useState(false);
+    const [proctoringAutoSubmit, setProctoringAutoSubmit] = useState(true);
+    const [updatingProctoring, setUpdatingProctoring] = useState(false);
+    const [siteSettingsId, setSiteSettingsId] = useState(null);
     const [editingId, setEditingId] = useState(null);
     const [editForm, setEditForm] = useState({
         name: '',
@@ -32,7 +35,7 @@ export default function ManageCriteria() {
         try {
             const { data, error } = await supabase
                 .from('site_settings')
-                .select('is_site_active, allow_screenshots')
+                .select('id, is_site_active, allow_screenshots, proctoring_auto_submit')
                 .single();
             if (error) {
                 if (error.code === '42P01') {
@@ -41,9 +44,12 @@ export default function ManageCriteria() {
                     throw error;
                 }
             } else if (data) {
+                setSiteSettingsId(data.id);
                 setSiteStatus(data.is_site_active);
                 // Default to false if the column doesn't exist yet to prevent breaking
                 setAllowScreenshots(data.allow_screenshots || false);
+                // Default to true for proctoring auto-submit
+                setProctoringAutoSubmit(data.proctoring_auto_submit !== false);
             }
         } catch (error) {
             console.error('Error fetching site status:', error);
@@ -57,7 +63,7 @@ export default function ManageCriteria() {
             const { error } = await supabase
                 .from('site_settings')
                 .update({ allow_screenshots: newStatus })
-                .eq('id', (await supabase.from('site_settings').select('id').single()).data.id);
+                .eq('id', siteSettingsId);
 
             if (error) throw error;
             setAllowScreenshots(newStatus);
@@ -72,6 +78,30 @@ export default function ManageCriteria() {
             }
         } finally {
             setUpdatingScreenshots(false);
+        }
+    };
+ 
+    const toggleProctoringStatus = async () => {
+        setUpdatingProctoring(true);
+        try {
+            const newStatus = !proctoringAutoSubmit;
+            const { error } = await supabase
+                .from('site_settings')
+                .update({ proctoring_auto_submit: newStatus })
+                .eq('id', siteSettingsId);
+ 
+            if (error) throw error;
+            setProctoringAutoSubmit(newStatus);
+            toast.success(`Security Auto-Submit ${newStatus ? 'Enabled' : 'Disabled'}`);
+        } catch (error) {
+            console.error('Error updating proctoring status:', error);
+            if (error.message?.includes('proctoring_auto_submit')) {
+                toast.error('Database schema out of sync: "proctoring_auto_submit" column missing.');
+            } else {
+                toast.error('Failed to update proctoring status.');
+            }
+        } finally {
+            setUpdatingProctoring(false);
         }
     };
 
@@ -205,6 +235,23 @@ export default function ManageCriteria() {
                                 className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${allowScreenshots ? 'bg-amber-500' : 'bg-slate-700'}`}
                             >
                                 <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${allowScreenshots ? 'translate-x-5' : 'translate-x-0'}`} />
+                            </button>
+                        </div>
+
+                        {/* Proctoring Auto-Submit Toggle */}
+                        <div className="bg-[#0f172a]/80 backdrop-blur-md border border-slate-700/50 rounded-2xl px-6 py-4 flex items-center gap-4 shadow-xl">
+                            <div>
+                                <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Strict Proctoring</div>
+                                <div className={`text-sm font-bold ${proctoringAutoSubmit ? 'text-red-400' : 'text-slate-400'}`}>
+                                    {proctoringAutoSubmit ? 'ENABLED (STRICT)' : 'DISABLED (OPEN)'}
+                                </div>
+                            </div>
+                            <button
+                                onClick={toggleProctoringStatus}
+                                disabled={updatingProctoring}
+                                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${proctoringAutoSubmit ? 'bg-red-500' : 'bg-slate-700'}`}
+                            >
+                                <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${proctoringAutoSubmit ? 'translate-x-5' : 'translate-x-0'}`} />
                             </button>
                         </div>
 
