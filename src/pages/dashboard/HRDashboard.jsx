@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Sun, Moon, Search, BarChart3, TrendingUp, Calendar, CheckCircle, XCircle, Users, LayoutDashboard, Database, Activity, Briefcase, GraduationCap } from 'lucide-react';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement, Filler } from 'chart.js';
@@ -17,12 +17,17 @@ export default function HRDashboard() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
-    const [driveFilter, setDriveFilter] = useState('all');
+    const [driveFilter, setDriveFilter] = useState('');
+    const driveFilterRef = useRef(''); // Use ref to solve stale closure in background polling
     const [drives, setDrives] = useState([]);
     const [activeTab, setActiveTab] = useState('fresher');
 
+    // Keep ref in sync with state
     useEffect(() => {
-        fetchData();
+        driveFilterRef.current = driveFilter;
+    }, [driveFilter]);
+
+    useEffect(() => {
         fetchDrives();
 
         const channel = supabase
@@ -48,11 +53,17 @@ export default function HRDashboard() {
         }, 10000);
 
         return () => {
-            document.head.removeChild(link);
+            if (link.parentNode) document.head.removeChild(link);
             supabase.removeChannel(channel);
             clearInterval(pollInterval);
         };
     }, []);
+
+    // NEW: React to Drive Filter changes
+    useEffect(() => {
+        if (!driveFilter) return; // Skip fetch until we have a decisive drive (avoids global flash)
+        fetchData();
+    }, [driveFilter]);
 
     const fetchData = async (isBackgroundRefresh = false) => {
         if (!isBackgroundRefresh) {
@@ -69,8 +80,8 @@ export default function HRDashboard() {
                 .order('completed_at', { ascending: false })
                 .order('started_at', { ascending: false });
 
-            if (driveFilter !== 'all') {
-                query = query.eq('scheduled_interview_id', driveFilter);
+            if (driveFilterRef.current && driveFilterRef.current !== 'all') {
+                query = query.eq('scheduled_interview_id', driveFilterRef.current);
             }
 
             const { data: interviewData, error } = await query;
@@ -90,7 +101,16 @@ export default function HRDashboard() {
                 .from('scheduled_interviews')
                 .select('id, description, scheduled_date')
                 .order('scheduled_date', { ascending: false });
-            if (!error) setDrives(data || []);
+            
+            if (!error && data && data.length > 0) {
+                setDrives(data);
+                // Auto-select the latest drive if none selected or if still on default
+                if (driveFilterRef.current === '' || driveFilterRef.current === 'all') {
+                    setDriveFilter(data[0].id);
+                }
+            } else if (data) {
+                setDrives(data);
+            }
         } catch (err) {
             console.error('Error fetching drives:', err);
         }
@@ -187,6 +207,12 @@ export default function HRDashboard() {
             dangerBg: '#fee2e2'
         }
     };
+
+    // NEW: Heuristic to determine if the current view is for Internal Employees or a Fresher Drive
+    const currentDrive = drives.find(d => d.id === driveFilter);
+    const isInternalAssessment = currentDrive?.description?.toLowerCase().includes('assessment') || 
+                               (currentDrive && !currentDrive.description.toLowerCase().includes('fresher'));
+    const isGlobalView = driveFilter === 'all' || !driveFilter;
 
     const current = theme === 'dark' ? tokens.dark : tokens.light;
 
@@ -337,9 +363,17 @@ export default function HRDashboard() {
                         <div>
                             <h3 className="text-xl font-bold flex items-center gap-2">
                                 <Database className="w-5 h-5 text-blue-400" />
-                                Global Candidate Search
+                                {driveFilter === 'all' || !driveFilter
+                                    ? 'Global Candidate Search' 
+                                    : `${drives.find(d => d.id === driveFilter)?.description || 'Drive'} Results`
+                                }
                             </h3>
-                            <p className="text-xs text-slate-500 mt-1">Found {filteredInterviews.length} indexed records</p>
+                            <p className="text-xs text-slate-500 mt-1">
+                                {driveFilter === 'all' 
+                                    ? `Found ${filteredInterviews.length} indexed records`
+                                    : `Filtered ${filteredInterviews.length} participants for this batch`
+                                }
+                            </p>
                         </div>
                         <div className="flex flex-col sm:flex-row items-center gap-4 w-full max-w-2xl">
                             <div className="relative flex-1 w-full">
@@ -367,11 +401,7 @@ export default function HRDashboard() {
 
                             <select
                                 value={driveFilter}
-                                onChange={(e) => {
-                                    setDriveFilter(e.target.value);
-                                    // Trigger refetch since drive filter is handled at query level for perf
-                                    setTimeout(() => fetchData(), 10);
-                                }}
+                                onChange={(e) => setDriveFilter(e.target.value)}
                                 style={{ backgroundColor: current.inputBg, border: `1px solid ${current.glassBorder}` }}
                                 className="px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium text-sm min-w-[160px] appearance-none cursor-pointer"
                             >
@@ -446,17 +476,31 @@ export default function HRDashboard() {
                         <div className="flex items-center justify-between mb-8">
                             <h3 className="text-xl font-bold flex items-center gap-2">
                                 <Activity className="w-5 h-5 text-emerald-400" />
-                                Category Distribution
+                                {isInternalAssessment ? 'Assessment Distribution' : 'Category Distribution'}
                             </h3>
                         </div>
                         <div className="h-[300px]">
                             <Bar
                                 options={chartOptions}
                                 data={{
-                                    labels: ['Fresher', 'Experience'],
+                                    labels: isInternalAssessment ? ['Internal Employees'] : ['Fresher', 'Experience'],
                                     datasets: [
-                                        { label: 'Qualified', data: ['Fresher', 'Experience'].map(c => categoriesData[c].q.length), backgroundColor: current.success + 'CC', borderRadius: 8 },
-                                        { label: 'Not Qualified', data: ['Fresher', 'Experience'].map(c => categoriesData[c].nq.length), backgroundColor: current.danger + 'CC', borderRadius: 8 }
+                                        { 
+                                            label: 'Qualified', 
+                                            data: isInternalAssessment 
+                                                ? [categoriesData['Fresher'].q.length + categoriesData['Experience'].q.length]
+                                                : ['Fresher', 'Experience'].map(c => categoriesData[c].q.length), 
+                                            backgroundColor: current.success + 'CC', 
+                                            borderRadius: 8 
+                                        },
+                                        { 
+                                            label: 'Not Qualified', 
+                                            data: isInternalAssessment 
+                                                ? [categoriesData['Fresher'].nq.length + categoriesData['Experience'].nq.length]
+                                                : ['Fresher', 'Experience'].map(c => categoriesData[c].nq.length), 
+                                            backgroundColor: current.danger + 'CC', 
+                                            borderRadius: 8 
+                                        }
                                     ]
                                 }}
                             />
@@ -485,29 +529,51 @@ export default function HRDashboard() {
                     </div>
                 </div>
 
-                {/* Tabbed Category View */}
+                {/* Tabbed Category View / Employee View */}
                 <div className="flex flex-col gap-6">
-                    <div className="flex justify-center">
-                        <div className="glass-card p-1 flex gap-2" style={{ backgroundColor: current.inputBg, borderRadius: '18px' }}>
-                            <button
-                                onClick={() => setActiveTab('fresher')}
-                                className={`tab-btn flex items-center gap-2 ${activeTab === 'fresher' ? 'active' : ''}`}
-                            >
-                                <GraduationCap size={16} />
-                                Freshers
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('experience')}
-                                className={`tab-btn flex items-center gap-2 ${activeTab === 'experience' ? 'active' : ''}`}
-                            >
-                                <Briefcase size={16} />
-                                Experienced
-                            </button>
+                    {!isInternalAssessment && !isGlobalView ? (
+                        <div className="flex justify-center">
+                            <div className="glass-card p-1 flex gap-2" style={{ backgroundColor: current.inputBg, borderRadius: '18px' }}>
+                                <button
+                                    onClick={() => setActiveTab('fresher')}
+                                    className={`tab-btn flex items-center gap-2 ${activeTab === 'fresher' ? 'active' : ''}`}
+                                >
+                                    <GraduationCap size={16} />
+                                    Freshers
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('experience')}
+                                    className={`tab-btn flex items-center gap-2 ${activeTab === 'experience' ? 'active' : ''}`}
+                                >
+                                    <Briefcase size={16} />
+                                    Experienced
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    ) : null}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {activeTab === 'fresher' ? (
+                        {isInternalAssessment ? (
+                            <>
+                                <CategoryPanel 
+                                    name="Internal Employees" 
+                                    data={{
+                                        q: [...categoriesData['Fresher'].q, ...categoriesData['Experience'].q],
+                                        nq: [...categoriesData['Fresher'].nq, ...categoriesData['Experience'].nq]
+                                    }} 
+                                    icon={<Users className="text-blue-500" />} 
+                                    current={current} 
+                                />
+                                <CategorySummary 
+                                    label="Employee Pass Rate" 
+                                    data={{
+                                        q: [...categoriesData['Fresher'].q, ...categoriesData['Experience'].q],
+                                        nq: [...categoriesData['Fresher'].nq, ...categoriesData['Experience'].nq]
+                                    }} 
+                                    current={current} 
+                                />
+                            </>
+                        ) : activeTab === 'fresher' ? (
                             <>
                                 <CategoryPanel name="Freshers" data={categoriesData['Fresher']} icon={<GraduationCap className="text-blue-500" />} current={current} />
                                 <CategorySummary label="Fresher Pass Rate" data={categoriesData['Fresher']} current={current} />
