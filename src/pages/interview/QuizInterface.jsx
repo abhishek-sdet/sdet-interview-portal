@@ -650,34 +650,43 @@ export default function QuizInterface() {
             const now = new Date();
             const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
             console.log('[TIMER] Checking for scheduled interview on:', today);
-            const { data: scheduledInterview, error: scheduleError } = await supabase
+
+            // Fetch ALL active drives for today to see if any match our criteria OR are "Both"
+            const { data: activeDrivesToday, error: scheduleError } = await supabase
                 .from('scheduled_interviews')
-                .select('id, time_limit_minutes')
-                .eq('criteria_id', criteriaId)
+                .select(`
+                    id, 
+                    time_limit_minutes,
+                    criteria_id,
+                    criteria!inner(name)
+                `)
                 .eq('scheduled_date', today)
-                .eq('is_active', true)
-                .maybeSingle(); // Use maybeSingle() to avoid errors when no scheduled interview
+                .eq('is_active', true);
 
             if (scheduleError) {
-                console.error('[TIMER ERROR] Failed to fetch scheduled interview:', scheduleError);
-            } else if (scheduledInterview) {
-                console.log('[TIMER] Found scheduled interview:', scheduledInterview);
+                console.error('[TIMER ERROR] Failed to fetch scheduled interviews:', scheduleError);
+            }
+
+            // Find a drive that either matches our specific criteria OR is marked "Both"
+            const scheduledInterview = activeDrivesToday?.find(drive => 
+                drive.criteria_id === criteriaId || drive.criteria?.name === 'Both'
+            );
+
+            if (scheduledInterview) {
+                console.log('[TIMER] Found matching scheduled interview:', scheduledInterview);
             } else {
-                console.log('[TIMER] No scheduled interview found for today');
+                console.log('[TIMER] No matching scheduled interview found for today (criteria mismatch or none active)');
             }
 
             let timeLimitMinutes = null;
-            let scheduledInterviewId = null;
+            let scheduledInterviewId = scheduledInterview?.id || null;
 
             // ALWAYS fetch criteria timer FIRST (this is what admin sets)
             const { data: criteriaData, error: criteriaError } = await supabase
                 .from('criteria')
                 .select('timer_duration, name')
                 .eq('id', criteriaId)
-                .maybeSingle(); // Use maybeSingle() instead of single() to avoid errors when no row found
-
-            console.log('[TIMER] Criteria data:', criteriaData);
-            console.log('[TIMER] Criteria error:', criteriaError);
+                .maybeSingle();
 
             if (criteriaError) {
                 console.error('[TIMER ERROR] Failed to fetch criteria:', criteriaError);
@@ -687,30 +696,33 @@ export default function QuizInterface() {
             if (criteriaData && criteriaData.timer_duration) {
                 timeLimitMinutes = criteriaData.timer_duration;
                 console.log('[TIMER] Using criteria timer from admin:', timeLimitMinutes, 'minutes');
-                setCriteriaType(criteriaData.name || '');
-            } else {
-                console.warn('[TIMER] No criteria timer found, will use default or scheduled timer');
             }
 
-            // Override with scheduled interview timer if exists
-            if (!scheduleError && scheduledInterview) {
-                scheduledInterviewId = scheduledInterview.id;
-                if (scheduledInterview.time_limit_minutes) {
-                    timeLimitMinutes = scheduledInterview.time_limit_minutes;
-                    console.log('[TIMER] Overriding with scheduled timer:', timeLimitMinutes, 'minutes');
-                }
+            // Override with scheduled interview timer if it's explicitly set there
+            if (scheduledInterview?.time_limit_minutes) {
+                timeLimitMinutes = scheduledInterview.time_limit_minutes;
+                console.log('[TIMER] Overriding with scheduled timer:', timeLimitMinutes, 'minutes');
             }
+
             // Universal Update: Ensure question_set and time_limit are ALWAYS saved
-
             if (interviewId) {
-                console.log('[SETUP] Updating interview:', { interviewId, timeLimitMinutes, selectedSet });
+                console.log('[SETUP] Updating interview:', { interviewId, timeLimitMinutes, selectedSet, scheduledInterviewId });
+                
+                // Build update object dynamically to avoid overwriting existing valid IDs with null
+                const updateData = {
+                    time_limit_minutes: timeLimitMinutes,
+                    question_set: selectedSet || null
+                };
+
+                // Only update scheduled_interview_id if we actually found a valid one
+                // This prevents the "null overwrite" bug
+                if (scheduledInterviewId) {
+                    updateData.scheduled_interview_id = scheduledInterviewId;
+                }
+
                 await supabase
                     .from('interviews')
-                    .update({
-                        scheduled_interview_id: scheduledInterviewId,
-                        time_limit_minutes: timeLimitMinutes,
-                        question_set: selectedSet || null
-                    })
+                    .update(updateData)
                     .eq('id', interviewId);
             }
 

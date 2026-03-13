@@ -1,0 +1,5 @@
+b0c5f42 feat: Implement candidate interview criteria selection and session initiation with supporting debug scripts.
+bedbe83 feat: Add interview landing page with site status checks and a diagnostic script for login flow.
+566c702 feat: Add interview landing page with candidate registration, session management, and security checks, along with supporting scripts and database policy.
+982130a feat: Implement Results and HR Dashboards, and introduce database cleanup and diagnostic scripts.
+8a1db47 feat: add HR Dashboard with interview analytics and new admin pages for results and drive management.
