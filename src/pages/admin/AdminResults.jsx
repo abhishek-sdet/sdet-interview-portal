@@ -58,12 +58,23 @@ export default function AdminResults() {
                     }, 1000); // 1s buffer for DB replica sync
                 }
             )
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'scheduled_interviews' },
+                () => {
+                    setTimeout(() => {
+                        fetchDrives();
+                        fetchResults(true);
+                    }, 1000);
+                }
+            )
             .subscribe((status) => {
                 console.log('Subscription status:', status);
             });
 
         // Fallback polling every 10 seconds in case WebSockets fail or are blocked by network/ad-blockers
         const pollInterval = setInterval(() => {
+            fetchDrives();
             fetchResults(true);
         }, 10000);
 

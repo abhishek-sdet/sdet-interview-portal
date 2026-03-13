@@ -39,6 +39,16 @@ export default function HRDashboard() {
                     setTimeout(() => fetchData(true), 1000);
                 }
             )
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'scheduled_interviews' },
+                () => {
+                    setTimeout(() => {
+                        fetchDrives();
+                        fetchData(true);
+                    }, 1000);
+                }
+            )
             .subscribe();
 
         // Add fonts
@@ -49,6 +59,7 @@ export default function HRDashboard() {
 
         // Fallback polling
         const pollInterval = setInterval(() => {
+            fetchDrives();
             fetchData(true);
         }, 10000);
 

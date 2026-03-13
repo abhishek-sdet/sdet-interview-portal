@@ -189,16 +189,27 @@ export default function ManageDrives() {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this drive? Interviews linked to it will remain but without drive association.')) return;
+        if (!window.confirm('Are you sure you want to delete this drive? All interviews and candidate data associated with this drive will also be permanently deleted from the dashboard.')) return;
 
         try {
-            const { error } = await supabase
+            // 1. Delete associated interviews (this will cascade to other tables if set up, 
+            // but we want to ensure they are removed from the dashboard)
+            const { error: interviewsError } = await supabase
+                .from('interviews')
+                .delete()
+                .eq('scheduled_interview_id', id);
+
+            if (interviewsError) throw interviewsError;
+
+            // 2. Delete the drive itself
+            const { error: driveError } = await supabase
                 .from('scheduled_interviews')
                 .delete()
                 .eq('id', id);
 
-            if (error) throw error;
-            toast.success('Drive deleted successfully');
+            if (driveError) throw driveError;
+
+            toast.success('Drive and associated data deleted successfully');
             fetchData();
         } catch (error) {
             console.error('Error deleting drive:', error);
