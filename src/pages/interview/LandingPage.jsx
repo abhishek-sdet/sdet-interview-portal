@@ -216,11 +216,11 @@ export default function LandingPage() {
 
             const { data: deviceInterviews, error: deviceError } = await supabase
                 .from('interviews')
-                .select('id, status, completed_at, device_id, ip_address')
+                .select('id, status, completed_at, device_id, ip_address, scheduled_interviews!inner(is_active)')
                 .eq('status', 'completed')
-                .gte('completed_at', startOfToday.toISOString()) // Must be completed today
+                .eq('scheduled_interviews.is_active', true)
+                .gte('completed_at', startOfToday.toISOString())
                 .or(orQuery)
-                .not('scheduled_interview_id', 'is', null)
                 .limit(1);
 
             if (!deviceError && deviceInterviews && deviceInterviews.length > 0) {
@@ -252,9 +252,9 @@ export default function LandingPage() {
                 // 2. Candidate exists, check for *active* or *completed* associated interview
                 const { data: interviews, error: interviewError } = await supabase
                     .from('interviews')
-                    .select('id, status')
+                    .select('id, status, scheduled_interviews!inner(is_active)')
                     .eq('candidate_id', existingCandidate.id)
-                    .not('scheduled_interview_id', 'is', null)
+                    .eq('scheduled_interviews.is_active', true)
                     .limit(1);
 
                 if (interviewError) {
