@@ -220,6 +220,7 @@ export default function LandingPage() {
                 .eq('status', 'completed')
                 .gte('completed_at', startOfToday.toISOString()) // Must be completed today
                 .or(orQuery)
+                .not('scheduled_interview_id', 'is', null)
                 .limit(1);
 
             if (!deviceError && deviceInterviews && deviceInterviews.length > 0) {
@@ -253,6 +254,7 @@ export default function LandingPage() {
                     .from('interviews')
                     .select('id, status')
                     .eq('candidate_id', existingCandidate.id)
+                    .not('scheduled_interview_id', 'is', null)
                     .limit(1);
 
                 if (interviewError) {

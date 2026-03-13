@@ -1,0 +1,18 @@
+Checking status for email: test@test.com
+
+Candidates found: [
+  {
+    "id": "770319e8-6339-4d62-9d2b-264ecf46237c",
+    "full_name": "test"
+  }
+]
+
+Interviews for candidate 770319e8-6339-4d62-9d2b-264ecf46237c: [
+  {
+    "id": "ba888ea5-5ed2-43fe-a225-b39092cc230c",
+    "status": "completed",
+    "completed_at": "2026-03-12T16:37:20.444+00:00",
+    "scheduled_interview_id": null,
+    "scheduled_interviews": null
+  }
+]
