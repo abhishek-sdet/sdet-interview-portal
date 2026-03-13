@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, LayoutDashboard, Upload, FileText, List, Settings, ShieldCheck } from 'lucide-react';
+import { LogOut, LayoutDashboard, Upload, FileText, List, Settings, ShieldCheck, Calendar } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 export default function SimpleLayout({ children }) {
@@ -56,6 +56,7 @@ export default function SimpleLayout({ children }) {
         { path: '/admin/questions', label: 'Manage Questions', icon: List },
         { path: '/admin/criteria', label: 'Configuration', icon: Settings },
         { path: '/admin/access', label: 'Access Control', icon: ShieldCheck },
+        { path: '/admin/drives', label: 'Drives', icon: Calendar },
         { path: '/admin/results', label: 'Results', icon: FileText }
     ];
 
