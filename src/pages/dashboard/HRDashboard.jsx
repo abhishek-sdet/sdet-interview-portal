@@ -89,7 +89,8 @@ export default function HRDashboard() {
                     criteria(name, passing_percentage)
                 `)
                 .order('completed_at', { ascending: false })
-                .order('started_at', { ascending: false });
+                .order('started_at', { ascending: false })
+                .not('scheduled_interview_id', 'is', null);
 
             if (driveFilterRef.current && driveFilterRef.current !== 'all') {
                 query = query.eq('scheduled_interview_id', driveFilterRef.current);

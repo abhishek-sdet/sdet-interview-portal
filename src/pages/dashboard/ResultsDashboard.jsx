@@ -28,7 +28,8 @@ export default function ResultsDashboard() {
                     criteria(name, passing_percentage)
                 `)
                 .order('completed_at', { ascending: false })
-                .order('started_at', { ascending: false });
+                .order('started_at', { ascending: false })
+                .not('scheduled_interview_id', 'is', null);
 
             if (error) throw error;
 
