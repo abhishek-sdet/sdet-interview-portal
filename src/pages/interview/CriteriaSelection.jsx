@@ -47,29 +47,44 @@ export default function CriteriaSelection() {
             }
 
             // Step 2: Extract criteria IDs from today's active drives
-            const activeCriteriaIds = (activeDrives || [])
+            const activeDrivesList = activeDrives || [];
+            const activeCriteriaIds = activeDrivesList
                 .map(d => d.criteria_id)
                 .filter(Boolean);
 
             if (activeCriteriaIds.length === 0) {
-                // No drives today — show nothing (landing page should have caught this, but just in case)
                 setCriteria([]);
                 setError('No active assessments are scheduled for today.');
                 setLoading(false);
                 return;
             }
 
-            // Step 3: Fetch only the criteria that are part of today's drives
-            const { data, error: fetchError } = await supabase
+            // Detect if "Both" (internal ID) is one of the active drives
+            // We'll check by name since IDs might vary by environment, but the code previously used name 'Both'
+            const { data: allActiveCriteria, error: checkError } = await supabase
+                .from('criteria')
+                .select('id, name')
+                .in('id', activeCriteriaIds);
+
+            const hasBoth = allActiveCriteria?.some(c => c.name === 'Both');
+            
+            let query = supabase
                 .from('criteria')
                 .select('*')
-                .eq('is_active', true)
-                .in('id', activeCriteriaIds)
-                .order('name');
+                .eq('is_active', true);
+
+            if (hasBoth) {
+                // If "Both" is active, show Fresher, Experienced, AND any other specific active criteria
+                query = query.or(`name.eq.Fresher,name.eq.Experienced,id.in.(${activeCriteriaIds.join(',')})`);
+            } else {
+                query = query.in('id', activeCriteriaIds);
+            }
+
+            const { data, error: fetchError } = await query.order('name');
 
             if (fetchError) throw fetchError;
 
-            // Filter out hidden/internal criteria
+            // Filter out hidden/internal criteria (like 'Both' itself)
             const filteredData = (data || []).filter(item =>
                 !item.metadata?.hidden_from_candidates &&
                 item.name !== 'Both'
