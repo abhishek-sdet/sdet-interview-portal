@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SimpleLayout from '@/components/admin/SimpleLayout';
 import { supabase } from '@/lib/supabase';
-import { Plus, Edit2, Save, X, Calendar, Users, CheckCircle2, AlertCircle, Trash2 } from 'lucide-react';
+import { Plus, Edit2, Save, X, Calendar, Users, CheckCircle2, AlertCircle, Trash2, Clock } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function ManageDrives() {
@@ -130,7 +130,12 @@ export default function ManageDrives() {
             setCriteria(criteriaData || []);
 
             if (criteriaData?.length > 0 && !formData.criteria_id) {
-                setFormData(prev => ({ ...prev, criteria_id: criteriaData[0].id }));
+                const firstCrit = criteriaData[0];
+                setFormData(prev => ({ 
+                    ...prev, 
+                    criteria_id: firstCrit.id,
+                    time_limit_minutes: firstCrit.timer_duration || 45
+                }));
             }
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -138,6 +143,16 @@ export default function ManageDrives() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleCriteriaChange = (e) => {
+        const critId = e.target.value;
+        const selectedCrit = criteria.find(c => c.id === critId);
+        setFormData(prev => ({
+            ...prev,
+            criteria_id: critId,
+            time_limit_minutes: selectedCrit?.timer_duration || prev.time_limit_minutes
+        }));
     };
 
     const handleCreate = async (e) => {
@@ -290,14 +305,24 @@ export default function ManageDrives() {
                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 block">Default Criteria</label>
                                 <select
                                     value={formData.criteria_id}
-                                    onChange={(e) => setFormData({ ...formData, criteria_id: e.target.value })}
+                                    onChange={handleCriteriaChange}
                                     className="w-full bg-[#0b101b] border border-slate-700 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-brand-blue transition-colors"
                                     required
                                 >
                                     {criteria.map(c => (
-                                        <option key={c.id} value={c.id}>{c.name}</option>
+                                        <option key={c.id} value={c.id}>{c.name} ({c.timer_duration}m)</option>
                                     ))}
                                 </select>
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 block">Duration (Minutes)</label>
+                                <input
+                                    type="number"
+                                    value={formData.time_limit_minutes}
+                                    onChange={(e) => setFormData({ ...formData, time_limit_minutes: e.target.value })}
+                                    className="w-full bg-[#0b101b] border border-slate-700 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-brand-blue transition-colors"
+                                    required
+                                />
                             </div>
                             <div>
                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 block">Scheduled Date</label>
@@ -378,13 +403,20 @@ export default function ManageDrives() {
                                                         {drive.total_attempted}
                                                     </p>
                                                 </div>
-                                                <div className="space-y-1">
-                                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Pass Ratio</p>
-                                                    <p className="text-sm font-bold text-brand-orange">
-                                                        {drive.pass_ratio}%
-                                                    </p>
-                                                </div>
-                                            </div>
+                                                 <div className="space-y-1">
+                                                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Time Limit</p>
+                                                     <p className="text-sm font-bold text-cyan-400 flex items-center gap-2">
+                                                         <Clock className="w-3.5 h-3.5" />
+                                                         {drive.time_limit_minutes}m
+                                                     </p>
+                                                 </div>
+                                                 <div className="space-y-1">
+                                                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Pass Ratio</p>
+                                                     <p className="text-sm font-bold text-brand-orange">
+                                                         {drive.pass_ratio}%
+                                                     </p>
+                                                 </div>
+                                             </div>
                                         </div>
 
                                         <div className="flex md:flex-col items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>

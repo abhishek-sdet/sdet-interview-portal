@@ -66,6 +66,7 @@ export default function QuizInterface() {
     const javaQuestionsRef = useRef([]);
     const pythonQuestionsRef = useRef([]);
     const lastWarningTimeRef = useRef(0); // For debouncing tab switches
+    const criteriaNameRef = useRef(''); // Added to track criteria name for formatting
 
     // Track visited questions for accurate "Skipped" status without hopping bugs
     useEffect(() => {
@@ -529,13 +530,17 @@ export default function QuizInterface() {
         try {
             // Get interviewId from session storage
             const interviewId = localStorage.getItem('interviewId');
+            let timeLimitMinutes = 0;
 
             // Get exam configuration from session (set by ExamSetup.jsx)
             const examConfigStr = localStorage.getItem('examConfig');
             const examConfig = examConfigStr ? JSON.parse(examConfigStr) : null;
 
-            const selectedSet = examConfig?.set || localStorage.getItem('selectedSet');
-            const selectedSubject = examConfig?.subject; // e.g., 'java', 'python'
+            const rawSet = examConfig?.set || localStorage.getItem('selectedSet');
+            const selectedSet = (!rawSet || rawSet === 'undefined' || rawSet === 'null') ? null : rawSet;
+            
+            const rawSubject = examConfig?.subject; // e.g., 'java', 'python'
+            const selectedSubject = (!rawSubject || rawSubject === 'undefined' || rawSubject === 'null') ? null : rawSubject;
 
             let query = supabase
                 .from('questions')
@@ -658,8 +663,12 @@ export default function QuizInterface() {
             setTotalExamQuestions(expectedTotal);
 
             // If we skip specialization, we mark it as "General" immediately
+            let currentSpecialization = specialization;
             if (skipSpecialization) {
+                currentSpecialization = 'General';
                 setSpecialization('General');
+            } else if (selectedSubject) {
+                currentSpecialization = selectedSubject.charAt(0).toUpperCase() + selectedSubject.slice(1);
             }
 
             // NEW: Load questions upfront
@@ -703,6 +712,29 @@ export default function QuizInterface() {
             const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
             console.log('[TIMER] Checking for scheduled interview on:', today);
 
+            // 1. Fetch criteria timer FIRST (this is what admin sets - Primary Source of Truth)
+            const { data: criteriaData, error: criteriaError } = await supabase
+                .from('criteria')
+                .select('timer_duration, name')
+                .eq('id', criteriaId)
+                .maybeSingle();
+
+            if (criteriaError) {
+                console.error('[TIMER ERROR] Failed to fetch criteria:', criteriaError);
+            }
+
+            if (criteriaData) {
+                setCriteriaType(criteriaData.name);
+                criteriaNameRef.current = criteriaData.name;
+            }
+
+            // Standard: Use criteria timer if available
+            if (criteriaData && criteriaData.timer_duration) {
+                timeLimitMinutes = criteriaData.timer_duration;
+                console.log('[TIMER] Using criteria timer from admin:', timeLimitMinutes, 'minutes');
+            }
+
+            // 2. Scheduled interview check (Secondary Source / Override)
             // Fetch ALL active drives for today to see if any match our criteria OR are "Both"
             const { data: activeDrivesToday, error: scheduleError } = await supabase
                 .from('scheduled_interviews')
@@ -726,44 +758,40 @@ export default function QuizInterface() {
 
             if (scheduledInterview) {
                 console.log('[TIMER] Found matching scheduled interview:', scheduledInterview);
+                // ONLY override if the criteria timer wasn't found, OR if the scheduled drive 
+                // has a SPECIFIC non-default timer that should take precedence (optional business rule)
+                if (!timeLimitMinutes && scheduledInterview.time_limit_minutes) {
+                    timeLimitMinutes = scheduledInterview.time_limit_minutes;
+                    console.log('[TIMER] Falling back to scheduled timer:', timeLimitMinutes, 'minutes');
+                }
             } else {
                 console.log('[TIMER] No matching scheduled interview found for today (criteria mismatch or none active)');
             }
 
-            let timeLimitMinutes = null;
             let scheduledInterviewId = scheduledInterview?.id || null;
-
-            // ALWAYS fetch criteria timer FIRST (this is what admin sets)
-            const { data: criteriaData, error: criteriaError } = await supabase
-                .from('criteria')
-                .select('timer_duration, name')
-                .eq('id', criteriaId)
-                .maybeSingle();
-
-            if (criteriaError) {
-                console.error('[TIMER ERROR] Failed to fetch criteria:', criteriaError);
-            }
-
-            // Use criteria timer if available
-            if (criteriaData && criteriaData.timer_duration) {
-                timeLimitMinutes = criteriaData.timer_duration;
-                console.log('[TIMER] Using criteria timer from admin:', timeLimitMinutes, 'minutes');
-            }
-
-            // Override with scheduled interview timer if it's explicitly set there
-            if (scheduledInterview?.time_limit_minutes) {
-                timeLimitMinutes = scheduledInterview.time_limit_minutes;
-                console.log('[TIMER] Overriding with scheduled timer:', timeLimitMinutes, 'minutes');
-            }
 
             // Universal Update: Ensure question_set and time_limit are ALWAYS saved
             if (interviewId) {
-                console.log('[SETUP] Updating interview:', { interviewId, timeLimitMinutes, selectedSet, scheduledInterviewId });
+                // Determine specialization string for early display - Use local variables to avoid stale state
+                const electiveStr = selectedSubject || currentSpecialization;
+                const criteriaName = criteriaData?.name || '';
+                const isAssessment = criteriaName.toLowerCase().includes('assessment');
+                
+                let displaySet = (selectedSet && selectedSet !== 'N/A') ? selectedSet : 'Set';
+                
+                // Refined Logic: If Assessment, just show Set A. Otherwise, show Set A (Java).
+                if (!isAssessment && electiveStr && electiveStr.toLowerCase() !== 'n/a' && electiveStr !== 'null' && electiveStr !== 'undefined') {
+                    displaySet = `${displaySet} (${electiveStr.charAt(0).toUpperCase() + electiveStr.slice(1)})`;
+                } else if (displaySet === 'Set' && (!selectedSet || selectedSet === 'N/A')) {
+                    displaySet = null; // Don't save if we have zero info
+                }
+
+                console.log('[SETUP] Updating interview:', { interviewId, timeLimitMinutes, displaySet, scheduledInterviewId });
                 
                 // Build update object dynamically to avoid overwriting existing valid IDs with null
                 const updateData = {
                     time_limit_minutes: timeLimitMinutes,
-                    question_set: selectedSet || null
+                    question_set: displaySet
                 };
 
                 // Only update scheduled_interview_id if we actually found a valid one
@@ -999,12 +1027,27 @@ export default function QuizInterface() {
             if (answersError) throw answersError;
 
             // 3. Update interview
-            const config = JSON.parse(localStorage.getItem('examConfig') || '{}');
-            const questionSet = config?.set;
-            const elective = specialization || config?.subject;
+            const configStr = localStorage.getItem('examConfig');
+            const config = configStr ? JSON.parse(configStr) : null;
             
-            // Format set as "Set A (Java)"
-            const fullSetInfo = elective ? `${questionSet} (${elective})` : questionSet;
+            // Match the retrieval logic in fetchQuestions for consistency
+            const rawSetVal = config?.set || localStorage.getItem('selectedSet');
+            const questionSet = (!rawSetVal || rawSetVal === 'undefined' || rawSetVal === 'null') ? 'Set' : rawSetVal;
+            
+            const rawElectiveVal = specialization || config?.subject;
+            const elective = (!rawElectiveVal || rawElectiveVal === 'undefined' || rawElectiveVal === 'null' || rawElectiveVal === 'N/A') ? null : rawElectiveVal;
+            
+            // Refined Logic: If Assessment, just show Set A. Otherwise show Set A (Java).
+            const isAssessment = (criteriaNameRef.current || '').toLowerCase().includes('assessment');
+            
+            let fullSetInfo = questionSet;
+            if (!isAssessment && elective && elective.toLowerCase() !== 'n/a') {
+                fullSetInfo = `${questionSet} (${elective.charAt(0).toUpperCase() + elective.slice(1)})`;
+            } else if (isAssessment) {
+                fullSetInfo = questionSet; // Just show Set A/B/C/D
+            } else if (questionSet === 'Set' && (!rawSetVal || rawSetVal === 'undefined')) {
+                fullSetInfo = null; // Don't update if we have no info
+            }
 
             const updatePayload = {
                 status: 'completed',

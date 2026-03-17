@@ -208,24 +208,18 @@ export default function LandingPage() {
             const startOfToday = new Date();
             startOfToday.setHours(0, 0, 0, 0);
 
-            // Supabase OR query format: .or(`column.eq."value",column2.eq."value"`)
-            let orQuery = `device_id.eq."${deviceId}"`;
-            if (ipAddress) {
-                orQuery = `${orQuery},ip_address.eq."${ipAddress}"`;
-            }
-
             const { data: deviceInterviews, error: deviceError } = await supabase
                 .from('interviews')
                 .select('id, status, completed_at, device_id, ip_address, scheduled_interviews!inner(is_active)')
                 .eq('status', 'completed')
                 .eq('scheduled_interviews.is_active', true)
                 .gte('completed_at', startOfToday.toISOString())
-                .or(orQuery)
+                .eq('device_id', deviceId)
                 .limit(1);
 
             if (!deviceError && deviceInterviews && deviceInterviews.length > 0) {
-                console.warn('[REGISTRATION] Same-day reattempt blocked by hardware fingerprint or IP:', deviceId, ipAddress);
-                setError('A user from this device or network has already completed an assessment today. Please try again on a different scheduled drive day.');
+                console.warn('[REGISTRATION] Same-day reattempt blocked by hardware fingerprint:', deviceId);
+                setError('A user from this device has already completed an assessment today. Please try again on a different scheduled drive day.');
                 setLoading(false);
                 return;
             }
