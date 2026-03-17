@@ -217,6 +217,7 @@ export default function AdminDashboard() {
                             <thead className="bg-[#0f172a] border-b border-white/10 relative z-10">
                                 <tr>
                                     <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Candidate</th>
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider text-center">Set</th>
                                     <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Score</th>
                                     <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
                                     <th className="px-6 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-wider">Time</th>
@@ -229,6 +230,11 @@ export default function AdminDashboard() {
                                             <td className="px-6 py-4">
                                                 <div className="font-medium text-white">{activity.candidates?.full_name || 'N/A'}</div>
                                                 <div className="text-xs text-slate-400">{activity.criteria?.name}</div>
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <span className="text-xs font-bold text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded">
+                                                    {activity.question_set || 'N/A'}
+                                                </span>
                                             </td>
                                             <td className="px-6 py-4 text-center font-mono font-bold text-slate-300">
                                                 {activity.score}/{activity.total_questions}

@@ -167,6 +167,7 @@ export default function ResultsDashboard() {
                             <thead>
                                 <tr className={`border-b sticky top-0 z-10 ${theme === 'dark' ? 'bg-slate-900 border-white/10' : 'bg-white border-gray-200'}`}>
                                     <th className="text-left py-4 px-4 text-xs uppercase text-cyan-400 font-semibold">Criteria</th>
+                                    <th className="text-left py-4 px-4 text-xs uppercase text-cyan-400 font-semibold">Set</th>
                                     <th className="text-left py-4 px-4 text-xs uppercase text-cyan-400 font-semibold">Status</th>
                                     <th className="text-left py-4 px-4 text-xs uppercase text-cyan-400 font-semibold">Name</th>
                                     <th className="text-left py-4 px-4 text-xs uppercase text-cyan-400 font-semibold">Email</th>
@@ -183,6 +184,11 @@ export default function ResultsDashboard() {
                                             <span className={`px-3 py-1 rounded-full text-xs font-semibold ${theme === 'dark' ? 'bg-white/10 text-white' : 'bg-gray-200 text-gray-800'
                                                 }`}>
                                                 {result.criteria?.name || 'N/A'}
+                                            </span>
+                                        </td>
+                                        <td className="py-4 px-4">
+                                            <span className="text-xs font-bold text-cyan-400">
+                                                {result.question_set || 'N/A'}
                                             </span>
                                         </td>
                                         <td className="py-4 px-4">

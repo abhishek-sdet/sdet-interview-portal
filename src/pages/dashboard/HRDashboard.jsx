@@ -433,10 +433,11 @@ export default function HRDashboard() {
                                 <thead className="sticky top-0 z-10" style={{ backgroundColor: current.bgBody }}>
                                     <tr style={{ borderBottom: `1px solid ${current.glassBorder}` }}>
                                         <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Criteria</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Set</th>
                                         <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Status</th>
                                         <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Candidate</th>
                                         <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Email Address</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Timestamp</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Timestamp</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y" style={{ borderColor: current.glassBorder }}>
@@ -446,6 +447,11 @@ export default function HRDashboard() {
                                                 <td className="px-6 py-4">
                                                     <span className="px-2.5 py-1 rounded-md text-[10px] font-bold border" style={{ borderColor: current.glassBorder, backgroundColor: current.inputBg }}>
                                                         {item.criteria?.name || 'N/A'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className="text-[10px] font-black text-cyan-500 uppercase tracking-tighter">
+                                                        {item.question_set || 'N/A'}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4">
@@ -466,7 +472,7 @@ export default function HRDashboard() {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-xs font-semibold text-slate-500">{item.candidates?.email}</td>
-                                                <td className="px-6 py-4 text-[10px] font-bold font-mono text-slate-600">
+                                                <td className="px-6 py-4 text-[10px] font-bold font-mono text-slate-600 text-right">
                                                     {new Date(item.completed_at || item.started_at).toLocaleString()}
                                                 </td>
                                             </tr>
@@ -707,7 +713,10 @@ function CandidateMiniCard({ item, status, current }) {
             <p className="text-sm font-bold truncate tracking-tight">{item.candidates?.full_name}</p>
             <p className="text-xs text-slate-500 truncate">{item.candidates?.email}</p>
             <div className="mt-2 pt-2 border-t border-white/5 flex items-center justify-between">
-                <span className="text-[9px] font-bold font-mono opacity-30 uppercase">{new Date(item.completed_at || item.started_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
+                <div className="flex flex-col gap-0.5">
+                    <span className="text-[9px] font-bold font-mono opacity-30 uppercase">{new Date(item.completed_at || item.started_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
+                    <span className="text-[8px] font-black text-cyan-500/50 uppercase tracking-tighter">{item.question_set}</span>
+                </div>
                 <span className="text-[9px] font-bold text-slate-400 capitalize">{item.criteria?.name?.split(' ')[0]}</span>
             </div>
         </div>

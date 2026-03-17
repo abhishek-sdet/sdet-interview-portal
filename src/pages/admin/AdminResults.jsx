@@ -191,13 +191,14 @@ export default function AdminResults() {
     };
 
     const exportToCSV = () => {
-        const headers = ['Name', 'Email', 'Phone', 'Drive', 'Criteria', 'Score', 'Total', 'Percentage', 'Status', 'Fabricated', 'Date'];
+        const headers = ['Name', 'Email', 'Phone', 'Drive', 'Criteria', 'Set', 'Score', 'Total', 'Percentage', 'Status', 'Fabricated', 'Date'];
         const rows = filteredResults.map(r => [
             r.candidates?.full_name || 'N/A',
             r.candidates?.email || 'N/A',
             r.candidates?.phone || 'N/A',
             r.scheduled_interviews?.description || 'N/A',
             r.criteria?.name || 'N/A',
+            r.question_set || 'N/A',
             r.score || 0,
             r.total_questions || 0,
             r.total_questions ? ((r.score / r.total_questions) * 100).toFixed(1) : '0',
@@ -547,6 +548,7 @@ export default function AdminResults() {
                                                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Candidate</th>
                                                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Phone</th>
                                                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Criteria</th>
+                                                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Set</th>
                                                                 <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Score</th>
                                                                 <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Percentage</th>
                                                                 <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
@@ -570,6 +572,7 @@ export default function AdminResults() {
                                                                         </td>
                                                                         <td className="px-6 py-4 text-sm text-slate-300 font-mono">{result.candidates?.phone || 'N/A'}</td>
                                                                         <td className="px-6 py-4 text-sm text-slate-300">{result.criteria?.name || 'N/A'}</td>
+                                                                        <td className="px-6 py-4 text-sm font-bold text-cyan-400">{result.question_set || 'N/A'}</td>
                                                                         <td className="px-6 py-4 text-center">
                                                                             {editingScoreId === result.id ? (
                                                                                 <div className="flex items-center justify-center gap-2" onClick={e => e.stopPropagation()}>

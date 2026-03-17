@@ -15,6 +15,8 @@ export default function ManageCriteria() {
     const [updatingScreenshots, setUpdatingScreenshots] = useState(false);
     const [proctoringAutoSubmit, setProctoringAutoSubmit] = useState(true);
     const [updatingProctoring, setUpdatingProctoring] = useState(false);
+    const [enforceFullScreen, setEnforceFullScreen] = useState(false);
+    const [updatingFullScreen, setUpdatingFullScreen] = useState(false);
     const [siteSettingsId, setSiteSettingsId] = useState(null);
     const [editingId, setEditingId] = useState(null);
     const [editForm, setEditForm] = useState({
@@ -35,8 +37,9 @@ export default function ManageCriteria() {
         try {
             const { data, error } = await supabase
                 .from('site_settings')
-                .select('id, is_site_active, allow_screenshots, proctoring_auto_submit')
-                .single();
+                .select('id, is_site_active, allow_screenshots, proctoring_auto_submit, enforce_full_screen')
+                .maybeSingle();
+
             if (error) {
                 if (error.code === '42P01') {
                     console.warn('site_settings table not found. Please run scripts/site_settings.sql');
@@ -46,10 +49,23 @@ export default function ManageCriteria() {
             } else if (data) {
                 setSiteSettingsId(data.id);
                 setSiteStatus(data.is_site_active);
-                // Default to false if the column doesn't exist yet to prevent breaking
                 setAllowScreenshots(data.allow_screenshots || false);
-                // Default to true for proctoring auto-submit
                 setProctoringAutoSubmit(data.proctoring_auto_submit !== false);
+                setEnforceFullScreen(data.enforce_full_screen || false);
+            } else {
+                // No row exists - create one
+                console.log('No site settings found. Creating default row...');
+                const { data: newData, error: insertError } = await supabase
+                    .from('site_settings')
+                    .insert({ is_site_active: true, enforce_full_screen: false })
+                    .select()
+                    .single();
+                
+                if (insertError) throw insertError;
+                if (newData) {
+                    setSiteSettingsId(newData.id);
+                    setSiteStatus(newData.is_site_active);
+                }
             }
         } catch (error) {
             console.error('Error fetching site status:', error);
@@ -102,6 +118,30 @@ export default function ManageCriteria() {
             }
         } finally {
             setUpdatingProctoring(false);
+        }
+    };
+
+    const toggleFullScreenStatus = async () => {
+        setUpdatingFullScreen(true);
+        try {
+            const newStatus = !enforceFullScreen;
+            const { error } = await supabase
+                .from('site_settings')
+                .update({ enforce_full_screen: newStatus })
+                .eq('id', siteSettingsId);
+
+            if (error) throw error;
+            setEnforceFullScreen(newStatus);
+            toast.success(`Full Screen mode ${newStatus ? 'Enforced' : 'Optional'}`);
+        } catch (error) {
+            console.error('Error updating full screen status:', error);
+            if (error.message?.includes('enforce_full_screen')) {
+                toast.error('Database schema out of sync: "enforce_full_screen" column missing. Run the script scripts/add_fullscreen_setting.sql');
+            } else {
+                toast.error('Failed to update full screen status.');
+            }
+        } finally {
+            setUpdatingFullScreen(false);
         }
     };
 
@@ -252,6 +292,23 @@ export default function ManageCriteria() {
                                 className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${proctoringAutoSubmit ? 'bg-red-500' : 'bg-slate-700'}`}
                             >
                                 <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${proctoringAutoSubmit ? 'translate-x-5' : 'translate-x-0'}`} />
+                            </button>
+                        </div>
+
+                        {/* Full Screen Mode Toggle */}
+                        <div className="bg-[#0f172a]/80 backdrop-blur-md border border-slate-700/50 rounded-2xl px-6 py-4 flex items-center gap-4 shadow-xl">
+                            <div>
+                                <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Full Screen Mode</div>
+                                <div className={`text-sm font-bold ${enforceFullScreen ? 'text-purple-400' : 'text-slate-400'}`}>
+                                    {enforceFullScreen ? 'STRICT (ENFORCED)' : 'OPTIONAL (RELAXED)'}
+                                </div>
+                            </div>
+                            <button
+                                onClick={toggleFullScreenStatus}
+                                disabled={updatingFullScreen}
+                                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${enforceFullScreen ? 'bg-purple-500' : 'bg-slate-700'}`}
+                            >
+                                <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${enforceFullScreen ? 'translate-x-5' : 'translate-x-0'}`} />
                             </button>
                         </div>
 

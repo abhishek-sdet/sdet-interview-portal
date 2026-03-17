@@ -12,6 +12,23 @@ import { shuffleArray } from '@/utils/questionHelpers';
 
 export default function QuizInterface() {
     const navigate = useNavigate();
+
+    const enterFullscreen = async () => {
+        const elem = document.documentElement;
+        try {
+            if (elem.requestFullscreen) {
+                await elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+                await elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                await elem.msRequestFullscreen();
+            }
+            console.log('[PROCTOR] Fullscreen mode entered successfully');
+        } catch (err) {
+            console.warn('[PROCTOR] Fullscreen request failed:', err);
+        }
+    };
+
     const [questions, setQuestions] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [answers, setAnswers] = useState({});
@@ -38,8 +55,10 @@ export default function QuizInterface() {
     // Proctoring State
     const [tabSwitchWarnings, setTabSwitchWarnings] = useState(0);
     const [proctorCountdown, setProctorCountdown] = useState(10);
+    const [isActuallyFullscreen, setIsActuallyFullscreen] = useState(false);
     const [allowScreenshots, setAllowScreenshots] = useState(false); // Default to secure
     const [proctoringStrict, setProctoringStrict] = useState(true); // Default to strict
+    const [enforceFullScreen, setEnforceFullScreen] = useState(false); // Add full screen enforcement state
     const MAX_WARNINGS = 3;
 
     // Refs to hold cached questions needed for the second phase
@@ -138,6 +157,55 @@ export default function QuizInterface() {
         fetchQuestions(criteriaId, null);
     }, [navigate]);
 
+    // NEW: Independent Security Settings Fetch with Retry logic
+    useEffect(() => {
+        let retryCount = 0;
+        const fetchSettings = async () => {
+            console.log('[PROCTOR] Supabase Config Check:', { 
+                url: import.meta.env.VITE_SUPABASE_URL ? 'PRESENT' : 'MISSING',
+                key: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'PRESENT' : 'MISSING'
+            });
+            console.log('[PROCTOR] Fetching Site Settings (Attempt ' + (retryCount + 1) + ')...');
+            try {
+                const { data: siteSettings, error } = await supabase
+                    .from('site_settings')
+                    .select('allow_screenshots, proctoring_auto_submit, enforce_full_screen')
+                    .single();
+
+                if (error) {
+                    console.error('[PROCTOR] Error fetching settings:', error);
+                    if (retryCount < 2) {
+                        retryCount++;
+                        setTimeout(fetchSettings, 2000);
+                        return;
+                    }
+                    // If all retries fail, use defaults
+                    console.warn('[PROCTOR] Falling back to default security rules.');
+                    setSettingsLoaded(true);
+                    return;
+                }
+
+                if (siteSettings) {
+                    console.log('[PROCTOR] Fetched Site Settings:', siteSettings);
+                    setAllowScreenshots(siteSettings.allow_screenshots || false);
+                    setProctoringStrict(siteSettings.proctoring_auto_submit !== false);
+                    setEnforceFullScreen(siteSettings.enforce_full_screen || false);
+                } else {
+                    console.warn('[PROCTOR] Site settings table is empty.');
+                }
+                setSettingsLoaded(true);
+            } catch (err) {
+                console.error('[PROCTOR] Fetch Exception:', err);
+                setSettingsLoaded(true); 
+            }
+        };
+        fetchSettings();
+    }, []);
+
+    const [settingsLoaded, setSettingsLoaded] = useState(false);
+    const settingsLoadedRef = useRef(false);
+    useEffect(() => { settingsLoadedRef.current = settingsLoaded }, [settingsLoaded]);
+
     // --- SAVE STATE TO LOCAL STORAGE ---
     useEffect(() => {
         const interviewId = localStorage.getItem('interviewId');
@@ -178,53 +246,62 @@ export default function QuizInterface() {
 
     // --- PROCTORING SHIELD ---
 
-    // Force Fullscreen API Helper
-    const enterFullscreen = () => {
-        const elem = document.documentElement;
-        if (elem.requestFullscreen) {
-            elem.requestFullscreen().catch(() => { });
-        } else if (elem.webkitRequestFullscreen) { /* Safari */
-            elem.webkitRequestFullscreen();
-        } else if (elem.msRequestFullscreen) { /* IE11 */
-            elem.msRequestFullscreen();
-        }
-    };
-
-    // 1. Strict Compliance Loop (Interval Fallback for Split-Screen)
+    // 1. Strict Compliance Loop (Interval Fallback for Split-Screen & Tab Switching)
     useEffect(() => {
-        if (submitting || showSpecialization || loading) return;
+        // Only start checks once loading is finished and settings are in place
+        if (submitting || showSpecialization || loading || !settingsLoaded) {
+            console.log('[PROCTOR] Compliance check waiting/paused:', { submitting, showSpecialization, loading, settingsLoaded });
+            return;
+        }
 
-        const complianceCheck = setInterval(() => {
-            let violation = false;
+        let intervalId = null;
 
-            // If strict proctoring is OFF, skip all checks
-            if (!proctoringStrict) return;
+        // NEW: Add a 3-second stabilization delay before starting compliance checks
+        const stabilizationTimeout = setTimeout(() => {
+            console.log('[PROCTOR] Starting compliance monitoring...');
+            intervalId = setInterval(() => {
+                // If checking is disabled, just update heartbeat and exit
+                if (!proctoringStrict && !enforceFullScreen) {
+                    setHeartbeat(prev => (prev + 1) % 10);
+                    return;
+                }
 
-            // Check 1: Must be in Fullscreen (prevents split-screen entirely)
+                if (showProctorWarning) return; 
 
-            // If a violation is caught and the modal isn't showing yet, trigger the strike system
-            if (violation && !showProctorWarning) {
-                if (tabSwitchWarnings >= MAX_WARNINGS - 1) { // -1 because this IS the final strike
-                    console.log('[PROCTOR] Max strikes reached.');
-                    if (proctoringStrict) {
-                        showToast.error("Exam Auto-Submitted due to maximum security violations (3/3).");
-                        handleSubmit(true, 'proctor_max_strikes');
-                    } else {
-                        showToast.error("Security Warning (3/3): Prohibited action detected.");
-                        // If not strict, we don't auto-submit, but we still trigger the warning modal to block interactions momentarily
-                        setProctorCountdown(10);
-                        setShowProctorWarning(true);
-                    }
-                } else {
-                    console.log('[PROCTOR] Violation detected. Triggering security modal countdown.');
-                    setProctorCountdown(10); // Reset timer
+                let violation = false;
+                let reason = '';
+
+                // Check 1: Fullscreen enforcement
+                const currentFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+                if (enforceFullScreen && !currentFullscreen) {
+                    violation = true;
+                    reason = 'Fullscreen exited (Interval Check)';
+                }
+
+                // Check 2: Tab switch / Window blur (Aligned with STRICT toggle)
+                if (proctoringStrict && (document.hidden || !document.hasFocus())) {
+                    violation = true;
+                    reason = `Focus Violation (Hidden: ${document.hidden}, Focus: ${document.hasFocus()})`;
+                }
+
+                if (violation) {
+                    console.warn(`[PROCTOR] VIOLATION: ${reason}`);
+                    setTabSwitchWarnings(prev => prev + 1);
+                    setProctorCountdown(10);
                     setShowProctorWarning(true);
                 }
-            }
-        }, 1000);
+                
+                setHeartbeat(prev => (prev + 1) % 10);
+            }, 1000);
+        }, 3000);
 
-        return () => clearInterval(complianceCheck);
-    }, [submitting, showSpecialization, showProctorWarning, loading, tabSwitchWarnings]);
+        return () => {
+            clearTimeout(stabilizationTimeout);
+            if (intervalId) clearInterval(intervalId);
+        };
+    }, [submitting, showSpecialization, showProctorWarning, loading, settingsLoaded, proctoringStrict, enforceFullScreen]);
+
+    const [heartbeat, setHeartbeat] = useState(0);
 
     // 1.b. Countdown Timer for Proctor Warning
     useEffect(() => {
@@ -246,45 +323,41 @@ export default function QuizInterface() {
         return () => clearInterval(timer);
     }, [showProctorWarning, proctorCountdown, submitting, proctoringStrict]);
 
-    // 2. Instant Event Listeners (For instantaneous reaction)
+    // 2. Fullscreen Sync
     useEffect(() => {
-        if (submitting || showSpecialization || !proctoringStrict) return;
-
-        const handleFocusLoss = () => {
-            if (document.hidden || !document.hasFocus()) {
-                if (!showProctorWarning) {
-                    if (tabSwitchWarnings >= MAX_WARNINGS - 1) {
-                        if (proctoringStrict) {
-                            showToast.error("Exam Auto-Submitted due to maximum security violations (3/3).");
-                            handleSubmit(true, 'proctor_max_strikes');
-                        } else {
-                            showToast.error("Security Warning (3/3): Prohibited action detected.");
-                            setProctorCountdown(10);
-                            setShowProctorWarning(true);
-                        }
-                    } else {
-                        console.log('[PROCTOR] Focus lost/tab switched. Triggering security modal.');
-                        setProctorCountdown(10);
-                        setShowProctorWarning(true);
-                    }
-                }
-            }
+        const syncFullscreen = () => {
+            const current = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+            setIsActuallyFullscreen(current);
+            console.log('[PROCTOR] Fullscreen sync:', current);
         };
 
-        const handleFullscreenChange = () => {
-            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
-            if (!isFullscreen && !showProctorWarning) {
-                if (tabSwitchWarnings >= MAX_WARNINGS - 1) {
-                    if (proctoringStrict) {
-                        showToast.error("Exam Auto-Submitted due to maximum security violations (3/3).");
-                        handleSubmit(true, 'proctor_max_strikes');
-                    } else {
-                        showToast.error("Security Warning (3/3): Fullscreen mode is required.");
-                        setProctorCountdown(10);
-                        setShowProctorWarning(true);
-                    }
-                } else {
-                    console.log('[PROCTOR] Exam exited fullscreen. Triggering security modal.');
+        document.addEventListener('fullscreenchange', syncFullscreen);
+        document.addEventListener('webkitfullscreenchange', syncFullscreen);
+        document.addEventListener('mozfullscreenchange', syncFullscreen);
+        document.addEventListener('MSFullscreenChange', syncFullscreen);
+        
+        syncFullscreen(); // Initial check
+
+        return () => {
+            document.removeEventListener('fullscreenchange', syncFullscreen);
+            document.removeEventListener('webkitfullscreenchange', syncFullscreen);
+            document.removeEventListener('mozfullscreenchange', syncFullscreen);
+            document.removeEventListener('MSFullscreenChange', syncFullscreen);
+        };
+    }, []);
+
+    // 2.b Instant Event Listeners (For instantaneous reaction)
+    useEffect(() => {
+        console.log('[PROCTOR] Security Effect triggered:', { proctoringStrict, enforceFullScreen, loading, submitting });
+        if (submitting || showSpecialization || loading) return;
+        
+        const handleFocusLoss = () => {
+            if (!proctoringStrict && !enforceFullScreen) return;
+
+            if (document.hidden || !document.hasFocus()) {
+                if (!showProctorWarning) {
+                    console.log('[PROCTOR] Focus lost detected by listener.');
+                    setTabSwitchWarnings(prev => prev + 1);
                     setProctorCountdown(10);
                     setShowProctorWarning(true);
                 }
@@ -294,21 +367,11 @@ export default function QuizInterface() {
         document.addEventListener('visibilitychange', handleFocusLoss);
         window.addEventListener('blur', handleFocusLoss);
 
-        document.addEventListener('fullscreenchange', handleFullscreenChange);
-        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-        document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-        document.addEventListener('MSFullscreenChange', handleFullscreenChange);
-
         return () => {
             document.removeEventListener('visibilitychange', handleFocusLoss);
             window.removeEventListener('blur', handleFocusLoss);
-
-            document.removeEventListener('fullscreenchange', handleFullscreenChange);
-            document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-            document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
-            document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
         };
-    }, [submitting, showSpecialization, showProctorWarning, tabSwitchWarnings, proctoringStrict, loading]);
+    }, [submitting, showSpecialization, showProctorWarning, tabSwitchWarnings, proctoringStrict, enforceFullScreen, loading]);
 
     // 2.b DevTools Honeypot Detection (Time-based debugger trap)
     useEffect(() => {
@@ -473,17 +536,6 @@ export default function QuizInterface() {
 
             const selectedSet = examConfig?.set || localStorage.getItem('selectedSet');
             const selectedSubject = examConfig?.subject; // e.g., 'java', 'python'
-
-            // Fetch Site Settings for Security (Screenshots & Proctoring)
-            const { data: siteSettings } = await supabase
-                .from('site_settings')
-                .select('allow_screenshots, proctoring_auto_submit')
-                .single();
-
-            if (siteSettings) {
-                setAllowScreenshots(siteSettings.allow_screenshots || false);
-                setProctoringStrict(siteSettings.proctoring_auto_submit !== false);
-            }
 
             let query = supabase
                 .from('questions')
@@ -947,8 +999,12 @@ export default function QuizInterface() {
             if (answersError) throw answersError;
 
             // 3. Update interview
-            const questionSet = localStorage.getItem('selectedSet') ||
-                JSON.parse(localStorage.getItem('examConfig') || '{}')?.set;
+            const config = JSON.parse(localStorage.getItem('examConfig') || '{}');
+            const questionSet = config?.set;
+            const elective = specialization || config?.subject;
+            
+            // Format set as "Set A (Java)"
+            const fullSetInfo = elective ? `${questionSet} (${elective})` : questionSet;
 
             const updatePayload = {
                 status: 'completed',
@@ -960,7 +1016,7 @@ export default function QuizInterface() {
                 device_id: deviceId // Ensure device_id is recorded on submission for reattempt check
             };
 
-            if (questionSet) updatePayload.question_set = questionSet;
+            if (fullSetInfo) updatePayload.question_set = fullSetInfo;
             if (autoSubmit) updatePayload.metadata = { auto_submitted: true, reason: reason };
 
             const { error: updateError } = await supabase
@@ -1562,6 +1618,30 @@ export default function QuizInterface() {
                 </div>
             </div>
 
+
+            {/* NEW: Mandatory Fullscreen Overlay */}
+            {enforceFullScreen && !isActuallyFullscreen && !loading && !submitting && !showSpecialization && (
+                <div className="fixed inset-0 z-[100000] bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
+                    <div className="max-w-md w-full animate-in fade-in zoom-in duration-500">
+                        <div className="w-24 h-24 bg-brand-blue/10 rounded-full flex items-center justify-center mx-auto mb-8 border-2 border-brand-blue/30">
+                            <ShieldAlert className="w-12 h-12 text-brand-blue animate-pulse" />
+                        </div>
+                        <h2 className="text-3xl font-black text-white mb-4 tracking-tight">SECURE ENVIRONMENT REQUIRED</h2>
+                        <p className="text-slate-400 mb-10 leading-relaxed">
+                            This assessment must be taken in full-screen mode to ensure exam integrity. 
+                            Exiting this mode will pause your assessment.
+                        </p>
+                        <button
+                            onClick={enterFullscreen}
+                            className="w-full py-5 bg-brand-blue hover:bg-blue-500 text-white font-black text-xl rounded-2xl transition-all shadow-2xl shadow-brand-blue/20 transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3"
+                        >
+                            <Sparkles className="w-6 h-6" />
+                            ENTER SECURE MODE
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <QuizSubmissionModal
                 isOpen={showSubmitModal}
                 onClose={() => setShowSubmitModal(false)}
@@ -1588,14 +1668,25 @@ export default function QuizInterface() {
                         </div>
                         <h2 className="text-3xl font-black text-white mb-2 tracking-tight">SECURITY WARNING</h2>
 
-                        <div className="mb-4 inline-block px-4 py-1.5 bg-red-500/20 text-red-400 font-bold rounded-full border border-red-500/30">
-                            STRIKE {tabSwitchWarnings + 1} OF {MAX_WARNINGS}
+                        <div className={`mb-4 inline-block px-4 py-1.5 font-bold rounded-full border ${tabSwitchWarnings >= MAX_WARNINGS ? 'bg-red-600 text-white border-red-400 animate-pulse' : 'bg-red-500/20 text-red-400 border-red-500/30'}`}>
+                            {tabSwitchWarnings >= MAX_WARNINGS ? 'LIMIT REACHED' : `STRIKE ${tabSwitchWarnings} OF ${MAX_WARNINGS}`}
                         </div>
 
                         <p className="text-slate-300 mb-6 leading-relaxed font-medium">
-                            You have attempted to leave the secure fullscreen environment or switch tabs. This is a strict violation of exam rules.
+                            {tabSwitchWarnings >= MAX_WARNINGS ? (
+                                <span className="text-red-400 font-black text-xl">
+                                    MAXIMUM VIOLATIONS REACHED. 
+                                    <br />
+                                    Your assessment is being terminated.
+                                </span>
+                            ) : (
+                                <>
+                                    You have attempted to leave the secure fullscreen environment or switch tabs. This is a strict violation of exam rules.
+                                    <br /><br />
+                                    <span className="text-red-400 font-bold text-lg block mb-1">Return to the exam immediately.</span>
+                                </>
+                            )}
                             <br /><br />
-                            <span className="text-red-400 font-bold text-lg block mb-1">Return to the exam immediately.</span>
                             {proctoringStrict ? (
                                 <>Auto-submitting in <span className="text-white text-2xl font-black">{proctorCountdown}</span> seconds...</>
                             ) : (
@@ -1606,13 +1697,18 @@ export default function QuizInterface() {
                         <div className="flex flex-col gap-4 relative z-10">
                             <button
                                 onClick={() => {
-                                    setTabSwitchWarnings(prev => prev + 1); // Record the strike
+                                    if (tabSwitchWarnings >= MAX_WARNINGS) return; // Extra safety
                                     setShowProctorWarning(false);
                                     enterFullscreen();
                                 }}
-                                className="w-full py-4 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl transition-all shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)] transform hover:-translate-y-1"
+                                disabled={tabSwitchWarnings >= MAX_WARNINGS}
+                                className={`w-full py-4 text-white font-bold rounded-xl transition-all transform ${
+                                    tabSwitchWarnings >= MAX_WARNINGS 
+                                    ? 'bg-slate-800 cursor-not-allowed grayscale' 
+                                    : 'bg-red-600 hover:bg-red-500 shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)] hover:-translate-y-1'
+                                }`}
                             >
-                                RESUME EXAM (Accept Warning)
+                                {tabSwitchWarnings >= MAX_WARNINGS ? 'SUBMITTING...' : 'RESUME EXAM (Accept Warning)'}
                             </button>
                             <button
                                 onClick={() => {

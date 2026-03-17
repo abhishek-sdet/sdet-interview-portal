@@ -13,8 +13,6 @@ export default function ExamSetup() {
     const [isLocked, setIsLocked] = useState(false);
 
     // Subject options for Elective section
-    // In a real app, we could fetch these dynamically if valid subjects are stored in DB
-    // For now, these are the standard electives derived from requirements
     const electives = [
         { id: 'java', name: 'Java Programming', icon: Code2 },
         { id: 'python', name: 'Python Programming', icon: Code2 },
@@ -29,7 +27,6 @@ export default function ExamSetup() {
 
     useEffect(() => {
         if (!candidateData || !criteriaId) {
-            // Try localStorage fallback
             const savedCandidateId = localStorage.getItem('candidateId');
             const savedCriteriaId = localStorage.getItem('criteriaId');
 
@@ -39,7 +36,6 @@ export default function ExamSetup() {
             }
         }
 
-        // Check for existing lock
         const savedConfig = localStorage.getItem('examConfig');
         if (savedConfig) {
             try {
@@ -58,7 +54,6 @@ export default function ExamSetup() {
     const fetchAvailableSets = async () => {
         try {
             setLoading(true);
-            // Fetch distinct categories (Sets) for this criteria
             const { data, error } = await supabase
                 .from('questions')
                 .select('category')
@@ -67,11 +62,9 @@ export default function ExamSetup() {
 
             if (error) throw error;
 
-            // Extract unique sets
             const uniqueSets = [...new Set(data.map(q => q.category).filter(Boolean))];
             setSets(uniqueSets.sort());
 
-            // Auto-select if only one set exists
             if (uniqueSets.length === 1) {
                 setSelectedSet(uniqueSets[0]);
             }
@@ -88,13 +81,11 @@ export default function ExamSetup() {
             return;
         }
 
-        // Store selection in session
         localStorage.setItem('examConfig', JSON.stringify({
             set: selectedSet,
             subject: selectedSubject
         }));
 
-        // Navigate to Quiz with config
         navigate('/quiz', {
             state: {
                 candidateData,
@@ -118,7 +109,6 @@ export default function ExamSetup() {
     return (
         <div className="h-full bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4 overflow-y-auto">
             <div className="w-[90%] max-w-[90%] mx-auto py-12">
-                {/* Header */}
                 <div className="text-center mb-12">
                     <div className="flex justify-center mb-4">
                         <div className="p-4 bg-cyan-500/20 rounded-full shadow-lg shadow-cyan-500/30">
@@ -144,7 +134,6 @@ export default function ExamSetup() {
                 )}
 
                 <div className="grid md:grid-cols-2 gap-8 mb-12">
-                    {/* Step 1: Select Set */}
                     <div className="glass-panel p-8 rounded-2xl animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
                         <div className="flex items-center gap-3 mb-6">
                             <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-black font-bold">1</div>
@@ -180,7 +169,6 @@ export default function ExamSetup() {
                         )}
                     </div>
 
-                    {/* Step 2: Select Elective */}
                     <div className="glass-panel p-8 rounded-2xl animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
                         <div className="flex items-center gap-3 mb-6">
                             <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-white font-bold">2</div>
@@ -217,7 +205,6 @@ export default function ExamSetup() {
                     </div>
                 </div>
 
-                {/* Continue Button */}
                 <div className="flex justify-center animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
                     <button
                         onClick={handleStartExam}

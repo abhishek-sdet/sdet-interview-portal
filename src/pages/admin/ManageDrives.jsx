@@ -188,9 +188,46 @@ export default function ManageDrives() {
         }
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this drive? All interviews and candidate data associated with this drive will also be permanently deleted from the dashboard.')) return;
+    const handleDelete = (id) => {
+        toast((t) => (
+            <div className="flex flex-col gap-3 min-w-[280px]">
+                <div className="flex items-center gap-2 text-white">
+                    <AlertCircle className="text-red-500" size={18} />
+                    <span className="font-bold text-sm">Delete this drive?</span>
+                </div>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                    This will permanently remove all associated interviews and candidate data from the dashboard.
+                </p>
+                <div className="flex justify-end gap-2 mt-2">
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-white transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={() => {
+                            toast.dismiss(t.id);
+                            executeDelete(id);
+                        }}
+                        className="px-4 py-1.5 text-xs font-black bg-red-600 text-white rounded-lg hover:bg-red-500 transition-all shadow-lg shadow-red-900/20 uppercase tracking-tighter"
+                    >
+                        Yes, Delete
+                    </button>
+                </div>
+            </div>
+        ), {
+            duration: 6000,
+            style: {
+                background: '#0f172a',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: '14px',
+                padding: '16px',
+            },
+        });
+    };
 
+    const executeDelete = async (id) => {
         try {
             // 1. Delete associated interviews (this will cascade to other tables if set up, 
             // but we want to ensure they are removed from the dashboard)

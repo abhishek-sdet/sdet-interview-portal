@@ -10,6 +10,8 @@ export default function ManageAccess() {
     const [loading, setLoading] = useState(true);
     const [currentInfo, setCurrentInfo] = useState({ ip: null, deviceId: null });
     const [newItem, setNewItem] = useState({ type: 'ip', value: '', name: '' });
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState(null);
 
     useEffect(() => {
         fetchData();
@@ -78,21 +80,35 @@ export default function ManageAccess() {
         }
     };
 
-    const handleDelete = async (id) => {
-        if (!confirm('Are you sure you want to revoke this access?')) return;
+    const handleDelete = (item) => {
+        console.log('[DELETE] Requested for item:', item);
+        setItemToDelete(item);
+        setShowDeleteModal(true);
+    };
 
+    const confirmDelete = async () => {
+        if (!itemToDelete) return;
+        
+        console.log('[DELETE] Confirmed for ID:', itemToDelete.id);
         try {
             const { error } = await supabase
                 .from('admin_access_control')
                 .delete()
-                .eq('id', id);
+                .eq('id', itemToDelete.id);
 
-            if (error) throw error;
+            if (error) {
+                console.error('[DELETE] Supabase Error:', error);
+                throw error;
+            }
+            
+            console.log('[DELETE] Success. Refreshing data...');
             toast.success('Access revoked');
+            setShowDeleteModal(false);
+            setItemToDelete(null);
             fetchData();
         } catch (error) {
-            console.error('Error deleting access:', error);
-            toast.error('Failed to revoke access');
+            console.error('[DELETE] Exception:', error);
+            toast.error('Failed to revoke access: ' + (error.message || 'Unknown error'));
         }
     };
 
@@ -252,7 +268,7 @@ export default function ManageAccess() {
                                                     <td className="px-6 py-4 text-right">
                                                         <button
                                                             type="button"
-                                                            onClick={() => handleDelete(item.id)}
+                                                            onClick={() => handleDelete(item)}
                                                             className="p-2 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
                                                         >
                                                             <Trash2 size={18} />
@@ -277,6 +293,41 @@ export default function ManageAccess() {
                     </div>
                 </div>
             </div>
+
+            {/* Confirmation Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-universe/80 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-[#0b101b] border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
+                        <div className="flex flex-col items-center text-center gap-4">
+                            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center text-red-500">
+                                <Trash2 size={32} />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-white mb-2">Revoke Access?</h3>
+                                <p className="text-slate-400 text-sm">
+                                    Are you sure you want to remove access for <span className="text-white font-bold">{itemToDelete?.name}</span>?
+                                    <br />
+                                    <span className="text-xs font-mono mt-2 block opacity-50">{itemToDelete?.value}</span>
+                                </p>
+                            </div>
+                            <div className="flex gap-3 w-full mt-2">
+                                <button
+                                    onClick={() => setShowDeleteModal(false)}
+                                    className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={confirmDelete}
+                                    className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-red-500/20"
+                                >
+                                    Revoke
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </SimpleLayout>
     );
 }
