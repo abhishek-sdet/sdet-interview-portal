@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { showToast } from '@/components/Toast';
 import GPTWBadge from '@/components/GPTWBadge';
-import { Loader2, ArrowRight, ArrowLeft, Clock, CheckCircle2, Circle, AlertCircle, Code, Sparkles, ShieldAlert } from 'lucide-react';
+import { Loader2, ArrowRight, ArrowLeft, Clock, CheckCircle2, Circle, AlertCircle, Code, Sparkles, ShieldAlert, Lock, ShieldCheck, Zap } from 'lucide-react';
 import { accessControl } from '@/lib/accessControl';
 import QuizSubmissionModal from '@/components/QuizSubmissionModal';
 import QuestionStatusMap from '@/components/QuestionStatusMap';
@@ -12,6 +12,11 @@ import { shuffleArray } from '@/utils/questionHelpers';
 
 export default function QuizInterface() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const candidateData = location.state?.candidateData || { 
+        full_name: localStorage.getItem('candidateName'), 
+        id: localStorage.getItem('candidateId') 
+    };
 
     const enterFullscreen = async () => {
         const elem = document.documentElement;
@@ -54,7 +59,7 @@ export default function QuizInterface() {
 
     // Proctoring State
     const [tabSwitchWarnings, setTabSwitchWarnings] = useState(0);
-    const [proctorCountdown, setProctorCountdown] = useState(10);
+    const [proctorCountdown, setProctorCountdown] = useState(30);
     const [isActuallyFullscreen, setIsActuallyFullscreen] = useState(false);
     const [allowScreenshots, setAllowScreenshots] = useState(false); // Default to secure
     const [proctoringStrict, setProctoringStrict] = useState(true); // Default to strict
@@ -288,7 +293,7 @@ export default function QuizInterface() {
                 if (violation) {
                     console.warn(`[PROCTOR] VIOLATION: ${reason}`);
                     setTabSwitchWarnings(prev => prev + 1);
-                    setProctorCountdown(10);
+                    setProctorCountdown(30);
                     setShowProctorWarning(true);
                 }
                 
@@ -353,13 +358,19 @@ export default function QuizInterface() {
         if (submitting || showSpecialization || loading) return;
         
         const handleFocusLoss = () => {
-            if (!proctoringStrict && !enforceFullScreen) return;
+            // Aggressively clear clipboard on focus loss ANYWAY if screenshots are locked
+            if (!allowScreenshots && navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText('SECURITY BREACH: Screen capture attempted or focus lost.').catch(() => {});
+            }
+
+            // ONLY trigger tab-switch security warning visual if STRICT proctoring is enabled.
+            if (!proctoringStrict) return;
 
             if (document.hidden || !document.hasFocus()) {
                 if (!showProctorWarning) {
                     console.log('[PROCTOR] Focus lost detected by listener.');
                     setTabSwitchWarnings(prev => prev + 1);
-                    setProctorCountdown(10);
+                    setProctorCountdown(30);
                     setShowProctorWarning(true);
                 }
             }
@@ -379,73 +390,67 @@ export default function QuizInterface() {
         if (submitting || showSpecialization || !proctoringStrict) return;
 
         const devToolsCheck = setInterval(() => {
+            if (!proctoringStrict) return;
+ 
             const start = performance.now();
-            // The debugger statement forces the browser to pause execution IF DevTools is open.
-            // If it is closed, this statement is ignored by the engine and takes 0ms.
             debugger;
             const end = performance.now();
-
-            // If execution was paused for >100ms, DevTools is open.
+ 
             if (end - start > 100) {
                 console.warn('[PROCTOR] DevTools/Inspect Element detected!');
                 if (!showProctorWarning) {
-                    if (tabSwitchWarnings >= MAX_WARNINGS - 1) {
-                        if (proctoringStrict) {
-                            showToast.error("Exam Auto-Submitted due to prohibited Developer Tools usage.");
-                            handleSubmit(true, 'proctor_devtools_max_strikes');
-                        } else {
-                            showToast.error("Security Warning (3/3): Developer Tools are not permitted.");
-                            setProctorCountdown(10);
-                            setShowProctorWarning(true);
-                        }
-                    } else {
-                        setProctorCountdown(10);
-                        setShowProctorWarning(true);
-                    }
+                    setProctorCountdown(30);
+                    setShowProctorWarning(true);
                 }
             }
         }, 1500);
+ 
+        // EXTRA AGGRESSIVE: Clipboard Heartbeat Wipe (If screenshots are locked)
+        let clipboardHeartbeat = null;
+        if (!allowScreenshots) {
+            clipboardHeartbeat = setInterval(() => {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText('PROTECTED ASSESSMENT: Screenshots are strictly prohibited.').catch(() => {});
+                }
+            }, 3000); // Purge every 3 seconds
+        }
 
-        return () => clearInterval(devToolsCheck);
-    }, [submitting, showSpecialization, showProctorWarning, tabSwitchWarnings, proctoringStrict]);
+        return () => {
+            clearInterval(devToolsCheck);
+            if (clipboardHeartbeat) clearInterval(clipboardHeartbeat);
+        };
+    }, [submitting, showSpecialization, showProctorWarning, tabSwitchWarnings, proctoringStrict, allowScreenshots, loading]);
 
     // 3. Content Protection (Disable Right-click, Copy, Paste, Keyboard)
     useEffect(() => {
-        if (!proctoringStrict) return;
+        // We no longer return early if !proctoringStrict because 
+        // some protections (like screenshots) are independent toggles.
 
         const preventAction = (e) => {
-            e.preventDefault();
-            // Optional: showToast.error("Action disabled during assessment."); 
-            // Commenting out toast to avoid spamming if user persists
+            // Block context menu, copy, paste, cut if either strict mode is on OR screenshotting is locked
+            if (proctoringStrict || !allowScreenshots) {
+                e.preventDefault();
+            }
         };
 
         const preventKeyboard = (e) => {
-            // Check for screenshot attempts if not explicitly allowed
-            if (!allowScreenshots && (e.key === 'PrintScreen' || e.code === 'PrintScreen')) {
+            // 1. Screenshot Detection (Global lockdown if !allowScreenshots)
+            const isPrintScreen = ['PrintScreen', 'Snapshot', 'PrntSt', 'SysRq'].includes(e.key) || 
+                                 ['PrintScreen', 'Snapshot'].includes(e.code);
+            
+            if (!allowScreenshots && isPrintScreen) {
                 console.warn('[PROCTOR] Screenshot attempt detected!');
                 e.preventDefault();
                 e.stopPropagation();
 
-                // Attempt to clear clipboard aggressively 
+                // Aggressive clipboard clearing
                 if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText('Screenshots are strictly prohibited during this exam.').catch(err => console.log('Clipboard clear failed', err));
+                    navigator.clipboard.writeText('Screenshots are strictly prohibited.').catch(() => {});
                 }
 
-                // Trigger Proctor Strike
-                if (!showProctorWarning && proctoringStrict) {
-                    if (tabSwitchWarnings >= MAX_WARNINGS - 1) {
-                        if (proctoringStrict) {
-                            showToast.error("Exam Auto-Submitted due to prohibited Screen Capture attempt.");
-                            handleSubmit(true, 'proctor_screenshot_strike');
-                        } else {
-                            showToast.error("Security Warning (3/3): Screen capture is prohibited.");
-                            setProctorCountdown(10);
-                            setShowProctorWarning(true);
-                        }
-                    } else {
-                        setProctorCountdown(10);
-                        setShowProctorWarning(true);
-                    }
+                if (!showProctorWarning) {
+                    setProctorCountdown(30);
+                    setShowProctorWarning(true);
                 }
                 return false;
             }
@@ -455,9 +460,13 @@ export default function QuizInterface() {
             // but we need to be careful not to break accessibility or standard browser function if not needed.
             // Existing logic blocked ALL keys which is extremely aggressive. Let's keep it but enhance it.
 
-            // Allow basic navigation (Tab, Enter, Space, Arrows) if needed for accessibility, 
-            // but to be safe and true to original code, we block by default unless it's a known safe key.
+            // 2. Mastery Keyboard Locking (Always active during question phase to prevent copy/paste culture)
             const allowedKeys = ['Tab', 'Enter', ' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+            
+            if (allowScreenshots) {
+                allowedKeys.push('PrintScreen', 'Snapshot', 'PrntSt', 'SysRq');
+            }
+
             if (!allowedKeys.includes(e.key)) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1392,10 +1401,10 @@ export default function QuizInterface() {
             </div>
 
 
-            {/* Top Left - SDET Logo - Compact & Non-overlapping */}
-            <div className="fixed top-2 left-2 z-50 animate-hero hidden md:block">
-                <div className="bg-white/10 backdrop-blur-md border border-white/20 p-2 rounded-lg shadow-xl hover:border-brand-blue/50 transition-all duration-300 hover:scale-105 group">
-                    <img src="/sdet-logo.png" alt="SDET Logo" className="h-10 w-auto object-contain" />
+            {/* Top Left - SDET Logo - Shifted to avoid truncation */}
+            <div className="fixed top-4 left-6 z-50 animate-hero hidden md:block">
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 p-2.5 rounded-lg shadow-xl hover:border-brand-blue/50 transition-all duration-300 hover:scale-105 group">
+                    <img src="/sdet-logo.png" alt="SDET Logo" className="h-11 w-auto object-contain" />
                 </div>
             </div>
 
@@ -1466,12 +1475,18 @@ export default function QuizInterface() {
                 </div>
             </div>
 
-            {/* Main Content Area - Question Card at Top, Map at Bottom */}
-            <div className="flex-1 w-full flex flex-col items-center overflow-auto p-2 sm:p-4 lg:p-6 pt-20 sm:pt-24 relative z-10 custom-scrollbar">
-                <div className={`w-[98%] max-w-7xl min-h-0 transition-all duration-700 flex flex-col gap-6 sm:gap-8 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            {/* Main Content Area - Question Card at Top, Map at Bottom - Precision "Perfect Fit" Centering */}
+            <div className="flex-1 w-full flex flex-col items-center justify-center overflow-hidden p-2 sm:p-4 lg:p-6 pt-20 pb-10 relative z-10">
+                <div className={`w-[98%] max-w-7xl flex flex-col gap-10 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
 
                     {/* Question Card - Now the primary top element */}
-                    <div className="flex-shrink-0 flex flex-col bg-[#0b101b]/90 backdrop-blur-3xl border border-white/10 rounded-2xl p-4 sm:p-6 shadow-2xl relative overflow-hidden group hover:border-white/20 transition-all duration-500">
+                    <div 
+                        className="flex-shrink-0 flex flex-col bg-[#0b101b]/90 backdrop-blur-3xl border border-white/10 rounded-2xl p-4 sm:p-6 shadow-2xl relative overflow-hidden group hover:border-white/20 transition-all duration-500 select-none shadow-brand-blue/5"
+                        onCopy={(e) => e.preventDefault()}
+                        onPaste={(e) => e.preventDefault()}
+                        onCut={(e) => e.preventDefault()}
+                        onContextMenu={(e) => e.preventDefault()}
+                    >
 
                         {/* Ambient Background Glow */}
                         <div className="absolute top-0 right-0 w-96 h-96 bg-brand-blue/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
@@ -1533,7 +1548,7 @@ export default function QuizInterface() {
                             </div>
 
                             {/* Answer Options - Animated List */}
-                            <div className="space-y-2 sm:space-y-3 relative z-10">
+                            <div className="space-y-1 sm:space-y-1.5 relative z-10">
                                 {currentQuestion.options?.map((option, idx) => {
                                     const isSelected = answers[currentQuestion.id] === option;
 
@@ -1543,7 +1558,7 @@ export default function QuizInterface() {
                                             onClick={() => handleAnswerSelect(currentQuestion.id, option)}
                                             disabled={submitting || timeRemaining === 0}
                                             className={`
-                                            w-full text-left p-3 sm:p-4 rounded-xl border transition-all duration-300 group/option relative overflow-hidden
+                                            w-full text-left p-2 sm:p-2.5 rounded-xl border transition-all duration-300 group/option relative overflow-hidden
                                             ${isSelected
                                                     ? 'bg-brand-blue/10 border-brand-blue shadow-[0_0_15px_rgba(0,119,255,0.2)] translate-x-1'
                                                     : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20 hover:translate-x-1'
@@ -1581,25 +1596,20 @@ export default function QuizInterface() {
                     </div>
 
                     {/* Navigation Actions - Premium */}
-                    <div className="flex-shrink-0 flex items-center justify-between relative z-20">
-                        <button
-                            onClick={handlePrevious}
-                            disabled={isFirstQuestion}
-                            className={`
-                                flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all text-sm group
-                                ${isFirstQuestion
-                                    ? 'opacity-30 pointer-events-none cursor-not-allowed'
-                                    : 'text-slate-400 hover:text-white hover:bg-white/5'
-                                }
-                            `}
-                        >
-                            <div className="p-1.5 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors border border-white/5 group-hover:border-white/20">
-                                <ArrowLeft className="w-4 h-4" />
-                            </div>
-                            <span className="hidden sm:inline">
-                                Back
-                            </span>
-                        </button>
+                    <div className={`flex-shrink-0 flex items-center relative z-20 ${isFirstQuestion ? 'justify-end' : 'justify-between'}`}>
+                        {!isFirstQuestion && (
+                            <button
+                                onClick={handlePrevious}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all text-sm group text-slate-400 hover:text-white hover:bg-white/5"
+                            >
+                                <div className="p-1.5 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors border border-white/5 group-hover:border-white/20">
+                                    <ArrowLeft className="w-4 h-4" />
+                                </div>
+                                <span className="hidden sm:inline">
+                                    Previous Question
+                                </span>
+                            </button>
+                        )}
 
                         {!isLastQuestion ? (
                             <button
@@ -1642,8 +1652,8 @@ export default function QuizInterface() {
                         )}
                     </div>
 
-                    {/* Question Map - Now at Bottom and Enlarged for 2-Row Focus */}
-                    <div className="flex-shrink-0 px-2 sm:px-6 w-full max-w-5xl mx-auto pb-10">
+                    {/* Question Map - Optimized for "Perfect Fit" 2-Row Layout */}
+                    <div className="flex-shrink-0 px-2 sm:px-6 w-full max-w-5xl mx-auto">
                         <div className="bg-[#0b101b]/40 backdrop-blur-md rounded-2xl border border-white/5 p-4 sm:p-6 shadow-xl relative overflow-hidden group/map-container">
                              {/* Accent Glow */}
                              <div className="absolute bottom-0 left-1/4 w-1/2 h-px bg-gradient-to-r from-transparent via-brand-blue/30 to-transparent"></div>
@@ -1662,25 +1672,111 @@ export default function QuizInterface() {
             </div>
 
 
-            {/* NEW: Mandatory Fullscreen Overlay */}
+            {/* PREMIUM: QUANTUM SECURITY GATE OVERLAY */}
             {enforceFullScreen && !isActuallyFullscreen && !loading && !submitting && !showSpecialization && (
-                <div className="fixed inset-0 z-[100000] bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
-                    <div className="max-w-md w-full animate-in fade-in zoom-in duration-500">
-                        <div className="w-24 h-24 bg-brand-blue/10 rounded-full flex items-center justify-center mx-auto mb-8 border-2 border-brand-blue/30">
-                            <ShieldAlert className="w-12 h-12 text-brand-blue animate-pulse" />
+                <div className="fixed inset-0 z-[100000] bg-[#020617] flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden">
+                    {/* Immersive Animated Background */}
+                    <div className="absolute inset-0 z-0">
+                        <div className="absolute inset-0 bg-[#020617]"></div>
+                        {/* Moving Digital Grid */}
+                        <div className="absolute inset-0 opacity-20 bg-[linear-gradient(rgba(14,165,233,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(14,165,233,0.1)_1px,transparent_1px)] bg-[size:50px_50px] animate-grid-pan"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-[#020617]"></div>
+                        
+                        {/* Kinetic Energy Orbs */}
+                        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-brand-blue/30 rounded-full blur-[160px] animate-pulse-slow"></div>
+                        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-600/20 rounded-full blur-[120px] animate-pulse-slow" style={{ animationDelay: '-2s' }}></div>
+                    </div>
+
+                    <div className="relative z-10 max-w-xl w-full translate-y-[-5%] sm:translate-y-0">
+                        {/* The Gate Frame */}
+                        <div className="relative bg-[#0b1221]/85 backdrop-blur-[40px] border border-white/10 rounded-[1.5rem] p-4 sm:p-6 shadow-[0_0_100px_rgba(0,0,0,0.8)] group premium-border-glow">
+                            {/* Scanning Effect Overlay */}
+                            <div className="scan-line"></div>
+                            
+                            {/* Inner Accent Light */}
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-blue/10 blur-3xl rounded-full"></div>
+
+                            <div className="text-center space-y-3 sm:space-y-4">
+                                {/* Header / Status */}
+                                <div className="space-y-0.5 sm:space-y-1">
+                                    <div className="flex items-center justify-center gap-2">
+                                        <div className="h-0.5 w-3 bg-brand-blue rounded-full animate-pulse"></div>
+                                        <span className="text-[7px] sm:text-[8px] font-black tracking-[0.3em] text-brand-blue uppercase">Secure Mode v4.0</span>
+                                        <div className="h-0.5 w-3 bg-brand-blue rounded-full animate-pulse"></div>
+                                    </div>
+                                    
+                                    <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tighter leading-none italic uppercase">
+                                        Quantum <span className="text-brand-blue not-italic shimmer-text">Gate</span>
+                                    </h2>
+                                </div>
+
+                                {/* Security Metrics */}
+                                <div className="flex items-center justify-around py-3 border-y border-white/5 mx-auto max-w-md">
+                                    <div className="flex items-center gap-2">
+                                        <ShieldCheck className="w-3.5 h-3.5 text-green-400" />
+                                        <div className="text-left">
+                                            <p className="text-[7px] text-slate-500 font-bold uppercase tracking-wider leading-none">Scan</p>
+                                            <p className="text-[9px] text-white font-black leading-none">OK</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Lock className="w-3.5 h-3.5 text-brand-blue" />
+                                        <div className="text-left">
+                                            <p className="text-[7px] text-slate-500 font-bold uppercase tracking-wider leading-none">Env</p>
+                                            <p className="text-[9px] text-white font-black leading-none">LOCK</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Zap className="w-3.5 h-3.5 text-indigo-400" />
+                                        <div className="text-left">
+                                            <p className="text-[7px] text-slate-500 font-bold uppercase tracking-wider leading-none">Data</p>
+                                            <p className="text-[9px] text-white font-black leading-none">SEC</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2 sm:space-y-3 max-w-lg mx-auto">
+                                    <p className="text-sm sm:text-base text-slate-200 font-bold leading-tight">
+                                        Site operates in <span className="text-brand-blue uppercase tracking-widest px-1.5 py-0.5 bg-brand-blue/10 rounded border border-brand-blue/20">Full-Screen</span> mode. 
+                                    </p>
+                                    
+                                    <div className="bg-black/20 p-2 sm:p-3 rounded-[0.75rem] border border-white/5">
+                                        <p className="text-[9px] sm:text-[10px] text-slate-400 font-medium leading-none">
+                                            Tab switching is a <span className="text-red-400 font-bold italic">Security Strike</span>. 
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="pt-2">
+                                    <button
+                                        onClick={enterFullscreen}
+                                        className="group relative w-full px-6 py-3.5 sm:px-10 sm:py-4 bg-white hover:bg-brand-blue text-[#020617] hover:text-white font-black text-base sm:text-lg rounded-[1rem] transition-all duration-500 hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.1)] flex items-center justify-center gap-2 overflow-hidden"
+                                    >
+                                        <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform duration-500" />
+                                        ENTER SECURE ENVIRONMENT
+                                    </button>
+                                </div>
+
+                                <p className="text-[8px] text-slate-600 font-black tracking-[0.3em] uppercase opacity-50">
+                                    Encrypted Assessment Session
+                                </p>
+                            </div>
                         </div>
-                        <h2 className="text-3xl font-black text-white mb-4 tracking-tight">SECURE ENVIRONMENT REQUIRED</h2>
-                        <p className="text-slate-400 mb-10 leading-relaxed">
-                            This assessment must be taken in full-screen mode to ensure exam integrity. 
-                            Exiting this mode will pause your assessment.
-                        </p>
-                        <button
-                            onClick={enterFullscreen}
-                            className="w-full py-5 bg-brand-blue hover:bg-blue-500 text-white font-black text-xl rounded-2xl transition-all shadow-2xl shadow-brand-blue/20 transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3"
-                        >
-                            <Sparkles className="w-6 h-6" />
-                            ENTER SECURE MODE
-                        </button>
+
+                        
+                        {/* Cinematic Footer Elements */}
+                        <div className="mt-12 flex items-center justify-between px-10">
+                            <div className="flex gap-1.5">
+                                {[...Array(4)].map((_, i) => (
+                                    <div key={i} className="w-12 h-1 bg-white/5 rounded-full overflow-hidden">
+                                        <div className="h-full bg-brand-blue transition-all duration-1000 animate-pulse" style={{ width: '40%', animationDelay: `${i * 0.2}s` }}></div>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="text-[9px] text-slate-500 font-bold tracking-[0.3em] uppercase opacity-40">
+                                Auth Type: Dynamic Biometric (Fingerprint)
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

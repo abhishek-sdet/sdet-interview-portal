@@ -45,7 +45,7 @@ export default function QuestionStatusMap({
             </div>
 
             <div className="relative">
-                <div className="relative z-10 flex flex-wrap gap-1.5 justify-center">
+                <div className="relative z-10 grid grid-cols-10 sm:grid-cols-[repeat(25,minmax(0,1fr))] gap-1 justify-items-center">
                     {questions.map((q, idx) => {
                         const isAnswered = !!answers[q.id];
                         const isCurrent = currentIndex === idx;
@@ -57,7 +57,7 @@ export default function QuestionStatusMap({
                             <React.Fragment key={q.id}>
                                 {/* Optimized Section Divider */}
                                 {isFirstElective && (
-                                    <div className="w-full h-px bg-white/10 my-2 flex items-center justify-center relative">
+                                    <div className="w-full h-px bg-white/10 my-1 flex items-center justify-center relative">
                                         <div className="absolute left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-purple-500/30 to-transparent"></div>
                                         <span className="relative z-10 bg-[#0b101b] px-3 text-[9px] font-black text-purple-400 uppercase tracking-[0.2em] flex items-center gap-2 border border-white/5 rounded-full py-0.5">
                                             <span className="w-1 h-1 rounded-full bg-purple-500 animate-pulse"></span>
@@ -70,7 +70,7 @@ export default function QuestionStatusMap({
                                     onClick={() => onQuestionSelect && onQuestionSelect(idx)}
                                     disabled={!onQuestionSelect}
                                     className={`
-                                        w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-[10px] font-bold transition-all duration-300 border
+                                        w-7 h-7 sm:w-7 sm:h-7 rounded-md flex items-center justify-center text-[9px] font-bold transition-all duration-300 border
                                         ${isCurrent
                                             ? 'bg-brand-blue border-brand-blue text-white shadow-[0_0_15px_rgba(0,119,255,0.4)] scale-110 z-10 ring-1 ring-white/20'
                                             : isAnswered
