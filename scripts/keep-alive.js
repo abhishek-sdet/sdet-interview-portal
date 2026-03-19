@@ -2,7 +2,12 @@ const URL = process.env.URL;
 const KEY = process.env.KEY;
 
 if (!URL || !KEY) {
-    console.error("Missing SUPABASE_URL or SUPABASE_ANON_KEY environment variables.");
+    console.error("❌ ERROR: Missing SUPABASE_URL or SUPABASE_ANON_KEY.");
+    console.log("Please ensure you have added the following secrets to your GitHub repository:");
+    console.log("1. SUPABASE_URL (or VITE_SUPABASE_URL)");
+    console.log("2. SUPABASE_ANON_KEY (or VITE_SUPABASE_ANON_KEY)");
+    console.log("\nTo add secrets:");
+    console.log("Settings -> Secrets and variables -> Actions -> New repository secret");
     process.exit(1);
 }
 

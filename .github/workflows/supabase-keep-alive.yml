@@ -20,6 +20,7 @@ jobs:
 
       - name: Run Keep-Alive Script (Node.js)
         env:
-          URL: ${{ secrets.SUPABASE_URL || secrets.VITE_SUPABASE_URL }}
-          KEY: ${{ secrets.SUPABASE_ANON_KEY || secrets.VITE_SUPABASE_ANON_KEY }}
+          # Try variables first, then fallback to secrets (handles common naming)
+          URL: ${{ vars.SUPABASE_URL || vars.VITE_SUPABASE_URL || secrets.SUPABASE_URL || secrets.VITE_SUPABASE_URL }}
+          KEY: ${{ vars.SUPABASE_ANON_KEY || vars.VITE_SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY || secrets.VITE_SUPABASE_ANON_KEY }}
         run: node scripts/keep-alive.js
