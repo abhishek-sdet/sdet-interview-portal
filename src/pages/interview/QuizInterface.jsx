@@ -1069,7 +1069,25 @@ export default function QuizInterface() {
             };
 
             if (fullSetInfo) updatePayload.question_set = fullSetInfo;
-            if (autoSubmit) updatePayload.metadata = { auto_submitted: true, reason: reason };
+            
+            // PRESERVE METADATA: Fetch existing metadata and merge to avoid wiping the identity photo
+            try {
+                const { data: currentInterview } = await supabase
+                    .from('interviews')
+                    .select('metadata')
+                    .eq('id', interviewId)
+                    .single();
+                
+                const existingMeta = currentInterview?.metadata || {};
+                const newMeta = autoSubmit 
+                    ? { ...existingMeta, auto_submitted: true, reason: reason }
+                    : existingMeta;
+                
+                updatePayload.metadata = newMeta;
+            } catch (metaErr) {
+                console.warn('[SUBMIT] Could not fetch existing metadata for merge', metaErr);
+                if (autoSubmit) updatePayload.metadata = { auto_submitted: true, reason: reason };
+            }
 
             const { error: updateError } = await supabase
                 .from('interviews')

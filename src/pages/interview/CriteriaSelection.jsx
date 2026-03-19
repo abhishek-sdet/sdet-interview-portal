@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Loader2, CheckCircle2, Circle, AlertTriangle, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CriteriaSelection() {
     const navigate = useNavigate();
+    const location = useLocation();
     const [criteria, setCriteria] = useState([]);
     const [selectedCriteria, setSelectedCriteria] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -140,22 +141,32 @@ export default function CriteriaSelection() {
             const deviceId = localStorage.getItem('sdet_admin_device_id');
             const ipAddress = localStorage.getItem('sdet_admin_ip_address');
 
+            // Retrieve captured image from rules step (localStorage is more robust against refreshes)
+            const capturedImage = localStorage.getItem('pending_identity_photo');
+
             const { data, error: insertError } = await supabase
                 .from('interviews')
                 .insert([
                     {
                         candidate_id: candidateId,
                         criteria_id: selectedCriteria.id,
-                        scheduled_interview_id: activeDriveId, // Link to drive!
-                        device_id: deviceId, // CRITICAL: Save hardware fingerprint
-                        ip_address: ipAddress, // CRITICAL: Save network IP for dual-lock
-                        status: 'in_progress'
+                        scheduled_interview_id: activeDriveId,
+                        device_id: deviceId,
+                        ip_address: ipAddress,
+                        status: 'in_progress',
+                        metadata: {
+                            initial_photo: capturedImage,
+                            captured_at: new Date().toISOString()
+                        }
                     }
                 ])
                 .select()
                 .single();
 
             if (insertError) throw insertError;
+
+            // Cleanup identity photo from localStorage after successful persistence
+            localStorage.removeItem('pending_identity_photo');
 
             // Store interview ID and criteria info
             localStorage.setItem('interviewId', data.id);

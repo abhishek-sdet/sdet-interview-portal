@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SimpleLayout from '@/components/admin/SimpleLayout';
 import { supabase } from '@/lib/supabase';
-import { Search, Download, CheckCircle2, XCircle, Calendar, Filter, Trash2, AlertTriangle, Eye, X, RotateCcw } from 'lucide-react';
+import { Search, Download, CheckCircle2, XCircle, Calendar, Filter, Trash2, AlertTriangle, Eye, X, RotateCcw, Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function AdminResults() {
@@ -38,6 +38,7 @@ export default function AdminResults() {
     const [selectedInterview, setSelectedInterview] = useState(null);
     const [responseData, setResponseData] = useState([]);
     const [loadingResponses, setLoadingResponses] = useState(false);
+    const [zoomPhotoUrl, setZoomPhotoUrl] = useState(null);
 
     useEffect(() => {
         checkAuth();
@@ -331,10 +332,7 @@ export default function AdminResults() {
         }
 
         setUpdatingScore(true);
-
         try {
-            // 1. Get passing percentage for this criteria
-            // We can try to get it from the result object if joined, otherwise fetch it
             let passingPercentage = 70; // Default fallback
 
             // Fetch criteria details to be sure
@@ -546,6 +544,7 @@ export default function AdminResults() {
                                                         <thead className="bg-[#0f172a]/50 border-b border-white/5">
                                                             <tr>
                                                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Candidate</th>
+                                                                <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Identity</th>
                                                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Phone</th>
                                                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Criteria</th>
                                                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Set</th>
@@ -569,6 +568,36 @@ export default function AdminResults() {
                                                                                 <div className="font-medium text-white">{result.candidates?.full_name || 'N/A'}</div>
                                                                                 <div className="text-sm text-slate-400">{result.candidates?.email || 'N/A'}</div>
                                                                             </div>
+                                                                        </td>
+                                                                        <td className="px-6 py-4 text-center">
+                                                                            {(() => {
+                                                                                // Defense-in-depth: Ensure metadata is an object if stringified
+                                                                                const rawMeta = result.metadata;
+                                                                                const meta = typeof rawMeta === 'string' ? JSON.parse(rawMeta) : (rawMeta || {});
+                                                                                const photo = meta.initial_photo;
+
+                                                                                if (photo && photo.startsWith('data:image')) {
+                                                                                    return (
+                                                                                        <div className="relative inline-block group/photo">
+                                                                                            <img 
+                                                                                                src={photo} 
+                                                                                                alt="Identity" 
+                                                                                                className="w-10 h-10 rounded-lg object-cover border border-white/10 group-hover/photo:border-brand-blue transition-all cursor-zoom-in"
+                                                                                                onClick={(e) => {
+                                                                                                    e.stopPropagation();
+                                                                                                    setZoomPhotoUrl(photo);
+                                                                                                }}
+                                                                                            />
+                                                                                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[#0f172a] shadow-lg"></div>
+                                                                                        </div>
+                                                                                    );
+                                                                                }
+                                                                                return (
+                                                                                    <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-slate-600">
+                                                                                        <XCircle size={16} title="No verification photo found" />
+                                                                                    </div>
+                                                                                );
+                                                                            })()}
                                                                         </td>
                                                                         <td className="px-6 py-4 text-sm text-slate-300 font-mono">{result.candidates?.phone || 'N/A'}</td>
                                                                         <td className="px-6 py-4 text-sm text-slate-300">{result.criteria?.name || 'N/A'}</td>
@@ -753,12 +782,29 @@ export default function AdminResults() {
                                         )}
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => { setSelectedInterview(null); setResponseData([]); }}
-                                    className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
-                                >
-                                    <X size={20} />
-                                </button>
+                                <div className="flex items-center gap-4">
+                                    {selectedInterview.metadata?.initial_photo && (
+                                        <div className="flex flex-col items-end">
+                                            <div className="relative cursor-zoom-in group/zoom" onClick={() => setZoomPhotoUrl(selectedInterview.metadata.initial_photo)}>
+                                                <img 
+                                                    src={selectedInterview.metadata.initial_photo} 
+                                                    alt="Verification" 
+                                                    className="w-16 h-16 rounded-xl object-cover border-2 border-brand-blue/30 shadow-lg shadow-brand-blue/10 group-hover/zoom:border-brand-blue transition-colors"
+                                                />
+                                                <div className="absolute -bottom-1 -right-1 bg-brand-blue text-white p-0.5 rounded-md border-2 border-[#0f172a]">
+                                                    <Camera size={10} />
+                                                </div>
+                                            </div>
+                                            <span className="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-tighter">Verified Identity</span>
+                                        </div>
+                                    )}
+                                    <button
+                                        onClick={() => { setSelectedInterview(null); setResponseData([]); }}
+                                        className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-all self-start"
+                                    >
+                                        <X size={20} />
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Modal Body */}
@@ -853,7 +899,42 @@ export default function AdminResults() {
                         </div>
                     </div>
                 )}
-            </div>
-        </SimpleLayout>
+            {/* Premium Photo Zoom Overlay */}
+            {zoomPhotoUrl && (
+                <div 
+                    className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 sm:p-10 animate-in fade-in duration-300"
+                    onClick={() => setZoomPhotoUrl(null)}
+                >
+                    <div className="absolute top-6 right-6 z-10">
+                        <button 
+                            onClick={() => setZoomPhotoUrl(null)}
+                            className="p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all hover:rotate-90 duration-300 shadow-2xl"
+                        >
+                            <X size={28} />
+                        </button>
+                    </div>
+
+                    <div 
+                        className="relative max-w-4xl max-h-[85vh] w-full flex items-center justify-center animate-in zoom-in-95 duration-500"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="absolute -inset-4 bg-brand-blue/20 rounded-[2.5rem] blur-3xl opacity-50 animate-pulse"></div>
+                        <img 
+                            src={zoomPhotoUrl} 
+                            alt="Identity Verification Fullsize" 
+                            className="relative z-10 max-w-full max-h-full rounded-2xl border border-white/20 shadow-[0_0_80px_rgba(0,119,255,0.3)] object-contain"
+                        />
+                        
+                        <div className="absolute bottom-[-50px] left-1/2 -translate-x-1/2 text-center w-full">
+                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-blue/20 border border-brand-blue/30 rounded-full backdrop-blur-md">
+                                <Camera className="w-4 h-4 text-brand-blue" />
+                                <span className="text-white font-bold text-xs uppercase tracking-[0.2em]">Verified Fingerprint Identity</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    </SimpleLayout>
     );
 }
