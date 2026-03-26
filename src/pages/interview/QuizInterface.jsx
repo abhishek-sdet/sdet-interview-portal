@@ -64,6 +64,7 @@ export default function QuizInterface() {
     const [allowScreenshots, setAllowScreenshots] = useState(false); // Default to secure
     const [proctoringStrict, setProctoringStrict] = useState(true); // Default to strict
     const [enforceFullScreen, setEnforceFullScreen] = useState(false); // Add full screen enforcement state
+    const [shuffleQuestions, setShuffleQuestions] = useState(false); // Add shuffle state
     const MAX_WARNINGS = 3;
 
     // Refs to hold cached questions needed for the second phase
@@ -175,7 +176,7 @@ export default function QuizInterface() {
             try {
                 const { data: siteSettings, error } = await supabase
                     .from('site_settings')
-                    .select('allow_screenshots, proctoring_auto_submit, enforce_full_screen')
+                    .select('allow_screenshots, proctoring_auto_submit, enforce_full_screen, shuffle_questions')
                     .single();
 
                 if (error) {
@@ -196,6 +197,7 @@ export default function QuizInterface() {
                     setAllowScreenshots(siteSettings.allow_screenshots || false);
                     setProctoringStrict(siteSettings.proctoring_auto_submit !== false);
                     setEnforceFullScreen(siteSettings.enforce_full_screen || false);
+                    setShuffleQuestions(siteSettings.shuffle_questions || false);
                 } else {
                     console.warn('[PROCTOR] Site settings table is empty.');
                 }
@@ -700,10 +702,23 @@ export default function QuizInterface() {
 
             const rawAllQuestions = [...generalQuestionsRef.current, ...electiveQuestionsToShow];
 
-            // Disable Randomization: maintain original upload order
-            const finalQuestions = rawAllQuestions;
+            // NEW: Fetch site settings directly to ensure we have the latest shuffle preference
+            const { data: siteSettings } = await supabase
+                .from('site_settings')
+                .select('shuffle_questions')
+                .single();
+            
+            const isShuffleEnabled = siteSettings?.shuffle_questions || false;
+
+            // Update state to keep UI in sync if needed (though isShuffleEnabled is used locally here)
+            setShuffleQuestions(isShuffleEnabled);
+
+            // Apply randomization based on site settings
+            const finalQuestions = isShuffleEnabled ? shuffleArray(rawAllQuestions) : rawAllQuestions;
 
             setQuestions(finalQuestions);
+
+            console.log(`[FETCH] Loaded ${finalQuestions.length} questions upfront (${isShuffleEnabled ? 'SHUFFLED' : 'ORIGINAL ORDER'})`);
 
             console.log('[FETCH] Loaded all questions upfront (Original Order):', finalQuestions.length);
             console.log('[FETCH] General questions:', generalQuestionsRef.current.length);

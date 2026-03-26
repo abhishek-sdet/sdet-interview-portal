@@ -109,6 +109,16 @@ class MockSupabaseClient {
                     email: 'admin@sdet.com',
                     password: 'admin123' // In real app, this would be hashed
                 }
+            ],
+            site_settings: [
+                {
+                    id: '1',
+                    is_site_active: true,
+                    allow_screenshots: false,
+                    proctoring_auto_submit: true,
+                    enforce_full_screen: false,
+                    shuffle_questions: false
+                }
             ]
         };
 
