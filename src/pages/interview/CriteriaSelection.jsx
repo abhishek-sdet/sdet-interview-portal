@@ -15,6 +15,7 @@ export default function CriteriaSelection() {
     const [mounted, setMounted] = useState(false);
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [pendingCriteria, setPendingCriteria] = useState(null);
+    const [completedCriteriaIds, setCompletedCriteriaIds] = useState([]);
 
     useEffect(() => {
         setMounted(true);
@@ -92,6 +93,21 @@ export default function CriteriaSelection() {
             );
 
             setCriteria(filteredData);
+
+            // Step 3: Fetch candidate's completed interviews for today
+            const candidateId = localStorage.getItem('candidateId');
+            if (candidateId) {
+                const { data: completedInterviews } = await supabase
+                    .from('interviews')
+                    .select('criteria_id')
+                    .eq('candidate_id', candidateId)
+                    .eq('status', 'completed')
+                    .gte('completed_at', today);
+                
+                if (completedInterviews) {
+                    setCompletedCriteriaIds(completedInterviews.map(i => i.criteria_id));
+                }
+            }
         } catch (err) {
             console.error('Error fetching criteria:', err);
             setError('Failed to load interview categories. Please refresh the page.');
@@ -246,6 +262,12 @@ export default function CriteriaSelection() {
                                 <button
                                     key={item.id}
                                     onClick={() => {
+                                        if (completedCriteriaIds.includes(item.id) && !item.allow_multiple_attempts) {
+                                            setError(`You have already completed the "${item.name}" assessment.`);
+                                            return;
+                                        }
+                                        setError('');
+                                        
                                         // Check if this is an experienced criteria
                                         const isExperienced = item.name?.toLowerCase().includes('experienced') ||
                                             item.name?.toLowerCase().includes('testing background');
@@ -264,6 +286,7 @@ export default function CriteriaSelection() {
                                             ? 'bg-brand-blue/10 border-brand-blue shadow-2xl shadow-brand-blue/20 scale-[1.02]'
                                             : 'bg-white/5 border-white/10 hover:border-brand-blue/30 hover:bg-white/10 hover:scale-[1.01]'
                                         }
+                                    ${completedCriteriaIds.includes(item.id) && !item.allow_multiple_attempts ? 'opacity-60 grayscale-[0.5] cursor-not-allowed' : ''}
                                 `}
                                 >
                                     {/* Glow Effect */}
@@ -275,6 +298,11 @@ export default function CriteriaSelection() {
                                         <div className="space-y-4">
                                             <h3 className={`text-xl font-bold transition-colors ${isSelected ? 'text-white' : 'text-slate-200 group-hover:text-white'}`}>
                                                 {item.name}
+                                                {completedCriteriaIds.includes(item.id) && (
+                                                    <span className={`ml-3 text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest ${item.allow_multiple_attempts ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-green-500/10 text-green-500 border border-green-500/20'}`}>
+                                                        {item.allow_multiple_attempts ? 'Office Re-take' : 'Completed'}
+                                                    </span>
+                                                )}
                                             </h3>
                                             {item.sub_heading && (
                                                 <div className={`text-sm font-medium mb-1 ${isSelected ? 'text-blue-300' : 'text-blue-400/80 group-hover:text-blue-300'}`}>

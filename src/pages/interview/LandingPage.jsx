@@ -205,23 +205,40 @@ export default function LandingPage() {
             }
 
             // Check if this specific device or IP has already completed an assessment *TODAY*
-            const startOfToday = new Date();
-            startOfToday.setHours(0, 0, 0, 0);
+            // IN OFFICE MODE: We skip this check to allow multiple people to use the same machine
+            // OR if multiple assessments are available for the same candidate.
+            
+            const startOfTodayString = startOfToday.toISOString().split('T')[0];
+            const { data: activeDrives } = await supabase
+                .from('scheduled_interviews')
+                .select('criteria_id')
+                .eq('is_active', true)
+                .eq('scheduled_date', startOfTodayString);
+                
+            const activeCriteriaIds = activeDrives?.map(d => d.criteria_id).filter(Boolean) || [];
+            const { data: activeCriteria } = await supabase
+                .from('criteria')
+                .select('id, allow_multiple_attempts')
+                .in('id', activeCriteriaIds);
 
-            const { data: deviceInterviews, error: deviceError } = await supabase
-                .from('interviews')
-                .select('id, status, completed_at, device_id, ip_address, scheduled_interviews!inner(is_active)')
-                .eq('status', 'completed')
-                .eq('scheduled_interviews.is_active', true)
-                .gte('completed_at', startOfToday.toISOString())
-                .eq('device_id', deviceId)
-                .limit(1);
+            const hasOfficeMode = activeCriteria?.some(c => c.allow_multiple_attempts);
 
-            if (!deviceError && deviceInterviews && deviceInterviews.length > 0) {
-                console.warn('[REGISTRATION] Same-day reattempt blocked by hardware fingerprint:', deviceId);
-                setError('A user from this device has already completed an assessment today. Please try again on a different scheduled drive day.');
-                setLoading(false);
-                return;
+            if (!hasOfficeMode) {
+                const { data: deviceInterviews, error: deviceError } = await supabase
+                    .from('interviews')
+                    .select('id, status, completed_at, device_id, ip_address, scheduled_interviews!inner(is_active)')
+                    .eq('status', 'completed')
+                    .eq('scheduled_interviews.is_active', true)
+                    .gte('completed_at', startOfToday.toISOString())
+                    .eq('device_id', deviceId)
+                    .limit(1);
+
+                if (!deviceError && deviceInterviews && deviceInterviews.length > 0) {
+                    console.warn('[REGISTRATION] Same-day reattempt blocked by hardware fingerprint:', deviceId);
+                    setError('A user from this device has already completed an assessment today. Please try again on a different scheduled drive day.');
+                    setLoading(false);
+                    return;
+                }
             }
 
             console.log('[REGISTRATION] Checking for existing candidate email:', formData.email.trim());
@@ -246,10 +263,9 @@ export default function LandingPage() {
                 // 2. Candidate exists, check for *active* or *completed* associated interview
                 const { data: interviews, error: interviewError } = await supabase
                     .from('interviews')
-                    .select('id, status, scheduled_interviews!inner(is_active)')
+                    .select('id, status, criteria_id, scheduled_interviews!inner(is_active)')
                     .eq('candidate_id', existingCandidate.id)
-                    .eq('scheduled_interviews.is_active', true)
-                    .limit(1);
+                    .eq('scheduled_interviews.is_active', true);
 
                 if (interviewError) {
                     console.error('[REGISTRATION] Fetch interview error:', interviewError);
@@ -257,16 +273,26 @@ export default function LandingPage() {
                 }
 
                 if (interviews && interviews.length > 0) {
-                    const latestInterview = interviews[0];
-                    console.log('[REGISTRATION] Interview exists. Status:', latestInterview.status);
+                    const completedInterviews = interviews.filter(i => i.status === 'completed');
+                    const inProgressInterview = interviews.find(i => i.status === 'in_progress');
 
-                    if (latestInterview.status === 'completed') {
-                        setError('You have already completed the assessment for this email.');
-                        setLoading(false);
-                        return;
-                    } else if (latestInterview.status === 'in_progress') {
+                    // If they have finished ALL available assessments and none allow multiple attempts
+                    if (completedInterviews.length > 0) {
+                        const completedCriteriaIds = completedInterviews.map(i => i.criteria_id);
+                        const canTakeMore = activeCriteria?.some(c => 
+                            c.allow_multiple_attempts || !completedCriteriaIds.includes(c.id)
+                        );
+
+                        if (!canTakeMore) {
+                            setError('You have already completed all available assessments for today.');
+                            setLoading(false);
+                            return;
+                        }
+                    }
+
+                    if (inProgressInterview) {
                         console.log('[REGISTRATION] Active session resumed.');
-                        localStorage.setItem('interviewId', latestInterview.id);
+                        localStorage.setItem('interviewId', inProgressInterview.id);
                     }
                 }
 

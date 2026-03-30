@@ -29,7 +29,8 @@ export default function ManageCriteria() {
         sub_heading: '',
         description: '',
         timer_duration: '',
-        passing_percentage: ''
+        passing_percentage: '',
+        allow_multiple_attempts: false
     });
 
     // Fetch Criteria
@@ -222,7 +223,8 @@ export default function ManageCriteria() {
             sub_heading: c.sub_heading || '',
             description: c.description || '',
             timer_duration: c.timer_duration || 45,
-            passing_percentage: c.passing_percentage || 70
+            passing_percentage: c.passing_percentage || 70,
+            allow_multiple_attempts: c.allow_multiple_attempts || false
         });
     };
 
@@ -234,7 +236,8 @@ export default function ManageCriteria() {
             sub_heading: '',
             description: '',
             timer_duration: 30,
-            passing_percentage: 50
+            passing_percentage: 50,
+            allow_multiple_attempts: false
         });
     };
 
@@ -246,7 +249,8 @@ export default function ManageCriteria() {
             sub_heading: '',
             description: '',
             timer_duration: '',
-            passing_percentage: ''
+            passing_percentage: '',
+            allow_multiple_attempts: false
         });
     };
 
@@ -277,6 +281,7 @@ export default function ManageCriteria() {
                         passing_percentage: passingPct,
                         sub_heading: editForm.sub_heading?.trim(),
                         timer_duration: duration,
+                        allow_multiple_attempts: editForm.allow_multiple_attempts,
                         is_active: true
                     });
 
@@ -291,6 +296,7 @@ export default function ManageCriteria() {
                         passing_percentage: passingPct,
                         sub_heading: editForm.sub_heading?.trim(),
                         timer_duration: duration,
+                        allow_multiple_attempts: editForm.allow_multiple_attempts,
                     })
                     .eq('id', id);
 
@@ -507,6 +513,21 @@ export default function ManageCriteria() {
                                             />
                                         </div>
                                     </div>
+                                    <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-3 flex items-center justify-between">
+                                        <div>
+                                            <div className="text-xs font-bold text-amber-500 tracking-wider flex items-center gap-2">
+                                                <AlertCircle size={12} /> OFFICE MODE
+                                            </div>
+                                            <div className="text-[10px] text-slate-400 mt-1">Allow same email/device multiple times</div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setEditForm(prev => ({ ...prev, allow_multiple_attempts: !prev.allow_multiple_attempts }))}
+                                            className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${editForm.allow_multiple_attempts ? 'bg-amber-500' : 'bg-slate-700'}`}
+                                        >
+                                            <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${editForm.allow_multiple_attempts ? 'translate-x-5' : 'translate-x-0'}`} />
+                                        </button>
+                                    </div>
                                     <div className="flex gap-2 justify-end pt-2">
                                         <button
                                             onClick={handleCancel}
@@ -586,6 +607,21 @@ export default function ManageCriteria() {
                                             </div>
                                             <p className="text-[10px] text-slate-500 mt-1">Minimum percentage required to pass</p>
                                         </div>
+                                        <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-3 flex items-center justify-between">
+                                            <div>
+                                                <div className="text-xs font-bold text-amber-500 tracking-wider flex items-center gap-2">
+                                                    <AlertCircle size={12} /> OFFICE MODE
+                                                </div>
+                                                <div className="text-[10px] text-slate-400 mt-1">Allow same email/device multiple times</div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setEditForm(prev => ({ ...prev, allow_multiple_attempts: !prev.allow_multiple_attempts }))}
+                                                className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${editForm.allow_multiple_attempts ? 'bg-amber-500' : 'bg-slate-700'}`}
+                                            >
+                                                <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${editForm.allow_multiple_attempts ? 'translate-x-5' : 'translate-x-0'}`} />
+                                            </button>
+                                        </div>
                                         <div className="flex gap-2 justify-end pt-2">
                                             <button
                                                 onClick={handleCancel}
@@ -623,6 +659,14 @@ export default function ManageCriteria() {
                                                 </button>
                                             </div>
                                         </div>
+
+                                        {c.allow_multiple_attempts && (
+                                            <div className="mb-3">
+                                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-widest rounded">
+                                                    <AlertCircle size={10} /> Office Mode Active
+                                                </span>
+                                            </div>
+                                        )}
 
                                         {(c.sub_heading || c.description) && (
                                             <div className="mb-4 space-y-2">

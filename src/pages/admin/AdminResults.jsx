@@ -39,6 +39,9 @@ export default function AdminResults() {
     const [responseData, setResponseData] = useState([]);
     const [loadingResponses, setLoadingResponses] = useState(false);
     const [zoomPhotoUrl, setZoomPhotoUrl] = useState(null);
+    const [isReevaluating, setIsReevaluating] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
+    const [showReevaluateConfirm, setShowReevaluateConfirm] = useState(false);
 
     useEffect(() => {
         checkAuth();
@@ -191,30 +194,185 @@ export default function AdminResults() {
         setFilteredResults(filtered);
     };
 
-    const exportToCSV = () => {
-        const headers = ['Name', 'Email', 'Phone', 'Drive', 'Criteria', 'Set', 'Score', 'Total', 'Percentage', 'Status', 'Fabricated', 'Date'];
-        const rows = filteredResults.map(r => [
-            r.candidates?.full_name || 'N/A',
-            r.candidates?.email || 'N/A',
-            r.candidates?.phone || 'N/A',
-            r.scheduled_interviews?.description || 'N/A',
-            r.criteria?.name || 'N/A',
-            r.question_set || 'N/A',
-            r.score || 0,
-            r.total_questions || 0,
-            r.total_questions ? ((r.score / r.total_questions) * 100).toFixed(1) : '0',
-            r.passed ? 'PASSED' : 'FAILED',
-            r.is_fabricated ? 'YES' : 'NO',
-            r.completed_at ? new Date(r.completed_at).toLocaleString() : new Date(r.started_at).toLocaleString()
-        ]);
+    const exportToCSV = async () => {
+        if (filteredResults.length === 0) return;
+        
+        setIsExporting(true);
+        const toastId = toast.loading('Exporting detailed CSV...');
 
-        const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `interview_results_${new Date().toISOString().split('T')[0]}.csv`;
-        a.click();
+        try {
+            // 1. Get all interview IDs
+            const interviewIds = filteredResults.map(r => r.id);
+
+            // 2. Fetch all answers with questions in batches
+            const { data: allAnswers, error: answersError } = await supabase
+                .from('answers')
+                .select(`
+                    interview_id,
+                    selected_answer,
+                    is_correct,
+                    questions(question_text, correct_answer, category)
+                `)
+                .in('interview_id', interviewIds);
+
+            if (answersError) throw answersError;
+
+            // 3. Group answers by interview
+            const answersByInterview = {};
+            allAnswers.forEach(ans => {
+                if (!answersByInterview[ans.interview_id]) {
+                    answersByInterview[ans.interview_id] = [];
+                }
+                answersByInterview[ans.interview_id].push(ans);
+            });
+
+            // 4. Find the max number of questions to determine header width
+            let maxQuestions = 0;
+            Object.values(answersByInterview).forEach(answers => {
+                if (answers.length > maxQuestions) maxQuestions = answers.length;
+            });
+
+            // 5. Build Headers
+            const baseHeaders = ['Name', 'Email', 'Phone', 'Drive', 'Criteria', 'Set', 'Score', 'Total', 'Percentage', 'Status', 'Fabricated', 'Date'];
+            const answerHeaders = [];
+            for (let i = 1; i <= maxQuestions; i++) {
+                answerHeaders.push(`Q${i} Text`, `Q${i} Selected`, `Q${i} Correct`, `Q${i} Result`);
+            }
+            const headers = [...baseHeaders, ...answerHeaders];
+
+            // 6. Build Rows
+            const rows = filteredResults.map(r => {
+                const baseData = [
+                    `"${r.candidates?.full_name || 'N/A'}"`,
+                    `"${r.candidates?.email || 'N/A'}"`,
+                    `"${r.candidates?.phone || 'N/A'}"`,
+                    `"${r.scheduled_interviews?.description || 'N/A'}"`,
+                    `"${r.criteria?.name || 'N/A'}"`,
+                    `"${r.question_set || 'N/A'}"`,
+                    r.score || 0,
+                    r.total_questions || 0,
+                    r.total_questions ? ((r.score / r.total_questions) * 100).toFixed(1) : '0',
+                    r.passed ? 'PASSED' : 'FAILED',
+                    r.is_fabricated ? 'YES' : 'NO',
+                    r.completed_at ? new Date(r.completed_at).toLocaleString() : new Date(r.started_at).toLocaleString()
+                ];
+
+                const candidateAnswers = answersByInterview[r.id] || [];
+                const answerData = [];
+                
+                // Add answer details for each question
+                for (let i = 0; i < maxQuestions; i++) {
+                    const ans = candidateAnswers[i];
+                    if (ans) {
+                        answerData.push(
+                            `"${(ans.questions?.question_text || '').replace(/"/g, '""')}"`,
+                            `"${(ans.selected_answer || 'N/A').replace(/"/g, '""')}"`,
+                            `"${(ans.questions?.correct_answer || 'N/A').replace(/"/g, '""')}"`,
+                            ans.is_correct ? 'CORRECT' : 'WRONG'
+                        );
+                    } else {
+                        answerData.push('', '', '', '');
+                    }
+                }
+
+                return [...baseData, ...answerData];
+            });
+
+            const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `detailed_results_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            toast.success('CSV exported with detailed responses!', { id: toastId });
+        } catch (err) {
+            console.error('Export Error:', err);
+            toast.error('Failed to export detailed CSV', { id: toastId });
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    const handleReevaluate = async () => {
+        if (filteredResults.length === 0) return;
+        
+        setIsReevaluating(true);
+        const toastId = toast.loading(`Re-evaluating ${filteredResults.length} records...`);
+        setShowReevaluateConfirm(false);
+
+        try {
+            // 1. Fetch current correct answers for all questions
+            const { data: questions, error: qError } = await supabase
+                .from('questions')
+                .select('id, correct_answer');
+            
+            if (qError) throw qError;
+            const correctMap = Object.fromEntries(questions.map(q => [q.id, q.correct_answer]));
+
+            // 2. Fetch all criteria passing percentages
+            const { data: criteria, error: critError } = await supabase
+                .from('criteria')
+                .select('id, passing_percentage');
+            if (critError) throw critError;
+            const critMap = Object.fromEntries(criteria.map(c => [c.id, c.passing_percentage]));
+
+            // 3. Process each interview in filteredResults
+            for (const result of filteredResults) {
+                // Fetch answers for this specific interview
+                const { data: answers, error: ansError } = await supabase
+                    .from('answers')
+                    .select('id, question_id, selected_answer, is_correct')
+                    .eq('interview_id', result.id);
+                
+                if (ansError) continue;
+
+                let newScore = 0;
+                const updates = [];
+
+                for (const ans of answers) {
+                    const correctAnswer = correctMap[ans.question_id];
+                    if (correctAnswer === undefined) continue;
+
+                    const nowCorrect = ans.selected_answer === correctAnswer;
+                    if (nowCorrect) newScore++;
+
+                    if (nowCorrect !== ans.is_correct) {
+                        updates.push(supabase.from('answers').update({ is_correct: nowCorrect }).eq('id', ans.id));
+                    }
+                }
+
+                // Batch update answer correctness if any changes
+                if (updates.length > 0) {
+                    await Promise.all(updates);
+                }
+
+                // Recalculate passed status
+                const total = answers.length || result.total_questions || 1;
+                const percentage = (newScore / total) * 100;
+                const passingPct = critMap[result.criteria_id] || 70;
+                const passed = percentage >= passingPct;
+
+                // Update interview record
+                await supabase
+                    .from('interviews')
+                    .update({ 
+                        score: newScore, 
+                        total_questions: total, 
+                        passed,
+                        is_fabricated: false // Reset fabricated flag as we just verified against DB
+                    })
+                    .eq('id', result.id);
+            }
+
+            toast.success(`Successfully re-evaluated ${filteredResults.length} candidates.`, { id: toastId });
+            fetchResults(true); // Background refresh records
+        } catch (err) {
+            console.error('Re-evaluation error:', err);
+            toast.error('Failed to re-evaluate scores', { id: toastId });
+        } finally {
+            setIsReevaluating(false);
+        }
     };
 
     const handleDeleteInterview = async (result) => {
@@ -427,12 +585,20 @@ export default function AdminResults() {
                             Reset All
                         </button>
                         <button
+                            onClick={() => setShowReevaluateConfirm(true)}
+                            disabled={filteredResults.length === 0 || isReevaluating}
+                            className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 hover:border-amber-500/40 text-amber-400 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <RotateCcw size={18} className={isReevaluating ? 'animate-spin' : ''} />
+                            Re-evaluate
+                        </button>
+                        <button
                             onClick={exportToCSV}
-                            disabled={filteredResults.length === 0}
+                            disabled={filteredResults.length === 0 || isExporting}
                             className="flex items-center gap-2 px-4 py-2 bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 hover:border-green-500/40 text-green-400 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Download size={18} />
-                            Export CSV
+                            {isExporting ? 'Exporting...' : 'Export CSV'}
                         </button>
                     </div>
                 </div>
@@ -746,6 +912,42 @@ export default function AdminResults() {
                         </div>
                     </div>
                 )}
+                {/* Re-evaluation Confirmation Modal */}
+                {showReevaluateConfirm && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <div className="bg-[#0f172a] border border-amber-500/30 rounded-xl p-6 max-w-md w-full shadow-2xl">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-3 bg-amber-500/10 rounded-lg">
+                                    <RotateCcw className="w-6 h-6 text-amber-400" />
+                                </div>
+                                <h3 className="text-xl font-bold text-white">Re-evaluate Scores?</h3>
+                            </div>
+                            <div className="space-y-4">
+                                <p className="text-slate-300">
+                                    This will re-calculate the scores for <strong>{filteredResults.length} candidates</strong> against the current question keys in the database.
+                                </p>
+                                <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-sm text-amber-400/80">
+                                    Use this if you have recently corrected an answer key or modified the passing percentage in Criteria.
+                                </div>
+                            </div>
+                            <div className="flex gap-3 mt-6 justify-end">
+                                <button
+                                    onClick={() => setShowReevaluateConfirm(false)}
+                                    className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 rounded-lg transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleReevaluate}
+                                    className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-all font-bold"
+                                >
+                                    Yes, Re-evaluate All
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Candidate Response Modal */}
                 {selectedInterview && (
                     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
