@@ -1,68 +1,93 @@
-const URL = process.env.URL;
-const KEY = process.env.KEY;
+import pg from 'pg';
+const { Pool } = pg;
+import dns from 'dns';
+import dotenv from 'dotenv';
 
-if (!URL || !KEY) {
-    console.error("❌ ERROR: Missing SUPABASE_URL or SUPABASE_ANON_KEY.");
-    console.log("Please ensure you have added the following secrets to your GitHub repository:");
-    console.log("1. SUPABASE_URL (or VITE_SUPABASE_URL)");
-    console.log("2. SUPABASE_ANON_KEY (or VITE_SUPABASE_ANON_KEY)");
-    console.log("\nTo add secrets:");
-    console.log("Settings -> Secrets and variables -> Actions -> New repository secret");
+// Force IPv4 as GitHub Actions often has issues with IPv6 resolution (ENETUNREACH)
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
+
+dotenv.config();
+
+async function keepAlive() {
+  const connectionString = (process.env.DATABASE_URL || process.env.SUPABASE_DATABASE_URL)?.trim();
+
+  if (!connectionString) {
+    console.error('❌ ERROR: DATABASE_URL is not set.');
+    console.log('Please ensure you have added the DATABASE_URL secret to your GitHub repository.');
     process.exit(1);
-}
+  }
 
-const cleanUrl = URL.endsWith('/') ? URL.slice(0, -1) : URL;
-
-async function ping(name, endpoint) {
-    const fullUrl = `${cleanUrl}${endpoint}`;
-    console.log(`[${name}] Pinging: ${fullUrl}`);
+  // Manual parsing to handle multiple '@' symbols robustly (common in Supabase passwords)
+  const connectionParts = connectionString.match(/postgresql?:\/\/(.*?):(.*)@(.*?):(\d+)\/(.*)/);
+  
+  let poolConfig;
+  if (connectionParts) {
+    const [_, user, password, host, port, database] = connectionParts;
+    const decodedPassword = decodeURIComponent(password);
+    poolConfig = {
+      user,
+      password: decodedPassword,
+      host,
+      port: parseInt(port),
+      database,
+    };
+  } else {
     try {
-        const response = await fetch(fullUrl, {
-            method: 'GET',
-            headers: {
-                'apikey': KEY,
-                'Authorization': `Bearer ${KEY}`
-            }
-        });
-        console.log(`[${name}] Status: ${response.status} ${response.statusText}`);
-        if (response.ok) {
-            console.log(`[${name}] Success!`);
-            return true;
-        } else {
-            const body = await response.text();
-            console.log(`[${name}] Details: ${body.substring(0, 200)}`);
-            return false;
-        }
-    } catch (error) {
-        console.error(`[${name}] Fetch failed:`, error.message);
-        return false;
+      const url = new URL(connectionString);
+      poolConfig = {
+        user: url.username,
+        password: decodeURIComponent(url.password),
+        host: url.hostname,
+        port: url.port || 5432,
+        database: url.pathname.split('/')[1] || 'postgres',
+      };
+    } catch (e) {
+      console.error('❌ ERROR: Could not parse connection string.');
+      process.exit(1);
     }
-}
+  }
 
-async function run() {
-    console.log("Starting Supabase Keep-Alive Health Check...");
+  const pool = new Pool({
+    ...poolConfig,
+    connectionTimeoutMillis: 15000,
+    ssl: { 
+      rejectUnauthorized: false,
+      require: true 
+    }
+  });
+
+  try {
+    console.log('--- Supabase Keep-Alive Heartbeat ---');
+    console.log(`Time: ${new Date().toISOString()}`);
+    console.log(`Target: ${poolConfig.host}`);
+    console.log('Connecting to database...');
+
+    const start = Date.now();
+    const res = await pool.query('SELECT current_timestamp, version();');
+    const duration = Date.now() - start;
     
-    // We try multiple endpoints to be absolutely sure we wake it up
-    const endpoints = [
-        { name: 'Auth Health', path: '/auth/v1/health' },
-        { name: 'Rest v1 Root', path: '/rest/v1/' },
-        { name: 'PostgREST Health', path: '/' }
-    ];
-
-    let success = false;
-    for (const e of endpoints) {
-        const ok = await ping(e.name, e.path);
-        if (ok) success = true;
-        console.log("-------------------");
+    if (res.rows[0]) {
+      console.log('✅ SUCCESS: Database heartbeat sent successfully.');
+      console.log(`DB Time: ${res.rows[0].current_timestamp}`);
+      console.log(`Query Duration: ${duration}ms`);
     }
-
-    if (success) {
-        console.log("Supabase project is alive and responsive.");
-        process.exit(0);
-    } else {
-        console.error("All keep-alive attempts failed. Project might be paused or credentials invalid.");
-        process.exit(1);
+    
+    await pool.end();
+    console.log('--- Heartbeat Complete ---');
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ ERROR: Heartbeat failed.');
+    console.error(`Message: ${error.message}`);
+    
+    if (error.message.includes('ENETUNREACH')) {
+      console.error('CRITICAL: Network unreachable. Ensure you are using the Transaction Pooler URL (port 6543) for IPv4 support.');
     }
+    
+    process.exit(1);
+  }
 }
 
-run();
+keepAlive();
+

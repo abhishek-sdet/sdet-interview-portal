@@ -2,9 +2,9 @@ name: Supabase Keep-Alive
 
 on:
   schedule:
-    # Runs every 3 days at midnight
-    - cron: '0 0 */3 * *'
-  workflow_dispatch: # Allows manual triggering
+    # Run every Sunday at UTC 00:00
+    - cron: '0 0 * * 0'
+  workflow_dispatch: # Allow manual trigger
 
 jobs:
   ping-supabase:
@@ -16,11 +16,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
+          cache: 'npm'
 
       - name: Run Keep-Alive Script (Node.js)
         env:
-          # Try variables first, then fallback to secrets (handles common naming)
-          URL: ${{ vars.SUPABASE_URL || vars.VITE_SUPABASE_URL || secrets.SUPABASE_URL || secrets.VITE_SUPABASE_URL }}
-          KEY: ${{ vars.SUPABASE_ANON_KEY || vars.VITE_SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY || secrets.VITE_SUPABASE_ANON_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
         run: node scripts/keep-alive.js
+
