@@ -92,6 +92,13 @@ async function keepAlive() {
       console.error(`❌ ERROR: Heartbeat failed on attempt ${attempt}.`);
       console.error(`Message: ${error.message}`);
       
+      if (error.message.includes('tenant/user') && error.message.includes('not found')) {
+        console.error('❌ CRITICAL: Supabase project is either PAUSED or DELETED.');
+        console.error('💡 ACTION REQUIRED: Log in to the Supabase Dashboard and manually RESTORE your project.');
+        console.error('   The keep-alive script can only keep an active project from pausing, it cannot wake a paused project via the Database pooler.');
+        process.exit(1);
+      }
+      
       if (error.message.includes('ENETUNREACH')) {
         console.error('CRITICAL: Network unreachable. Ensure you are using the Transaction Pooler URL (port 6543) for IPv4 support.');
       }
