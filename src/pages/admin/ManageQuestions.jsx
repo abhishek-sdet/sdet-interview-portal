@@ -463,6 +463,12 @@ export default function ManageQuestions() {
                 acc[key].sections.cs_basics.push(q);
             } else if (subsection === 'grammar') {
                 acc[key].sections.grammar.push(q);
+            } else if (subsection === 'java') {
+                acc[key].sections.java.push(q);
+            } else if (subsection === 'python') {
+                acc[key].sections.python.push(q);
+            } else if (subsection === 'database') {
+                acc[key].sections.database.push(q);
             } else {
                 acc[key].sections.testing.push(q);
             }
