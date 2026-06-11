@@ -875,13 +875,15 @@ export default function ManageQuestions() {
                             const isExpanded = !!expandedSets[set.key];
 
                             const allSections = [
-                                { id: 'computer_science', label: 'Computer Science', shortLabel: 'CS', count: set.sections.computer_science.length, questions: set.sections.computer_science, icon: <Code size={14} />, color: 'blue' },
-                                { id: 'logical_reasoning', label: 'Logical Reasoning', shortLabel: 'Logic', count: set.sections.logical_reasoning.length, questions: set.sections.logical_reasoning, icon: <Brain size={14} />, color: 'green' },
-                                { id: 'miscellaneous', label: 'Miscellaneous', shortLabel: 'Misc', count: set.sections.miscellaneous.length, questions: set.sections.miscellaneous, icon: <ListTodo size={14} />, color: 'yellow' },
-                                { id: 'grammar', label: 'Grammar', shortLabel: 'Grammar', count: set.sections.grammar.length, questions: set.sections.grammar, icon: <BookOpen size={14} />, color: 'pink' },
-                                { id: 'java', label: 'Java', shortLabel: 'Java', count: set.sections.java.length, questions: set.sections.java, icon: <Code size={14} />, color: 'orange' },
-                                { id: 'python', label: 'Python', shortLabel: 'Python', count: set.sections.python.length, questions: set.sections.python, icon: <Code size={14} />, color: 'cyan' },
-                                { id: 'database', label: 'Database', shortLabel: 'DB', count: set.sections.database.length, questions: set.sections.database, icon: <Code size={14} />, color: 'emerald' },
+                                { id: 'testing', label: 'Testing', shortLabel: 'Test', count: set.sections.testing?.length || 0, questions: set.sections.testing, icon: <Code size={14} />, color: 'blue' },
+                                { id: 'api', label: 'API', shortLabel: 'API', count: set.sections.api?.length || 0, questions: set.sections.api, icon: <Code size={14} />, color: 'purple' },
+                                { id: 'logical', label: 'Logical', shortLabel: 'Logic', count: set.sections.logical?.length || 0, questions: set.sections.logical, icon: <Brain size={14} />, color: 'green' },
+                                { id: 'agile', label: 'Agile', shortLabel: 'Agile', count: set.sections.agile?.length || 0, questions: set.sections.agile, icon: <ListTodo size={14} />, color: 'yellow' },
+                                { id: 'cs_basics', label: 'CS Basics', shortLabel: 'CS', count: set.sections.cs_basics?.length || 0, questions: set.sections.cs_basics, icon: <Code size={14} />, color: 'blue' },
+                                { id: 'grammar', label: 'Grammar', shortLabel: 'Grammar', count: set.sections.grammar?.length || 0, questions: set.sections.grammar, icon: <BookOpen size={14} />, color: 'pink' },
+                                { id: 'java', label: 'Java', shortLabel: 'Java', count: set.sections.java?.length || 0, questions: set.sections.java, icon: <Code size={14} />, color: 'orange' },
+                                { id: 'python', label: 'Python', shortLabel: 'Python', count: set.sections.python?.length || 0, questions: set.sections.python, icon: <Code size={14} />, color: 'cyan' },
+                                { id: 'database', label: 'Database', shortLabel: 'DB', count: set.sections.database?.length || 0, questions: set.sections.database, icon: <Code size={14} />, color: 'emerald' },
                             ].filter(s => s.count > 0);
 
                             const firstSection = allSections[0]?.id;

@@ -73,13 +73,13 @@ content = content.replace(
 
 // Replace the render questions grid
 content = content.replace(
-    /\{ id: 'computer_science', label: 'Computer Science', shortLabel: 'CS', count: set\.sections\.computer_science\.length, questions: set\.sections\.computer_science, icon: <Code size=\{14\} \/>, color: 'blue' \},\s*\{ id: 'logical_reasoning', label: 'Logical Reasoning', shortLabel: 'LR', count: set\.sections\.logical_reasoning\.length, questions: set\.sections\.logical_reasoning, icon: <Cpu size=\{14\} \/>, color: 'purple' \},\s*\{ id: 'miscellaneous', label: 'Miscellaneous', shortLabel: 'Misc', count: set\.sections\.miscellaneous\.length, questions: set\.sections\.miscellaneous, icon: <Box size=\{14\} \/>, color: 'emerald' \},\s*\{ id: 'grammar', label: 'Grammar', shortLabel: 'Grammar', count: set\.sections\.grammar\.length, questions: set\.sections\.grammar, icon: <PenTool size=\{14\} \/>, color: 'rose' \},/g,
-    `{ id: 'testing', label: 'Testing', shortLabel: 'Test', count: set.sections.testing.length, questions: set.sections.testing, icon: <Code size={14} />, color: 'blue' },
-                                { id: 'api', label: 'API', shortLabel: 'API', count: set.sections.api.length, questions: set.sections.api, icon: <Cpu size={14} />, color: 'purple' },
-                                { id: 'logical', label: 'Logical', shortLabel: 'Log', count: set.sections.logical.length, questions: set.sections.logical, icon: <Box size={14} />, color: 'emerald' },
-                                { id: 'agile', label: 'Agile', shortLabel: 'Agl', count: set.sections.agile.length, questions: set.sections.agile, icon: <PenTool size={14} />, color: 'rose' },
-                                { id: 'cs_basics', label: 'CS Basics', shortLabel: 'CS', count: set.sections.cs_basics.length, questions: set.sections.cs_basics, icon: <Code size={14} />, color: 'blue' },
-                                { id: 'grammar', label: 'Grammar', shortLabel: 'Gram', count: set.sections.grammar.length, questions: set.sections.grammar, icon: <PenTool size={14} />, color: 'rose' },`
+    /\{ id: 'computer_science', label: 'Computer Science', shortLabel: 'CS', count: set\.sections\.computer_science\.length, questions: set\.sections\.computer_science, icon: <Code size=\{14\} \/>, color: 'blue' \},\s*\{ id: 'logical_reasoning', label: 'Logical Reasoning', shortLabel: 'Logic', count: set\.sections\.logical_reasoning\.length, questions: set\.sections\.logical_reasoning, icon: <Brain size=\{14\} \/>, color: 'green' \},\s*\{ id: 'miscellaneous', label: 'Miscellaneous', shortLabel: 'Misc', count: set\.sections\.miscellaneous\.length, questions: set\.sections\.miscellaneous, icon: <ListTodo size=\{14\} \/>, color: 'yellow' \},\s*\{ id: 'grammar', label: 'Grammar', shortLabel: 'Grammar', count: set\.sections\.grammar\.length, questions: set\.sections\.grammar, icon: <BookOpen size=\{14\} \/>, color: 'pink' \},/g,
+    `{ id: 'testing', label: 'Testing', shortLabel: 'Test', count: set.sections.testing?.length || 0, questions: set.sections.testing, icon: <Code size={14} />, color: 'blue' },
+                                { id: 'api', label: 'API', shortLabel: 'API', count: set.sections.api?.length || 0, questions: set.sections.api, icon: <Code size={14} />, color: 'purple' },
+                                { id: 'logical', label: 'Logical', shortLabel: 'Logic', count: set.sections.logical?.length || 0, questions: set.sections.logical, icon: <Brain size={14} />, color: 'green' },
+                                { id: 'agile', label: 'Agile', shortLabel: 'Agile', count: set.sections.agile?.length || 0, questions: set.sections.agile, icon: <ListTodo size={14} />, color: 'yellow' },
+                                { id: 'cs_basics', label: 'CS Basics', shortLabel: 'CS', count: set.sections.cs_basics?.length || 0, questions: set.sections.cs_basics, icon: <Code size={14} />, color: 'blue' },
+                                { id: 'grammar', label: 'Grammar', shortLabel: 'Grammar', count: set.sections.grammar?.length || 0, questions: set.sections.grammar, icon: <BookOpen size={14} />, color: 'pink' },`
 );
 
 
