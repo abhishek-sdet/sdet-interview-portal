@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import SimpleLayout from '@/components/admin/SimpleLayout';
 import { supabase } from '@/lib/supabase';
 import { Upload, FileText, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import mammoth from 'mammoth';
 import { preprocessDocumentText, detectSections, parseQuestionsInSection } from '@/utils/questionParser';
 
@@ -52,8 +53,8 @@ export default function UploadQuestions() {
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
         if (selectedFile) {
-            if (!selectedFile.name.endsWith('.docx') && !selectedFile.name.endsWith('.txt')) {
-                setMessage({ type: 'error', text: 'Please select a .docx or .txt file' });
+            if (!selectedFile.name.endsWith('.docx') && !selectedFile.name.endsWith('.txt') && !selectedFile.name.endsWith('.xlsx')) {
+                setMessage({ type: 'error', text: 'Please select a .docx, .txt, or .xlsx file' });
                 return;
             }
             setFile(selectedFile);
@@ -113,50 +114,91 @@ export default function UploadQuestions() {
                 setCriteria(prev => [...prev, newCriteria]);
             }
 
-            console.log(`📄 Parsing ${file.name}...`);
-            let text = '';
-
-            if (file.name.endsWith('.docx')) {
-                // Extract text from Word document using mammoth
-                const arrayBuffer = await file.arrayBuffer();
-                const result = await mammoth.extractRawText({ arrayBuffer });
-                text = result.value;
-            } else if (file.name.endsWith('.txt')) {
-                // Read text file directly with encoding detection
-                text = await readTextFile(file);
-
-                // Fallback: If text contains null bytes (common when UTF-16 is read as UTF-8 or BOM missing), strip them
-                if (text.indexOf('\0') !== -1) {
-                    console.warn('Found null bytes in text, stripping to fix encoding...');
-                    text = text.replace(/\0/g, '');
-                }
-            }
-
-            if (!text || text.trim().length === 0) {
-                throw new Error('No text found in document');
-            }
-
-            console.log(`✅ Extracted ${text.length} characters`);
-
-            // Use the shared robust parser
-            // 1. Preprocess (handle newlines etc)
-            text = preprocessDocumentText(text);
-
-            // 2. Detect sections
-            const sections = detectSections(text);
-            console.log(`Found ${sections.length} sections`);
-
-            const importData = {
-                criteria_id: currentCriteriaId,
-                category: 'Common',
-                difficulty: 'medium'
-            };
-
-            // 3. Parse each section
             let allQuestions = [];
-            for (const section of sections) {
-                const questions = parseQuestionsInSection(section, importData);
-                allQuestions = [...allQuestions, ...questions];
+
+            if (file.name.endsWith('.xlsx')) {
+                console.log('📄 Parsing Excel file...');
+                const arrayBuffer = await file.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const data = XLSX.utils.sheet_to_json(worksheet);
+
+                if (!data || data.length === 0) {
+                    throw new Error('No valid questions found in Excel document');
+                }
+
+                // Map Excel rows to internal question format
+                for (let i = 0; i < data.length; i++) {
+                    const row = data[i];
+                    if (!row.Question) continue;
+
+                    let options = [];
+                    if (row['Option A']) options.push(row['Option A'].toString().trim());
+                    if (row['Option B']) options.push(row['Option B'].toString().trim());
+                    if (row['Option C']) options.push(row['Option C'].toString().trim());
+                    if (row['Option D']) options.push(row['Option D'].toString().trim());
+
+                    if (options.length < 2) {
+                        console.warn(`Row ${i + 2} skipped: Not enough options`);
+                        continue;
+                    }
+
+                    allQuestions.push({
+                        criteria_id: currentCriteriaId,
+                        category: 'Common',
+                        section: row.Category ? row.Category.toString().trim() : 'General',
+                        subsection: row.Category ? row.Category.toString().trim() : 'aptitude',
+                        question_text: row.Question.toString().trim(),
+                        options: options,
+                        correct_option: row.Answer ? row.Answer.toString().trim().toUpperCase() : 'A'
+                    });
+                }
+            } else {
+                console.log(`📄 Parsing ${file.name}...`);
+                let text = '';
+
+                if (file.name.endsWith('.docx')) {
+                    // Extract text from Word document using mammoth
+                    const arrayBuffer = await file.arrayBuffer();
+                    const result = await mammoth.extractRawText({ arrayBuffer });
+                    text = result.value;
+                } else if (file.name.endsWith('.txt')) {
+                    // Read text file directly with encoding detection
+                    text = await readTextFile(file);
+
+                    // Fallback: If text contains null bytes (common when UTF-16 is read as UTF-8 or BOM missing), strip them
+                    if (text.indexOf('\0') !== -1) {
+                        console.warn('Found null bytes in text, stripping to fix encoding...');
+                        text = text.replace(/\0/g, '');
+                    }
+                }
+
+                if (!text || text.trim().length === 0) {
+                    throw new Error('No text found in document');
+                }
+
+                console.log(`✅ Extracted ${text.length} characters`);
+
+                // Use the shared robust parser
+                // 1. Preprocess (handle newlines etc)
+                text = preprocessDocumentText(text);
+
+                // 2. Detect sections
+                const sections = detectSections(text);
+                console.log(`Found ${sections.length} sections`);
+
+                const importData = {
+                    criteria_id: currentCriteriaId,
+                    category: 'Common',
+                    difficulty: 'medium'
+                };
+
+                // 3. Parse each section
+                for (const section of sections) {
+                    const questions = parseQuestionsInSection(section, importData);
+                    allQuestions = [...allQuestions, ...questions];
+                }
             }
 
             if (allQuestions.length === 0) {
@@ -486,17 +528,21 @@ export default function UploadQuestions() {
                 <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-5">
                     <h3 className="font-bold text-white mb-3 flex items-center gap-2 text-sm">
                         <FileText size={16} className="text-blue-400" />
-                        Document Format Guidelines (.docx or .txt)
+                        Document Format Guidelines (.docx, .txt, or .xlsx)
                     </h3>
                     <ul className="text-sm text-slate-400 space-y-1.5">
+                        <li className="font-semibold text-white">For Word (.docx) and Text (.txt) Files:</li>
                         <li>• Questions should be numbered (1. 2. 3. or 1) 2) 3))</li>
-                        <li>• Options should be labeled (A) B) C) D) or a) b) c) d))</li>
-                        <li>• Mark correct answer with * or add "Answer: A" line</li>
-                        <li>• Use headings to separate sections (General, Java, Python, etc.)</li>
+                        <li>Ensure options are clearly marked with A), B), C), D)</li>
+                        <li>Ensure the correct answer is marked with "Answer: "</li>
+                        <br/>
+                        <li className="font-semibold text-white">For Excel (.xlsx) Files:</li>
+                        <li>Use the following columns: Category, Question, Option A, Option B, Option C, Option D, Answer</li>
+                        <li>Category represents the section (e.g. "Testing Fundamentals", "Java", etc.)</li>
+                        <li>Answer should be the option letter (A, B, C, or D)</li>
                     </ul>
                 </div>
             </div>
         </SimpleLayout>
     );
-}
 
