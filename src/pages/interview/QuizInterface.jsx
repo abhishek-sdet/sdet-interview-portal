@@ -243,7 +243,7 @@ export default function QuizInterface() {
         const timer = setInterval(() => {
             setTimeRemaining((prev) => {
                 if (prev <= 1) {
-                    // handleSubmit(true); // Auto-submit when time runs out (DISABLED FOR TESTING)
+                    handleSubmit(true, 'time_expired'); // Auto-submit when time runs out
                     return 0;
                 }
                 return prev - 1;
