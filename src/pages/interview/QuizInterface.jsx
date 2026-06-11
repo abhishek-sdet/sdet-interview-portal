@@ -729,7 +729,16 @@ export default function QuizInterface() {
             console.log('[FETCH] Selected elective questions:', selectedElectiveQs.length);
 
             // Organize general questions by subsection
-            const selectRandom = (arr, count) => shuffleArray([...arr]).slice(0, count);
+            // Fetch site settings directly to ensure we have the latest shuffle preference
+            const { data: siteSettings } = await supabase
+                .from('site_settings')
+                .select('shuffle_questions')
+                .single();
+            
+            const isShuffleEnabled = siteSettings?.shuffle_questions || false;
+            setShuffleQuestions(isShuffleEnabled);
+
+            const selectQuestions = (arr, count) => isShuffleEnabled ? shuffleArray([...arr]).slice(0, count) : arr.slice(0, count);
 
             const isCodingQuestion = (q) => {
                 const text = (q.question_text || '').toLowerCase();
@@ -769,12 +778,12 @@ export default function QuizInterface() {
             const hasSectionedQuestions = generalQs.some(q => knownSubsections.includes(q.subsection));
 
             if (hasSectionedQuestions) {
-                let testingQs = selectRandom(generalQs.filter(q => q.subsection === 'testing'), moduleCounts.testing);
-                let apiQs = selectRandom(generalQs.filter(q => q.subsection === 'api'), moduleCounts.api);
-                let logicalQs = selectRandom(generalQs.filter(q => q.subsection === 'logical'), moduleCounts.logical);
-                let agileQs = selectRandom(generalQs.filter(q => q.subsection === 'agile'), moduleCounts.agile);
-                let csBasicsQs = selectRandom(generalQs.filter(q => q.subsection === 'cs_basics'), moduleCounts.cs_basics);
-                let grammarQs = selectRandom(generalQs.filter(q => q.subsection === 'grammar'), moduleCounts.grammar);
+                let testingQs = selectQuestions(generalQs.filter(q => q.subsection === 'testing'), moduleCounts.testing);
+                let apiQs = selectQuestions(generalQs.filter(q => q.subsection === 'api'), moduleCounts.api);
+                let logicalQs = selectQuestions(generalQs.filter(q => q.subsection === 'logical'), moduleCounts.logical);
+                let agileQs = selectQuestions(generalQs.filter(q => q.subsection === 'agile'), moduleCounts.agile);
+                let csBasicsQs = selectQuestions(generalQs.filter(q => q.subsection === 'cs_basics'), moduleCounts.cs_basics);
+                let grammarQs = selectQuestions(generalQs.filter(q => q.subsection === 'grammar'), moduleCounts.grammar);
 
                 // Pad missing questions if any category is short
                 let currentTotal = testingQs.length + apiQs.length + logicalQs.length + agileQs.length + csBasicsQs.length + grammarQs.length;
@@ -782,7 +791,7 @@ export default function QuizInterface() {
                     const missing = expectedGeneralTotal - currentTotal;
                     // Try to pad from testing first
                     const testingAvailable = generalQs.filter(q => q.subsection === 'testing' && !testingQs.includes(q));
-                    const pad = selectRandom(testingAvailable, missing);
+                    const pad = selectQuestions(testingAvailable, missing);
                     testingQs = [...testingQs, ...pad];
                     
                     // If still missing, pad from logical
@@ -790,7 +799,7 @@ export default function QuizInterface() {
                     if (currentTotal < expectedGeneralTotal) {
                         const missingMore = expectedGeneralTotal - currentTotal;
                         const logicalAvailable = generalQs.filter(q => q.subsection === 'logical' && !logicalQs.includes(q));
-                        const padMore = selectRandom(logicalAvailable, missingMore);
+                        const padMore = selectQuestions(logicalAvailable, missingMore);
                         logicalQs = [...logicalQs, ...padMore];
                     }
                 }
@@ -829,7 +838,7 @@ export default function QuizInterface() {
             if (selectedSubject && !skipSpecialization) {
                 // Store selected elective questions
                 const electiveRef = selectedSubject === 'database' 
-                    ? selectRandom(selectedElectiveQs, moduleCounts.elective)
+                    ? selectQuestions(selectedElectiveQs, moduleCounts.elective)
                     : selectElectiveMix(selectedElectiveQs, moduleCounts.elective);
                 if (selectedSubject === 'java') {
                     javaQuestionsRef.current = electiveRef;
@@ -842,7 +851,7 @@ export default function QuizInterface() {
                 // Pre-filter ALL available specialized subjects into refs for the selection screen
                 javaQuestionsRef.current = selectElectiveMix(electiveQs.filter(q => q.subsection === 'java'), moduleCounts.elective);
                 pythonQuestionsRef.current = selectElectiveMix(electiveQs.filter(q => q.subsection === 'python'), moduleCounts.elective);
-                databaseQuestionsRef.current = selectRandom(electiveQs.filter(q => q.subsection === 'database'), moduleCounts.elective);
+                databaseQuestionsRef.current = selectQuestions(electiveQs.filter(q => q.subsection === 'database'), moduleCounts.elective);
             }
 
             let initialQs = [...orderedGeneralQs];
@@ -857,7 +866,7 @@ export default function QuizInterface() {
                 
                 if (!addedElectives || addedElectives.length === 0) {
                      addedElectives = selectedSubject === 'database'
-                         ? selectRandom(selectedElectiveQs, moduleCounts.elective)
+                         ? selectQuestions(selectedElectiveQs, moduleCounts.elective)
                          : selectElectiveMix(selectedElectiveQs, moduleCounts.elective);
                 }
                 initialQs = [...initialQs, ...addedElectives];
@@ -893,28 +902,9 @@ export default function QuizInterface() {
                 currentSpecialization = selectedSubject.charAt(0).toUpperCase() + selectedSubject.slice(1);
             }
 
-            // Fetch site settings directly to ensure we have the latest shuffle preference
-            const { data: siteSettings } = await supabase
-                .from('site_settings')
-                .select('shuffle_questions')
-                .single();
-            
-            const isShuffleEnabled = siteSettings?.shuffle_questions || false;
-
-            // Update state to keep UI in sync if needed (though isShuffleEnabled is used locally here)
-            setShuffleQuestions(isShuffleEnabled);
-
-            // Apply randomization based on site settings
-            let finalQuestions;
-            if (isShuffleEnabled) {
-                // Shuffle general and elective separately so placeholders/electives stay at the end
-                const shuffledGeneral = shuffleArray([...orderedGeneralQs]);
-                const shuffledElective = shuffleArray([...addedElectives]);
-                finalQuestions = [...shuffledGeneral, ...shuffledElective];
-            } else {
-                finalQuestions = initialQs;
-            }
-
+            // Apply randomization based on site settings (ONLY for internal shuffling now)
+            // The category sequence is strictly maintained.
+            let finalQuestions = initialQs;
             setQuestions(finalQuestions);
 
             console.log(`[FETCH] Loaded ${finalQuestions.length} questions upfront (${isShuffleEnabled ? 'SHUFFLED' : 'ORIGINAL ORDER'})`);
