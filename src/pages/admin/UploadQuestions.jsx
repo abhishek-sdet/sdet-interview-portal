@@ -474,13 +474,13 @@ export default function UploadQuestions() {
                     {/* File Upload */}
                     <div>
                         <label className="block text-sm font-medium text-slate-300 mb-2">
-                            Select Document (.docx or .txt)
+                            Select Document (.docx, .txt, or .xlsx)
                         </label>
                         <div className="relative">
                             <input
                                 id="file-input"
                                 type="file"
-                                accept=".docx,.txt"
+                                accept=".docx,.txt,.xlsx"
                                 onChange={handleFileChange}
                                 required
                                 className="hidden"
@@ -497,7 +497,7 @@ export default function UploadQuestions() {
                                 ) : (
                                     <>
                                         <Upload className="w-6 h-6 text-slate-400" />
-                                        <span className="text-slate-400">Click to select Word (.docx) or Text (.txt) file</span>
+                                        <span className="text-slate-400">Click to select Word (.docx), Text (.txt), or Excel (.xlsx) file</span>
                                     </>
                                 )}
                             </label>
@@ -545,4 +545,5 @@ export default function UploadQuestions() {
             </div>
         </SimpleLayout>
     );
+}
 
