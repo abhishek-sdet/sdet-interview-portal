@@ -628,6 +628,39 @@ export default function QuizInterface() {
             // Organize general questions by subsection
             const selectRandom = (arr, count) => shuffleArray([...arr]).slice(0, count);
 
+            const isCodingQuestion = (q) => {
+                const text = (q.question_text || '').toLowerCase();
+                if (text.includes('```')) return true;
+                if (text.includes('public class') || text.includes('system.out.print') || text.includes('public static void main')) return true;
+                if (text.includes('def ') || text.includes('print(')) return true;
+                if (text.includes('select ') && text.includes(' from ')) return true;
+                if (text.includes('output of') || text.includes('following code')) return true;
+                if (text.includes(';') && text.includes('{') && text.includes('}')) return true;
+                return false;
+            };
+
+            const selectElectiveMix = (availableQs, count) => {
+                const codingQs = availableQs.filter(isCodingQuestion);
+                const theoryQs = availableQs.filter(q => !isCodingQuestion(q));
+
+                const codingCount = Math.round(count * 0.6);
+                const theoryCount = count - codingCount;
+
+                let selectedCoding = shuffleArray([...codingQs]).slice(0, codingCount);
+                let selectedTheory = shuffleArray([...theoryQs]).slice(0, theoryCount);
+
+                // Fallback if not enough questions in either category
+                if (selectedCoding.length < codingCount) {
+                    const remainingTheoryNeeded = count - selectedCoding.length;
+                    selectedTheory = shuffleArray([...theoryQs]).slice(0, remainingTheoryNeeded);
+                } else if (selectedTheory.length < theoryCount) {
+                    const remainingCodingNeeded = count - selectedTheory.length;
+                    selectedCoding = shuffleArray([...codingQs]).slice(0, remainingCodingNeeded);
+                }
+
+                return shuffleArray([...selectedCoding, ...selectedTheory]);
+            };
+
             let orderedGeneralQs = [];
             const knownSubsections = ['computer_science', 'logical_reasoning', 'miscellaneous', 'grammar'];
             const hasSectionedQuestions = generalQs.some(q => knownSubsections.includes(q.subsection));
@@ -686,7 +719,9 @@ export default function QuizInterface() {
             // For backward compatibility with old specialization flow, store by subject
             if (selectedSubject && !skipSpecialization) {
                 // Store selected elective questions
-                const electiveRef = selectRandom(selectedElectiveQs, moduleCounts.elective);
+                const electiveRef = selectedSubject === 'database' 
+                    ? selectRandom(selectedElectiveQs, moduleCounts.elective)
+                    : selectElectiveMix(selectedElectiveQs, moduleCounts.elective);
                 if (selectedSubject === 'java') {
                     javaQuestionsRef.current = electiveRef;
                 } else if (selectedSubject === 'python') {
@@ -696,8 +731,8 @@ export default function QuizInterface() {
                 }
             } else {
                 // Pre-filter ALL available specialized subjects into refs for the selection screen
-                javaQuestionsRef.current = selectRandom(electiveQs.filter(q => q.subsection === 'java'), moduleCounts.elective);
-                pythonQuestionsRef.current = selectRandom(electiveQs.filter(q => q.subsection === 'python'), moduleCounts.elective);
+                javaQuestionsRef.current = selectElectiveMix(electiveQs.filter(q => q.subsection === 'java'), moduleCounts.elective);
+                pythonQuestionsRef.current = selectElectiveMix(electiveQs.filter(q => q.subsection === 'python'), moduleCounts.elective);
                 databaseQuestionsRef.current = selectRandom(electiveQs.filter(q => q.subsection === 'database'), moduleCounts.elective);
             }
 
@@ -706,7 +741,16 @@ export default function QuizInterface() {
 
             if (selectedSubject && !skipSpecialization) {
                 // If a subject was already selected before, append its questions now
-                addedElectives = selectRandom(selectedElectiveQs, moduleCounts.elective);
+                // addedElectives is already set if we go through the logic above, but if we need to set it here:
+                addedElectives = selectedSubject === 'java' ? javaQuestionsRef.current : 
+                                 selectedSubject === 'python' ? pythonQuestionsRef.current : 
+                                 databaseQuestionsRef.current;
+                
+                if (!addedElectives || addedElectives.length === 0) {
+                     addedElectives = selectedSubject === 'database'
+                         ? selectRandom(selectedElectiveQs, moduleCounts.elective)
+                         : selectElectiveMix(selectedElectiveQs, moduleCounts.elective);
+                }
                 initialQs = [...initialQs, ...addedElectives];
             } else if (!skipSpecialization) {
                 // Add placeholder questions so the map shows 30 questions from the start.
