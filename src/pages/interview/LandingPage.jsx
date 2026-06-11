@@ -247,12 +247,13 @@ export default function LandingPage() {
                 }
             }
 
-            console.log('[REGISTRATION] Checking for existing candidate email:', formData.email.trim());
+            const normalizedEmail = formData.email.trim().toLowerCase();
+            console.log('[REGISTRATION] Checking for existing candidate email:', normalizedEmail);
             // 2. Check if candidate email already exists
             const { data: candidates, error: fetchError } = await supabase
                 .from('candidates')
                 .select('id, full_name')
-                .eq('email', formData.email.trim())
+                .eq('email', normalizedEmail)
                 .limit(1);
 
             if (fetchError) {
@@ -330,7 +331,7 @@ export default function LandingPage() {
                     .insert([
                         {
                             full_name: formData.fullName.trim(),
-                            email: formData.email.trim(),
+                            email: normalizedEmail,
                             phone: formData.phone.trim()
                         }
                     ])
