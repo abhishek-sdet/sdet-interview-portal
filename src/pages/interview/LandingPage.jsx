@@ -106,6 +106,9 @@ export default function LandingPage() {
         if (field === 'phone') {
             // Strip non-numeric characters
             value = value.replace(/[^0-9]/g, '');
+        } else if (field === 'email') {
+            // Strip spaces from email
+            value = value.replace(/\s/g, '');
         }
         setFormData({ ...formData, [field]: value });
         setError('');
@@ -473,7 +476,7 @@ export default function LandingPage() {
                                 </div>
 
                                 {/* Form */}
-                                <form onSubmit={handleSubmit} className="space-y-4">
+                                <form onSubmit={handleSubmit} className="space-y-4" noValidate>
                                     {error && (
                                         <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-center gap-2 animate-pulse">
                                             <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>

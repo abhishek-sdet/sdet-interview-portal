@@ -323,6 +323,9 @@ export default function QuizInterface() {
             if (proctoringStrict) {
                 console.log('[PROCTOR] Countdown expired. Auto-submitting.');
                 showToast.error("Exam Auto-Submitted due to prolonged absence from the secure environment.");
+                // Prevent infinite loop if submission fails by hiding the warning modal 
+                // (or setting proctorCountdown to a safe value) so it doesn't trigger again
+                setShowProctorWarning(false);
                 handleSubmit(true, 'proctor_timeout');
             } else {
                 console.log('[PROCTOR] Countdown expired. Strict mode OFF, skipping auto-submit.');
@@ -627,14 +630,55 @@ export default function QuizInterface() {
                 return;
             }
 
+            // Deduplicate questions by text to prevent identical questions appearing if DB has duplicates
+            let uniqueData = Array.from(
+                new Map(data.map(q => [(q.question_text || '').trim().toLowerCase(), q])).values()
+            );
+
+            // FETCH PREVIOUSLY ANSWERED QUESTIONS FOR THIS CANDIDATE
+            const candidateId = localStorage.getItem('candidateId');
+            if (candidateId) {
+                try {
+                    const { data: pastInterviews } = await supabase
+                        .from('interviews')
+                        .select('id')
+                        .eq('candidate_id', candidateId)
+                        .neq('id', interviewId);
+
+                    if (pastInterviews && pastInterviews.length > 0) {
+                        const pastInterviewIds = pastInterviews.map(i => i.id);
+                        const { data: pastAnswers } = await supabase
+                            .from('answers')
+                            .select('question_id')
+                            .in('interview_id', pastInterviewIds);
+
+                        if (pastAnswers && pastAnswers.length > 0) {
+                            const previousQuestionIds = new Set(pastAnswers.map(a => a.question_id));
+                            
+                            // Filter out questions the candidate has already seen
+                            const unseenData = uniqueData.filter(q => !previousQuestionIds.has(q.id));
+                            
+                            if (unseenData.length >= expectedGeneralTotal + moduleCounts.elective) {
+                                uniqueData = unseenData;
+                                console.log('[FETCH] Filtered out previously answered questions. Remaining:', uniqueData.length);
+                            } else {
+                                console.warn('[FETCH] Not enough unseen questions available. Falling back to all questions.');
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.warn('[FETCH] Error fetching previous answers for deduplication:', err);
+                }
+            }
+
             // Categorize Questions by NEW structure: section + subsection
             // General/Aptitude
-            let generalQs = data.filter(q => {
+            let generalQs = uniqueData.filter(q => {
                 const isGeneral = q.section === 'general' || !q.section;
                 return isGeneral;
             });
 
-            let electiveQs = data.filter(q => {
+            let electiveQs = uniqueData.filter(q => {
                 const isElective = q.section === 'elective';
                 return isElective;
             });
@@ -1120,6 +1164,10 @@ export default function QuizInterface() {
 
         try {
             const interviewId = localStorage.getItem('interviewId');
+            if (!interviewId || interviewId === 'undefined' || interviewId === 'null') {
+                throw new Error("Invalid Session: Your exam session was not properly initialized or was deleted by an administrator.");
+            }
+
             const criteriaId = localStorage.getItem('criteriaId');
             const deviceId = accessControl.getDeviceId();
 
@@ -1249,7 +1297,14 @@ export default function QuizInterface() {
         } catch (err) {
             console.error('[SUBMISSION ERROR]', err);
             setSubmissionFailed(true);
-            setError(err.message || 'Connection lost. We could not save your answers.');
+            
+            // Provide a friendly error for foreign key constraint errors (e.g., if interview row was deleted)
+            if (err.code === '23503' || (err.message && err.message.includes('foreign key constraint'))) {
+                setError('Your interview session was deleted or is invalid. Please contact the administrator.');
+            } else {
+                setError(err.message || 'Connection lost. We could not save your answers.');
+            }
+            
             setSubmitting(false);
             showToast('Submission failed. Please try again.', 'error');
         }
