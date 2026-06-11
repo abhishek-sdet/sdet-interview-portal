@@ -241,16 +241,18 @@ export default function QuizInterface() {
         if (timeRemaining === null || timeRemaining <= 0 || submitting) return;
 
         const timer = setInterval(() => {
-            setTimeRemaining((prev) => {
-                if (prev <= 1) {
-                    handleSubmit(true, 'time_expired'); // Auto-submit when time runs out
-                    return 0;
-                }
-                return prev - 1;
-            });
+            setTimeRemaining((prev) => Math.max(0, prev - 1));
         }, 1000);
 
         return () => clearInterval(timer);
+    }, [timeRemaining, submitting]);
+
+    // Trigger submit when time runs out
+    useEffect(() => {
+        if (timeRemaining === 0 && !submitting) {
+            console.log('[TIMER] Time is up, auto-submitting...');
+            handleSubmit(true, 'time_expired');
+        }
     }, [timeRemaining, submitting]);
 
     // --- PROCTORING SHIELD ---
