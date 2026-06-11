@@ -607,14 +607,16 @@ export default function QuizInterface() {
                 .maybeSingle();
 
             const moduleCounts = criteriaMetaData?.metadata?.module_counts || {
-                computer_science: 10,
-                logical_reasoning: 5,
-                miscellaneous: 3,
-                grammar: 5,
+                testing: 10,
+                api: 4,
+                logical: 3,
+                agile: 2,
+                cs_basics: 2,
+                grammar: 2,
                 elective: 7
             };
 
-            const expectedGeneralTotal = moduleCounts.computer_science + moduleCounts.logical_reasoning + moduleCounts.miscellaneous + moduleCounts.grammar;
+            const expectedGeneralTotal = moduleCounts.testing + moduleCounts.api + moduleCounts.logical + moduleCounts.agile + moduleCounts.cs_basics + moduleCounts.grammar;
 
             let query = supabase
                 .from('questions')
@@ -748,44 +750,50 @@ export default function QuizInterface() {
             };
 
             let orderedGeneralQs = [];
-            const knownSubsections = ['computer_science', 'logical_reasoning', 'miscellaneous', 'grammar'];
+            const knownSubsections = ['testing', 'api', 'logical', 'agile', 'cs_basics', 'grammar'];
             const hasSectionedQuestions = generalQs.some(q => knownSubsections.includes(q.subsection));
 
             if (hasSectionedQuestions) {
-                let computerScienceQs = selectRandom(generalQs.filter(q => q.subsection === 'computer_science'), moduleCounts.computer_science);
-                let logicalReasoningQs = selectRandom(generalQs.filter(q => q.subsection === 'logical_reasoning'), moduleCounts.logical_reasoning);
-                let miscellaneousQs = selectRandom(generalQs.filter(q => q.subsection === 'miscellaneous'), moduleCounts.miscellaneous);
+                let testingQs = selectRandom(generalQs.filter(q => q.subsection === 'testing'), moduleCounts.testing);
+                let apiQs = selectRandom(generalQs.filter(q => q.subsection === 'api'), moduleCounts.api);
+                let logicalQs = selectRandom(generalQs.filter(q => q.subsection === 'logical'), moduleCounts.logical);
+                let agileQs = selectRandom(generalQs.filter(q => q.subsection === 'agile'), moduleCounts.agile);
+                let csBasicsQs = selectRandom(generalQs.filter(q => q.subsection === 'cs_basics'), moduleCounts.cs_basics);
                 let grammarQs = selectRandom(generalQs.filter(q => q.subsection === 'grammar'), moduleCounts.grammar);
 
-                // Pad missing questions if any category is short (e.g. Experienced has no Miscellaneous)
-                let currentTotal = computerScienceQs.length + logicalReasoningQs.length + miscellaneousQs.length + grammarQs.length;
+                // Pad missing questions if any category is short
+                let currentTotal = testingQs.length + apiQs.length + logicalQs.length + agileQs.length + csBasicsQs.length + grammarQs.length;
                 if (currentTotal < expectedGeneralTotal) {
                     const missing = expectedGeneralTotal - currentTotal;
-                    // Try to pad from computer science first
-                    const csAvailable = generalQs.filter(q => q.subsection === 'computer_science' && !computerScienceQs.includes(q));
-                    const csPad = selectRandom(csAvailable, missing);
-                    computerScienceQs = [...computerScienceQs, ...csPad];
+                    // Try to pad from testing first
+                    const testingAvailable = generalQs.filter(q => q.subsection === 'testing' && !testingQs.includes(q));
+                    const pad = selectRandom(testingAvailable, missing);
+                    testingQs = [...testingQs, ...pad];
                     
-                    // If still missing, pad from logical reasoning
-                    currentTotal = computerScienceQs.length + logicalReasoningQs.length + miscellaneousQs.length + grammarQs.length;
+                    // If still missing, pad from logical
+                    currentTotal = testingQs.length + apiQs.length + logicalQs.length + agileQs.length + csBasicsQs.length + grammarQs.length;
                     if (currentTotal < expectedGeneralTotal) {
                         const missingMore = expectedGeneralTotal - currentTotal;
-                        const lrAvailable = generalQs.filter(q => q.subsection === 'logical_reasoning' && !logicalReasoningQs.includes(q));
-                        const lrPad = selectRandom(lrAvailable, missingMore);
-                        logicalReasoningQs = [...logicalReasoningQs, ...lrPad];
+                        const logicalAvailable = generalQs.filter(q => q.subsection === 'logical' && !logicalQs.includes(q));
+                        const padMore = selectRandom(logicalAvailable, missingMore);
+                        logicalQs = [...logicalQs, ...padMore];
                     }
                 }
                 
                 orderedGeneralQs = [
-                    ...computerScienceQs,
-                    ...logicalReasoningQs,
-                    ...miscellaneousQs,
+                    ...testingQs,
+                    ...apiQs,
+                    ...logicalQs,
+                    ...agileQs,
+                    ...csBasicsQs,
                     ...grammarQs
                 ];
 
-                console.log('[FETCH] Computer Science questions:', computerScienceQs.length);
-                console.log('[FETCH] Logical Reasoning questions:', logicalReasoningQs.length);
-                console.log('[FETCH] Miscellaneous Logic questions:', miscellaneousQs.length);
+                console.log('[FETCH] Testing questions:', testingQs.length);
+                console.log('[FETCH] API questions:', apiQs.length);
+                console.log('[FETCH] Logical questions:', logicalQs.length);
+                console.log('[FETCH] Agile questions:', agileQs.length);
+                console.log('[FETCH] CS Basics questions:', csBasicsQs.length);
                 console.log('[FETCH] Grammar questions:', grammarQs.length);
             } else {
                 // Fallback for custom exams
@@ -1530,7 +1538,7 @@ export default function QuizInterface() {
 
         // General questions - determine by subsection
         switch (question.subsection) {
-            case 'computer_science':
+            case 'testing':
                 // Show "Software Testing" for Experienced, "Computer Science" for Fresher
                 return {
                     name: criteriaType === 'Experienced' ? 'Software Testing' : 'Computer Science',

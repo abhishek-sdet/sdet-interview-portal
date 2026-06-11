@@ -232,9 +232,11 @@ export default function UploadQuestions() {
                     dbSubsection = sectionLower.includes('java') ? 'java' : (sectionLower.includes('python') ? 'python' : 'database');
                 } else {
                     dbSection = 'general';
-                    if (sectionLower.includes('computer')) dbSubsection = 'computer_science';
-                    else if (sectionLower.includes('logical')) dbSubsection = 'logical_reasoning';
-                    else if (sectionLower.includes('miscellaneous')) dbSubsection = 'miscellaneous';
+                    if (sectionLower.includes('testing') || sectionLower.includes('qa')) dbSubsection = 'testing';
+                    else if (sectionLower.includes('api')) dbSubsection = 'api';
+                    else if (sectionLower.includes('logical')) dbSubsection = 'logical';
+                    else if (sectionLower.includes('agile')) dbSubsection = 'agile';
+                    else if (sectionLower.includes('computer') || sectionLower.includes('cs') || sectionLower.includes('basics')) dbSubsection = 'cs_basics';
                     else if (sectionLower.includes('grammar')) dbSubsection = 'grammar';
                     else if (sectionLower.includes('aptitude')) dbSubsection = 'aptitude';
                 }

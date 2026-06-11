@@ -37,7 +37,7 @@ export default function ManageQuestions() {
         options: ['', '', '', ''],
         correct_option: 'A',
         section: 'general',
-        subsection: 'computer_science',
+        subsection: 'testing',
         difficulty: 'medium',
         is_active: true
     });
@@ -227,9 +227,11 @@ export default function ManageQuestions() {
             let content = `Questions for: ${set.criteriaName}\n=================================\n\n`;
             
             const sections = [
-                { id: 'computer_science', name: 'Computer Science' },
-                { id: 'logical_reasoning', name: 'Logical Reasoning' },
-                { id: 'miscellaneous', name: 'Miscellaneous' },
+                { id: 'testing', name: 'Testing' },
+                { id: 'api', name: 'API' },
+                { id: 'logical', name: 'Logical Reasoning' },
+                { id: 'agile', name: 'Agile' },
+                { id: 'cs_basics', name: 'CS Basics' },
                 { id: 'grammar', name: 'Grammar' },
                 { id: 'java', name: 'Java' },
                 { id: 'python', name: 'Python' },
@@ -301,7 +303,7 @@ export default function ManageQuestions() {
             });
             if (error) throw error;
             setShowAddModal(false);
-            setNewQuestion({ criteria_id: '', category: '', question_text: '', options: ['', '', '', ''], correct_option: 'A', section: 'general', subsection: 'computer_science', difficulty: 'medium', is_active: true });
+            setNewQuestion({ criteria_id: '', category: '', question_text: '', options: ['', '', '', ''], correct_option: 'A', section: 'general', subsection: 'testing', difficulty: 'medium', is_active: true });
             setSuccessModal({ title: 'Question Added', message: 'Question has been added successfully.' });
             fetchQuestions(false);
         } catch (err) {
@@ -423,9 +425,11 @@ export default function ManageQuestions() {
                     criteriaId: q.criteria_id,
                     criteriaName: q.criteria?.name || 'Unknown',
                     sections: {
-                        computer_science: [],
-                        logical_reasoning: [],
-                        miscellaneous: [],
+                        testing: [],
+                        api: [],
+                        logical: [],
+                        agile: [],
+                        cs_basics: [],
                         grammar: [],
                         java: [],
                         python: [],
@@ -442,16 +446,20 @@ export default function ManageQuestions() {
                 acc[key].sections.python.push(q);
             } else if (subsection === 'database') {
                 acc[key].sections.database.push(q);
-            } else if (subsection === 'computer_science') {
-                acc[key].sections.computer_science.push(q);
-            } else if (subsection === 'logical_reasoning') {
-                acc[key].sections.logical_reasoning.push(q);
-            } else if (subsection === 'miscellaneous') {
-                acc[key].sections.miscellaneous.push(q);
+            } else if (subsection === 'testing') {
+                acc[key].sections.testing.push(q);
+            } else if (subsection === 'api') {
+                acc[key].sections.api.push(q);
+            } else if (subsection === 'logical') {
+                acc[key].sections.logical.push(q);
+            } else if (subsection === 'agile') {
+                acc[key].sections.agile.push(q);
+            } else if (subsection === 'cs_basics') {
+                acc[key].sections.cs_basics.push(q);
             } else if (subsection === 'grammar') {
                 acc[key].sections.grammar.push(q);
             } else {
-                acc[key].sections.computer_science.push(q);
+                acc[key].sections.testing.push(q);
             }
 
             return acc;
@@ -562,9 +570,11 @@ export default function ManageQuestions() {
                                             onChange={(e) => setEditingQuestion({ ...editingQuestion, subsection: e.target.value })}
                                             className="bg-white/5 border border-white/10 rounded px-2 py-1 text-white focus:outline-none focus:border-brand-blue"
                                         >
-                                            <option value="computer_science" className="bg-[#0b101b]">Computer Science</option>
-                                            <option value="logical_reasoning" className="bg-[#0b101b]">Logical Reasoning</option>
-                                            <option value="miscellaneous" className="bg-[#0b101b]">Miscellaneous</option>
+                                            <option value="testing" className="bg-[#0b101b]">Testing</option>
+                                            <option value="api" className="bg-[#0b101b]">API</option>
+                                            <option value="logical" className="bg-[#0b101b]">Logical Reasoning</option>
+                                            <option value="agile" className="bg-[#0b101b]">Agile</option>
+                                            <option value="cs_basics" className="bg-[#0b101b]">CS Basics</option>
                                             <option value="grammar" className="bg-[#0b101b]">Grammar</option>
                                             <option value="java" className="bg-[#0b101b]">Java</option>
                                             <option value="python" className="bg-[#0b101b]">Python</option>
@@ -737,10 +747,12 @@ export default function ManageQuestions() {
                                         onChange={(e) => setInlineNewQ({ ...inlineNewQ, subsection: e.target.value })}
                                         className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-emerald-500 transition-all"
                                     >
-                                        <option value="computer_science" className="bg-[#0b101b]">Computer Science / Software Testing</option>
-                                        <option value="logical_reasoning" className="bg-[#0b101b]">Logical Reasoning</option>
-                                        <option value="miscellaneous" className="bg-[#0b101b]">Miscellaneous</option>
-                                        <option value="grammar" className="bg-[#0b101b]">Grammar / English</option>
+                                        <option value="testing" className="bg-[#0b101b]">Testing</option>
+                                            <option value="api" className="bg-[#0b101b]">API</option>
+                                            <option value="logical" className="bg-[#0b101b]">Logical Reasoning</option>
+                                            <option value="agile" className="bg-[#0b101b]">Agile</option>
+                                            <option value="cs_basics" className="bg-[#0b101b]">CS Basics</option>
+                                            <option value="grammar" className="bg-[#0b101b]">Grammar</option>
                                         <option value="java" className="bg-[#0b101b]">Java (Elective)</option>
                                         <option value="python" className="bg-[#0b101b]">Python (Elective)</option>
                                         <option value="database" className="bg-[#0b101b]">Database (Elective)</option>
@@ -851,9 +863,11 @@ export default function ManageQuestions() {
                     <div className="space-y-4">
                         {Object.values(questionSets).map((set) => {
                             const totalQuestions =
-                                set.sections.computer_science.length +
-                                set.sections.logical_reasoning.length +
-                                set.sections.miscellaneous.length +
+                                set.sections.testing.length +
+                                set.sections.api.length +
+                                set.sections.logical.length +
+                                set.sections.agile.length +
+                                set.sections.cs_basics.length +
                                 set.sections.grammar.length +
                                 set.sections.java.length +
                                 set.sections.python.length +
@@ -1148,10 +1162,12 @@ export default function ManageQuestions() {
                                         onChange={(e) => setNewQuestion({ ...newQuestion, subsection: e.target.value })}
                                         className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-brand-blue transition-all"
                                     >
-                                        <option value="computer_science" className="bg-[#0b101b]">Computer Science / Software Testing</option>
-                                        <option value="logical_reasoning" className="bg-[#0b101b]">Logical Reasoning</option>
-                                        <option value="miscellaneous" className="bg-[#0b101b]">Miscellaneous</option>
-                                        <option value="grammar" className="bg-[#0b101b]">Grammar / English</option>
+                                        <option value="testing" className="bg-[#0b101b]">Testing</option>
+                                            <option value="api" className="bg-[#0b101b]">API</option>
+                                            <option value="logical" className="bg-[#0b101b]">Logical Reasoning</option>
+                                            <option value="agile" className="bg-[#0b101b]">Agile</option>
+                                            <option value="cs_basics" className="bg-[#0b101b]">CS Basics</option>
+                                            <option value="grammar" className="bg-[#0b101b]">Grammar</option>
                                         <option value="java" className="bg-[#0b101b]">Java (Elective)</option>
                                         <option value="python" className="bg-[#0b101b]">Python (Elective)</option>
                                     </select>

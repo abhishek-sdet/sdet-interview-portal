@@ -112,12 +112,14 @@ function detectSubsection(sectionName) {
     if (lower.includes('sql') || lower.includes('database')) return 'database';
 
     // Mappings for Fresher Drive Set
-    if (lower.includes('computer') || lower.includes('cs') || lower.includes('technical') || lower.includes('testing') || lower.includes('software')) return 'computer_science';
-    if (lower.includes('logical') || lower.includes('reasoning')) return 'logical_reasoning';
-    if (lower.includes('miscellaneous')) return 'miscellaneous';
+    if (lower.includes('testing') || lower.includes('qa')) return 'testing';
+    if (lower.includes('api')) return 'api';
+    if (lower.includes('logical') || lower.includes('reasoning')) return 'logical';
+    if (lower.includes('agile') || lower.includes('scrum')) return 'agile';
+    if (lower.includes('computer') || lower.includes('cs') || lower.includes('technical') || lower.includes('software') || lower.includes('basics')) return 'cs_basics';
     if (lower.includes('grammar') || lower.includes('english') || lower.includes('verbal')) return 'grammar';
 
-    return null; // for general sections (will default to computer_science in UI if not caught above)
+    return null; // for general sections (will default to testing in UI if not caught above)
 }
 
 /**

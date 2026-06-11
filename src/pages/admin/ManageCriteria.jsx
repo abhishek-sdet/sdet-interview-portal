@@ -32,10 +32,12 @@ export default function ManageCriteria() {
         passing_percentage: '',
         allow_multiple_attempts: false,
         module_counts: {
-            computer_science: 10,
-            logical_reasoning: 5,
-            miscellaneous: 3,
-            grammar: 5,
+            testing: 10,
+            api: 4,
+            logical: 3,
+            agile: 2,
+            cs_basics: 2,
+            grammar: 2,
             elective: 7
         }
     });
@@ -233,10 +235,12 @@ export default function ManageCriteria() {
             passing_percentage: c.passing_percentage || 70,
             allow_multiple_attempts: c.allow_multiple_attempts || false,
             module_counts: c.metadata?.module_counts || {
-                computer_science: 10,
-                logical_reasoning: 5,
-                miscellaneous: 3,
-                grammar: 5,
+                testing: 10,
+                api: 4,
+                logical: 3,
+                agile: 2,
+                cs_basics: 2,
+                grammar: 2,
                 elective: 7
             }
         });
@@ -253,10 +257,12 @@ export default function ManageCriteria() {
             passing_percentage: 50,
             allow_multiple_attempts: false,
             module_counts: {
-                computer_science: 10,
-                logical_reasoning: 5,
-                miscellaneous: 3,
-                grammar: 5,
+                testing: 10,
+                api: 4,
+                logical: 3,
+                agile: 2,
+                cs_basics: 2,
+                grammar: 2,
                 elective: 7
             }
         });
@@ -272,11 +278,13 @@ export default function ManageCriteria() {
             timer_duration: '',
             passing_percentage: '',
             allow_multiple_attempts: false,
-            module_counts: {
-                computer_science: 10,
-                logical_reasoning: 5,
-                miscellaneous: 3,
-                grammar: 5,
+            module_counts: criteria.metadata?.module_counts || {
+                testing: 10,
+                api: 4,
+                logical: 3,
+                agile: 2,
+                cs_basics: 2,
+                grammar: 2,
                 elective: 7
             }
         });
@@ -547,16 +555,24 @@ export default function ManageCriteria() {
                                         <div className="text-xs font-bold text-slate-300 mb-2 uppercase tracking-widest">Question Counts</div>
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                             <div>
-                                                <label className="text-[10px] text-slate-400 mb-1 block">Comp Science</label>
-                                                <input type="number" value={editForm.module_counts.computer_science} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, computer_science: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
+                                                <label className="text-[10px] text-slate-400 mb-1 block">Testing</label>
+                                                <input type="number" value={editForm.module_counts.testing} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, testing: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
                                             </div>
                                             <div>
-                                                <label className="text-[10px] text-slate-400 mb-1 block">Logical Reasoning</label>
-                                                <input type="number" value={editForm.module_counts.logical_reasoning} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, logical_reasoning: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
+                                                <label className="text-[10px] text-slate-400 mb-1 block">API</label>
+                                                <input type="number" value={editForm.module_counts.api} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, api: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
                                             </div>
                                             <div>
-                                                <label className="text-[10px] text-slate-400 mb-1 block">Miscellaneous</label>
-                                                <input type="number" value={editForm.module_counts.miscellaneous} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, miscellaneous: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
+                                                <label className="text-[10px] text-slate-400 mb-1 block">Logical</label>
+                                                <input type="number" value={editForm.module_counts.logical} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, logical: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] text-slate-400 mb-1 block">Agile</label>
+                                                <input type="number" value={editForm.module_counts.agile} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, agile: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] text-slate-400 mb-1 block">CS Basics</label>
+                                                <input type="number" value={editForm.module_counts.cs_basics} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, cs_basics: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
                                             </div>
                                             <div>
                                                 <label className="text-[10px] text-slate-400 mb-1 block">Grammar</label>
@@ -669,16 +685,24 @@ export default function ManageCriteria() {
                                             <div className="text-xs font-bold text-slate-300 mb-2 uppercase tracking-widest">Question Counts</div>
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
-                                                    <label className="text-[10px] text-slate-400 mb-1 block">Comp Science</label>
-                                                    <input type="number" value={editForm.module_counts.computer_science} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, computer_science: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
+                                                    <label className="text-[10px] text-slate-400 mb-1 block">Testing</label>
+                                                    <input type="number" value={editForm.module_counts.testing} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, testing: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
                                                 </div>
                                                 <div>
-                                                    <label className="text-[10px] text-slate-400 mb-1 block">Logical Reasoning</label>
-                                                    <input type="number" value={editForm.module_counts.logical_reasoning} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, logical_reasoning: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
+                                                    <label className="text-[10px] text-slate-400 mb-1 block">API</label>
+                                                    <input type="number" value={editForm.module_counts.api} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, api: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
                                                 </div>
                                                 <div>
-                                                    <label className="text-[10px] text-slate-400 mb-1 block">Miscellaneous</label>
-                                                    <input type="number" value={editForm.module_counts.miscellaneous} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, miscellaneous: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
+                                                    <label className="text-[10px] text-slate-400 mb-1 block">Logical</label>
+                                                    <input type="number" value={editForm.module_counts.logical} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, logical: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] text-slate-400 mb-1 block">Agile</label>
+                                                    <input type="number" value={editForm.module_counts.agile} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, agile: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] text-slate-400 mb-1 block">CS Basics</label>
+                                                    <input type="number" value={editForm.module_counts.cs_basics} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, cs_basics: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
                                                 </div>
                                                 <div>
                                                     <label className="text-[10px] text-slate-400 mb-1 block">Grammar</label>
