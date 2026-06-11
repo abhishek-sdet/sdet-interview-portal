@@ -212,8 +212,7 @@ export default function LandingPage() {
             // OR if multiple assessments are available for the same candidate.
             // 1. Check for Active Drives & Active Criteria
             const now = new Date();
-            // Create a string that represents the start of today in local time
-            // Example: '2023-10-27'
+            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             const startOfTodayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
             const { data: activeDrives, error: driveError } = await supabase
