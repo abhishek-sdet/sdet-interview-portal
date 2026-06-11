@@ -438,13 +438,18 @@ export default function ManageQuestions() {
                 };
             }
 
-            let subsection = q.subsection || 'cs_basics';
+            let subsection = q.subsection ? q.subsection.toLowerCase() : 'cs_basics';
 
-            // Map legacy database values to new categories
-            if (subsection === 'computer_science') subsection = 'cs_basics';
-            if (subsection === 'logical_reasoning') subsection = 'logical';
-            if (subsection === 'miscellaneous') subsection = 'testing';
-            if (subsection === 'aptitude') subsection = 'logical';
+            // Flexibly map database values to new categories
+            if (subsection.includes('agile') || subsection.includes('scrum')) subsection = 'agile';
+            else if (subsection.includes('api')) subsection = 'api';
+            else if (subsection.includes('grammar') || subsection.includes('communication')) subsection = 'grammar';
+            else if (subsection.includes('computer') || subsection.includes('cs ')) subsection = 'cs_basics';
+            else if (subsection.includes('database') || subsection.includes('sql')) subsection = 'database';
+            else if (subsection.includes('java')) subsection = 'java';
+            else if (subsection.includes('python')) subsection = 'python';
+            else if (subsection.includes('logical') || subsection.includes('reasoning') || subsection.includes('aptitude')) subsection = 'logical';
+            else if (subsection.includes('testing') || subsection.includes('qa') || subsection === 'general' || subsection.includes('miscellaneous')) subsection = 'testing';
 
             if (subsection === 'testing') {
                 acc[key].sections.testing.push(q);
