@@ -438,15 +438,15 @@ export default function ManageQuestions() {
                 };
             }
 
-            const subsection = q.subsection || 'computer_science';
+            let subsection = q.subsection || 'cs_basics';
 
-            if (subsection === 'java') {
-                acc[key].sections.java.push(q);
-            } else if (subsection === 'python') {
-                acc[key].sections.python.push(q);
-            } else if (subsection === 'database') {
-                acc[key].sections.database.push(q);
-            } else if (subsection === 'testing') {
+            // Map legacy database values to new categories
+            if (subsection === 'computer_science') subsection = 'cs_basics';
+            if (subsection === 'logical_reasoning') subsection = 'logical';
+            if (subsection === 'miscellaneous') subsection = 'testing';
+            if (subsection === 'aptitude') subsection = 'logical';
+
+            if (subsection === 'testing') {
                 acc[key].sections.testing.push(q);
             } else if (subsection === 'api') {
                 acc[key].sections.api.push(q);
