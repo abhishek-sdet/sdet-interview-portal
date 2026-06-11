@@ -17,7 +17,7 @@ export function preprocessDocumentText(text) {
 
     // Case 2: "Answer:" or "Ans:" pattern - robustly handle any prefix (emojis, etc.)
     // Expanded to handle Correct Option, Correct Answer, Answer Key, and multiple separators (-, ., ), :)
-    text = text.replace(/([^\n])\s*([^a-zA-Z0-9\n]*(?:Correct\s+Answer|Correct\s+Option|Answer\s+Key|Correct|Answer|Ans)[^a-zA-Z0-9\n]*)/gi, '$1\n$2');
+    text = text.replace(/([^\n])\s*([^a-zA-Z0-9\n]*(?:Correct\s+Answer|Correct\s+Option|Answer\s+Key|Answer|Ans\b)[^a-zA-Z0-9\n]*)/gi, '$1\n$2');
 
     return text;
 }
@@ -403,7 +403,7 @@ export function parseQuestionsInSection(section, importData) {
         const robustOptionMatch = line.match(/^([A-Da-d])[\.)\]]\s*(.+)/);
         const finalOptionMatch = optionMatch || robustOptionMatch;
 
-        const answerMatch = line.match(/^(?:[^a-zA-Z0-9]*)(?:Correct\s+Answer|Correct\s+Option|Answer\s+Key|Correct|Answer|Ans|Ans\.?)[\s:\-\)\.]+(?:\(?)\s*([A-Da-d])/i);
+        const answerMatch = line.match(/^(?:[^a-zA-Z0-9]*)(?:Correct\s+Answer|Correct\s+Option|Answer\s+Key|Answer|Ans|Ans\.?)[\s:\-\)\.]+(?:\(?)\s*([A-Da-d])/i);
 
         // 2. Detect Question Start
         // Unified Regex to handle all valid formats:

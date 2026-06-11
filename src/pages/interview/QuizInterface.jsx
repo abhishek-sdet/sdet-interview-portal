@@ -472,6 +472,10 @@ export default function QuizInterface() {
                 e.preventDefault();
                 e.stopPropagation();
 
+                // Instantly hide the screen to prevent capture if OS is slow
+                document.body.style.filter = 'blur(20px)';
+                document.body.style.opacity = '0';
+
                 // Aggressive clipboard clearing
                 if (navigator.clipboard && navigator.clipboard.writeText) {
                     navigator.clipboard.writeText('Screenshots are strictly prohibited.').catch(() => {});

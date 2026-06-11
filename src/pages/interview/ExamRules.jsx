@@ -105,6 +105,21 @@ export default function ExamRules() {
             return;
         }
 
+        // If resuming an existing interview, go straight to quiz
+        if (location.state?.resumeInterviewId) {
+            localStorage.setItem('interviewId', location.state.resumeInterviewId);
+            localStorage.setItem('criteriaId', location.state.resumeCriteriaId);
+            
+            navigate('/quiz', {
+                state: {
+                    candidateData,
+                    criteriaId: location.state.resumeCriteriaId,
+                    capturedImage
+                }
+            });
+            return;
+        }
+
         navigate('/criteria-selection', {
             state: {
                 candidateData,

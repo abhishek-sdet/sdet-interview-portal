@@ -210,14 +210,15 @@ export default function LandingPage() {
             // Check if this specific device or IP has already completed an assessment *TODAY*
             // IN OFFICE MODE: We skip this check to allow multiple people to use the same machine
             // OR if multiple assessments are available for the same candidate.
-            
+            // 1. Check for Active Drives & Active Criteria
             const now = new Date();
-            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            // Create a string that represents the start of today in local time
+            // Example: '2023-10-27'
             const startOfTodayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-            
-            const { data: activeDrives } = await supabase
+
+            const { data: activeDrives, error: driveError } = await supabase
                 .from('scheduled_interviews')
-                .select('criteria_id')
+                .select('id, criteria_id')
                 .eq('is_active', true)
                 .eq('scheduled_date', startOfTodayString);
                 
@@ -263,13 +264,15 @@ export default function LandingPage() {
             const existingCandidate = candidates?.[0];
             let candidateId = null;
             let candidateName = null;
+            let resumeInterviewId = null;
+            let resumeCriteriaId = null;
 
             if (existingCandidate) {
                 console.log('[REGISTRATION] Existing candidate found:', existingCandidate.id);
                 // 2. Candidate exists, check for *active* or *completed* associated interview
                 const { data: interviews, error: interviewError } = await supabase
                     .from('interviews')
-                    .select('id, status, criteria_id, scheduled_interviews!inner(is_active)')
+                    .select('id, status, criteria_id, scheduled_interview_id, scheduled_interviews!inner(is_active)')
                     .eq('candidate_id', existingCandidate.id)
                     .eq('scheduled_interviews.is_active', true);
 
@@ -284,21 +287,26 @@ export default function LandingPage() {
 
                     // If they have finished ALL available assessments and none allow multiple attempts
                     if (completedInterviews.length > 0) {
-                        const completedCriteriaIds = completedInterviews.map(i => i.criteria_id);
-                        const canTakeMore = activeCriteria?.some(c => 
-                            c.allow_multiple_attempts || !completedCriteriaIds.includes(c.id)
+                        const activeDriveIds = activeDrives?.map(d => d.id) || [];
+                        const completedForActiveDrives = completedInterviews.filter(i => 
+                            activeDriveIds.includes(i.scheduled_interview_id)
                         );
-
-                        if (!canTakeMore) {
-                            setError('You have already completed all available assessments for today.');
-                            setLoading(false);
-                            return;
+                        
+                        if (completedForActiveDrives.length > 0) {
+                            const driveAllowsMultiple = activeCriteria?.some(c => c.allow_multiple_attempts);
+                            if (!driveAllowsMultiple) {
+                                setError('You have already completed the assessment for today.');
+                                setLoading(false);
+                                return;
+                            }
                         }
                     }
 
                     if (inProgressInterview) {
                         console.log('[REGISTRATION] Active session resumed.');
                         localStorage.setItem('interviewId', inProgressInterview.id);
+                        resumeInterviewId = inProgressInterview.id;
+                        resumeCriteriaId = inProgressInterview.criteria_id;
                     }
                 }
 
@@ -345,7 +353,9 @@ export default function LandingPage() {
             console.log('[REGISTRATION] Success! Navigating to rules.');
             navigate('/exam-rules', {
                 state: {
-                    candidateData: { id: candidateId, full_name: candidateName }
+                    candidateData: { id: candidateId, full_name: candidateName },
+                    resumeInterviewId: resumeInterviewId,
+                    resumeCriteriaId: resumeCriteriaId
                 }
             });
         } catch (err) {

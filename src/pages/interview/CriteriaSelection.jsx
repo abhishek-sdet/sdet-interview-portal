@@ -265,6 +265,15 @@ export default function CriteriaSelection() {
                                 <button
                                     key={item.id}
                                     onClick={() => {
+                                        // If they have ANY completed exams today, prevent new ones unless allowed
+                                        if (completedCriteriaIds.length > 0) {
+                                            const hasMultipleAllowed = criteria.some(c => completedCriteriaIds.includes(c.id) && c.allow_multiple_attempts);
+                                            if (!hasMultipleAllowed && !item.allow_multiple_attempts) {
+                                                setError('You have already completed an assessment today. Multiple assessments are not permitted.');
+                                                return;
+                                            }
+                                        }
+
                                         if (completedCriteriaIds.includes(item.id) && !item.allow_multiple_attempts) {
                                             setError(`You have already completed the "${item.name}" assessment.`);
                                             return;

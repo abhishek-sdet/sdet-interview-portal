@@ -13,15 +13,33 @@ function HoverCodeBlock({ language, code }) {
 
     return (
         <div
-            className="relative inline-block my-2"
+            className="relative inline-block my-3"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
+            onClick={() => setIsHovered(!isHovered)}
         >
             {/* The Compact Chip */}
-            <div className="flex items-center gap-2 px-4 py-2 bg-brand-blue/10 border border-brand-blue/20 rounded-xl cursor-pointer text-brand-blue hover:bg-brand-blue/20 transition-colors shadow-sm w-max">
-                <Code2 className="w-5 h-5" />
-                <span className="font-bold text-sm tracking-wide uppercase">View {language} Snippet</span>
-                <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${isHovered ? 'rotate-90' : ''}`} />
+            <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-blue-900/40 to-[#0b101b] border border-blue-500/40 rounded-lg cursor-pointer text-blue-300 hover:bg-blue-800/40 hover:border-blue-400 hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] transition-all duration-300 w-max group relative overflow-hidden animate-pulse-slow">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-500"></div>
+                
+                <div className="relative flex items-center justify-center z-10 bg-blue-500/20 p-2 rounded-md">
+                    <Code2 className="w-5 h-5 text-blue-300 group-hover:text-white transition-colors" />
+                </div>
+                
+                <div className="flex flex-col items-start z-10 mr-2">
+                    <span className="font-bold text-[14px] tracking-wide text-blue-100 group-hover:text-white transition-colors flex items-center gap-2">
+                        Hover to check the code
+                        <span className="flex h-2 w-2 relative">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                        </span>
+                    </span>
+                    <span className="text-[11px] text-blue-300/70 uppercase tracking-widest mt-0.5 group-hover:text-blue-200 transition-colors">
+                        {language || 'Code'} Snippet Inside
+                    </span>
+                </div>
+                
+                <ChevronRight className={`w-5 h-5 ml-2 z-10 text-blue-400 transition-transform duration-300 ${isHovered ? 'rotate-90 text-white translate-x-1' : 'group-hover:text-white group-hover:translate-x-1'}`} />
             </div>
 
             {/* The Floating Tooltip Popup */}
