@@ -366,6 +366,12 @@ export default function QuizInterface() {
                 navigator.clipboard.writeText('SECURITY BREACH: Screen capture attempted or focus lost.').catch(() => {});
             }
 
+            // Obscure the screen immediately to prevent snipping tools from capturing the content
+            if (!allowScreenshots) {
+                document.body.style.filter = 'blur(10px)';
+                document.body.style.opacity = '0';
+            }
+
             // ONLY trigger tab-switch security warning visual if STRICT proctoring is enabled.
             if (!proctoringStrict) return;
 
@@ -379,12 +385,22 @@ export default function QuizInterface() {
             }
         };
 
+        const handleFocusGain = () => {
+            // Restore screen visibility when focus returns
+            document.body.style.filter = 'none';
+            document.body.style.opacity = '1';
+        };
+
         document.addEventListener('visibilitychange', handleFocusLoss);
         window.addEventListener('blur', handleFocusLoss);
+        window.addEventListener('focus', handleFocusGain);
 
         return () => {
             document.removeEventListener('visibilitychange', handleFocusLoss);
             window.removeEventListener('blur', handleFocusLoss);
+            window.removeEventListener('focus', handleFocusGain);
+            document.body.style.filter = 'none';
+            document.body.style.opacity = '1';
         };
     }, [submitting, showSpecialization, showProctorWarning, tabSwitchWarnings, proctoringStrict, enforceFullScreen, loading]);
 
@@ -441,6 +457,13 @@ export default function QuizInterface() {
             const isPrintScreen = ['PrintScreen', 'Snapshot', 'PrntSt', 'SysRq'].includes(e.key) || 
                                  ['PrintScreen', 'Snapshot'].includes(e.code);
             
+            // Detect Meta/OS key which is often used to launch Snipping Tool (Win+Shift+S)
+            // We obscure the screen while Meta is held down
+            if (!allowScreenshots && e.metaKey) {
+                document.body.style.filter = 'blur(10px)';
+                document.body.style.opacity = '0';
+            }
+
             if (!allowScreenshots && isPrintScreen) {
                 console.warn('[PROCTOR] Screenshot attempt detected!');
                 e.preventDefault();
@@ -477,6 +500,17 @@ export default function QuizInterface() {
             }
         };
 
+        const restoreScreenOnKeyUp = (e) => {
+            // Restore screen if Meta key is released
+            if (!allowScreenshots && (e.key === 'Meta' || e.key === 'OS' || e.code === 'MetaLeft' || e.code === 'MetaRight')) {
+                // Only restore if we actually have focus (prevent restoring if snipping tool overlay is active)
+                if (document.hasFocus()) {
+                    document.body.style.filter = 'none';
+                    document.body.style.opacity = '1';
+                }
+            }
+        };
+
         document.addEventListener('contextmenu', preventAction);
         document.addEventListener('copy', preventAction);
         document.addEventListener('paste', preventAction);
@@ -484,6 +518,7 @@ export default function QuizInterface() {
         document.addEventListener('selectstart', preventAction);
         document.addEventListener('keydown', preventKeyboard, true);
         document.addEventListener('keyup', preventKeyboard, true);
+        document.addEventListener('keyup', restoreScreenOnKeyUp, true);
         document.addEventListener('keypress', preventKeyboard, true);
 
         return () => {
@@ -494,6 +529,7 @@ export default function QuizInterface() {
             document.removeEventListener('selectstart', preventAction);
             document.removeEventListener('keydown', preventKeyboard, true);
             document.removeEventListener('keyup', preventKeyboard, true);
+            document.removeEventListener('keyup', restoreScreenOnKeyUp, true);
             document.removeEventListener('keypress', preventKeyboard, true);
         };
     }, [allowScreenshots, showProctorWarning, tabSwitchWarnings, proctoringStrict]);
