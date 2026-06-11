@@ -12,10 +12,11 @@ export default function UploadQuestions() {
     const [criteriaMode, setCriteriaMode] = useState('select'); // 'select' or 'create'
     const [selectedCriteria, setSelectedCriteria] = useState('');
     const [newCriteriaName, setNewCriteriaName] = useState('');
-    const [setName, setSetName] = useState('');
     const [file, setFile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
+    const [uploadStats, setUploadStats] = useState(null);
+    const [uploadProgress, setUploadProgress] = useState(null);
 
     useEffect(() => {
         checkAuth();
@@ -81,13 +82,15 @@ export default function UploadQuestions() {
     const handleUpload = async (e) => {
         e.preventDefault();
 
-        if ((criteriaMode === 'select' && !selectedCriteria) || (criteriaMode === 'create' && !newCriteriaName.trim()) || !setName || !file) {
+        if ((criteriaMode === 'select' && !selectedCriteria) || (criteriaMode === 'create' && !newCriteriaName.trim()) || !file) {
             setMessage({ type: 'error', text: 'Please fill all required fields' });
             return;
         }
 
         setLoading(true);
         setMessage({ type: '', text: '' });
+        setUploadStats(null);
+        setUploadProgress({ parsing: true, current: 0, total: 0 });
 
         try {
             let currentCriteriaId = selectedCriteria;
@@ -145,7 +148,7 @@ export default function UploadQuestions() {
 
             const importData = {
                 criteria_id: currentCriteriaId,
-                category: setName.trim(),
+                category: 'Common',
                 difficulty: 'medium'
             };
 
@@ -167,28 +170,26 @@ export default function UploadQuestions() {
                 .from('questions')
                 .delete()
                 .eq('criteria_id', currentCriteriaId)
-                .eq('category', setName.trim());
+                .eq('category', 'Common');
 
             if (deleteError) {
                 console.error('Error deleting old questions:', deleteError);
             }
 
-            // Insert new questions
+            // Insert new questions in batches to speed up the process
             let successCount = 0;
-            // IMPORTANT: Insert one by one to isolate bad rows and log errors
-            for (const q of allQuestions) {
-                // Map section to allowed database values ('general' or 'elective')
-                // and preserve the specific topic in subsection
+            let failedCount = 0;
+            
+            const processedQuestions = allQuestions.map(q => {
                 let dbSection = 'general';
                 let dbSubsection = q.subsection || (q.section ? q.section.toLowerCase() : 'aptitude');
 
                 const sectionLower = (q.section || '').toLowerCase();
-                if (sectionLower.includes('java') || sectionLower.includes('python')) {
+                if (sectionLower.includes('java') || sectionLower.includes('python') || sectionLower.includes('database')) {
                     dbSection = 'elective';
-                    dbSubsection = sectionLower.includes('java') ? 'java' : 'python';
+                    dbSubsection = sectionLower.includes('java') ? 'java' : (sectionLower.includes('python') ? 'python' : 'database');
                 } else {
                     dbSection = 'general';
-                    // Clean up subsection naming
                     if (sectionLower.includes('computer')) dbSubsection = 'computer_science';
                     else if (sectionLower.includes('logical')) dbSubsection = 'logical_reasoning';
                     else if (sectionLower.includes('miscellaneous')) dbSubsection = 'miscellaneous';
@@ -196,25 +197,20 @@ export default function UploadQuestions() {
                     else if (sectionLower.includes('aptitude')) dbSubsection = 'aptitude';
                 }
 
-                // If q.subsection already existed (from parser), prioritize mapped logic above but if parser was specific?
-                // Actually the parser sets subsection sometimes. Let's merge logic:
-                // If parser set subsection (like 'java'), trust it for elective.
-                // If parser set subsection to null, map section name.
-
                 if (q.subsection) {
                     dbSubsection = q.subsection;
-                    if (q.subsection === 'java' || q.subsection === 'python') {
+                    if (q.subsection === 'java' || q.subsection === 'python' || q.subsection === 'database') {
                         dbSection = 'elective';
                     }
                 }
 
-                const questionData = {
+                return {
                     criteria_id: q.criteria_id,
                     category: q.category,
                     section: dbSection,
                     subsection: dbSubsection,
                     question_text: q.question_text,
-                    options: q.options.map(opt => opt.trim()), // Ensure options are trimmed
+                    options: q.options.map(opt => opt.trim()),
                     correct_option: q.correct_option || 'A',
                     correct_answer: (q.correct_option
                         ? (q.options[q.correct_option.charCodeAt(0) - 65] || q.options[0])
@@ -223,26 +219,42 @@ export default function UploadQuestions() {
                     is_active: true,
                     points: 1
                 };
+            });
 
-                const { error } = await supabase
-                    .from('questions')
-                    .insert([questionData]);
+            setUploadProgress({ parsing: false, current: 0, total: processedQuestions.length });
+
+            const CHUNK_SIZE = 50;
+            for (let i = 0; i < processedQuestions.length; i += CHUNK_SIZE) {
+                const chunk = processedQuestions.slice(i, i + CHUNK_SIZE);
+                const { error } = await supabase.from('questions').insert(chunk);
 
                 if (!error) {
-                    successCount++;
+                    successCount += chunk.length;
                 } else {
-                    console.error('[Upload Error] Failed to insert question:', error);
-                    console.error('Failed Data:', JSON.stringify(questionData, null, 2));
+                    console.error('[Upload Error] Failed to insert chunk:', error);
+                    failedCount += chunk.length;
                 }
+
+                setUploadProgress({
+                    parsing: false,
+                    current: Math.min(i + CHUNK_SIZE, processedQuestions.length),
+                    total: processedQuestions.length
+                });
             }
 
             setMessage({
                 type: 'success',
-                text: `Successfully uploaded ${successCount} out of ${allQuestions.length} questions for "${setName}"`
+                text: 'Upload process completed successfully!'
             });
 
+            setUploadStats({
+                total: allQuestions.length,
+                success: successCount,
+                failed: failedCount
+            });
+            setUploadProgress(null);
+
             // Reset form
-            setSetName('');
             setFile(null);
             if (criteriaMode === 'create') {
                 setCriteriaMode('select');
@@ -266,12 +278,12 @@ export default function UploadQuestions() {
             <div className="max-w-3xl mx-auto space-y-6">
                 {/* Header */}
                 <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Upload Questions</h1>
-                    <p className="text-slate-400">Import questions from a Word or Text document</p>
+                    <h1 className="text-2xl font-black text-white tracking-tight">Upload Questions</h1>
+                    <p className="text-slate-500 text-sm mt-1">Import questions from a Word or Text document</p>
                 </div>
 
                 {/* Message */}
-                {message.text && (
+                {message.text && !uploadStats && (
                     <div className={`p-4 rounded-lg flex items-start gap-3 ${message.type === 'success'
                         ? 'bg-green-500/10 border border-green-500/20'
                         : 'bg-red-500/10 border border-red-500/20'
@@ -287,8 +299,73 @@ export default function UploadQuestions() {
                     </div>
                 )}
 
+                {/* Upload Stats Card */}
+                {uploadStats && !uploadProgress && (
+                    <div className="bg-gradient-to-br from-[#0b101b] to-[#131b2c] border border-brand-blue/20 rounded-2xl p-6 shadow-xl animate-in fade-in slide-in-from-bottom-4">
+                        <div className="flex items-center gap-3 mb-6 border-b border-white/5 pb-4">
+                            <div className="w-10 h-10 rounded-full bg-brand-blue/20 flex items-center justify-center">
+                                <CheckCircle2 className="w-5 h-5 text-brand-blue" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-semibold text-white">Upload Complete</h3>
+                                <p className="text-sm text-slate-400">Here are your upload statistics</p>
+                            </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="bg-white/5 border border-white/5 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                                <div className="text-3xl font-black text-brand-blue mb-1">{uploadStats.total}</div>
+                                <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Parsed</div>
+                            </div>
+                            <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                                <div className="text-3xl font-black text-green-400 mb-1">{uploadStats.success}</div>
+                                <div className="text-xs font-medium text-green-400/80 uppercase tracking-wider">Saved</div>
+                            </div>
+                            <div className={`border rounded-xl p-4 flex flex-col items-center justify-center text-center ${uploadStats.failed > 0 ? 'bg-red-500/10 border-red-500/20' : 'bg-white/5 border-white/5'}`}>
+                                <div className={`text-3xl font-black mb-1 ${uploadStats.failed > 0 ? 'text-red-400' : 'text-slate-400'}`}>{uploadStats.failed}</div>
+                                <div className={`text-xs font-medium uppercase tracking-wider ${uploadStats.failed > 0 ? 'text-red-400/80' : 'text-slate-500'}`}>Failed</div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Upload Progress Bar */}
+                {uploadProgress && (
+                    <div className="bg-[#0b101b]/60 backdrop-blur border border-brand-blue/30 rounded-2xl p-6 shadow-xl animate-in fade-in slide-in-from-bottom-2">
+                        <div className="flex flex-col space-y-3">
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="font-semibold text-white">
+                                    {uploadProgress.parsing ? 'Parsing Document...' : 'Saving to Database...'}
+                                </span>
+                                {!uploadProgress.parsing && uploadProgress.total > 0 && (
+                                    <span className="text-brand-blue font-medium">
+                                        {uploadProgress.current} / {uploadProgress.total}
+                                    </span>
+                                )}
+                            </div>
+                            
+                            <div className="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden border border-white/5 relative">
+                                {uploadProgress.parsing ? (
+                                    <div className="h-full bg-brand-blue rounded-full w-full animate-pulse"></div>
+                                ) : (
+                                    <div 
+                                        className="h-full bg-brand-blue rounded-full transition-all duration-300 ease-out shadow-[0_0_10px_rgba(59,130,246,0.5)]" 
+                                        style={{ width: `${Math.max(5, (uploadProgress.current / uploadProgress.total) * 100)}%` }}
+                                    ></div>
+                                )}
+                            </div>
+                            
+                            {!uploadProgress.parsing && (
+                                <p className="text-xs text-slate-400 text-center animate-pulse">
+                                    Please do not close this window
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 {/* Upload Form */}
-                <form onSubmit={handleUpload} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-8 space-y-6">
+                <form onSubmit={handleUpload} className="bg-[#0b101b]/60 backdrop-blur border border-white/[0.08] rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl">
                     {/* Criteria Selection Redesign */}
                     <div className="space-y-4">
                         <label className="block text-sm font-medium text-slate-300">
@@ -352,21 +429,6 @@ export default function UploadQuestions() {
                         )}
                     </div>
 
-                    {/* Set Name */}
-                    <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">
-                            Set Name
-                        </label>
-                        <input
-                            type="text"
-                            value={setName}
-                            onChange={(e) => setSetName(e.target.value)}
-                            placeholder="e.g., Set A, Set B"
-                            required
-                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
-                        />
-                    </div>
-
                     {/* File Upload */}
                     <div>
                         <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -404,29 +466,29 @@ export default function UploadQuestions() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-3 bg-brand-blue hover:bg-blue-600 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-brand-blue/20"
+                        className="w-full py-3 bg-brand-blue hover:bg-blue-500 text-white font-black rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-brand-blue/25 hover:shadow-brand-blue/40 hover:-translate-y-0.5 active:translate-y-0"
                     >
                         {loading ? (
                             <>
                                 <Loader2 className="w-5 h-5 animate-spin" />
-                                <UploadQuestionsText loading={loading} />
+                                {uploadProgress?.parsing ? 'Parsing Document...' : 'Uploading...'}
                             </>
                         ) : (
                             <>
                                 <Upload size={20} />
-                                <UploadQuestionsText loading={loading} />
+                                Upload Questions
                             </>
                         )}
                     </button>
                 </form>
 
                 {/* Instructions */}
-                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-6">
-                    <h3 className="font-bold text-white mb-3 flex items-center gap-2">
-                        <FileText size={18} className="text-blue-400" />
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-5">
+                    <h3 className="font-bold text-white mb-3 flex items-center gap-2 text-sm">
+                        <FileText size={16} className="text-blue-400" />
                         Document Format Guidelines (.docx or .txt)
                     </h3>
-                    <ul className="text-sm text-slate-300 space-y-2">
+                    <ul className="text-sm text-slate-400 space-y-1.5">
                         <li>• Questions should be numbered (1. 2. 3. or 1) 2) 3))</li>
                         <li>• Options should be labeled (A) B) C) D) or a) b) c) d))</li>
                         <li>• Mark correct answer with * or add "Answer: A" line</li>
@@ -438,6 +500,3 @@ export default function UploadQuestions() {
     );
 }
 
-const UploadQuestionsText = ({ loading }) => (
-    <span>{loading ? 'Uploading...' : 'Upload Questions'}</span>
-);

@@ -11,8 +11,9 @@
  */
 export function preprocessDocumentText(text) {
     // Add newline before option letters (A., B., C., D. or a. b. c. d. or A) B) etc)
-    // Case 1: Letter followed by dot/paren and space
-    text = text.replace(/([^\n])\s*([A-Da-d][\.)\]])\s+/g, '$1\n$2 ');
+    // Avoid splitting string concatenations or code text like + " " + (c == d) by requiring option to be at a clean line-boundary or after a whitespace block
+    // Ensure the preceding char is not an operator like +, -, *, /, =, &, |, or quotes.
+    text = text.replace(/([^a-zA-Z0-9\+\-\*\/="'"\n\s])\s+([A-Da-d][\.)\]])\s+/g, '$1\n$2 ');
 
     // Case 2: "Answer:" or "Ans:" pattern - robustly handle any prefix (emojis, etc.)
     // Expanded to handle Correct Option, Correct Answer, Answer Key, and multiple separators (-, ., ), :)
@@ -94,7 +95,7 @@ function detectSectionType(sectionName) {
         return 'general';
     }
     if (lower.includes('elective') || lower.includes('section b') || lower.includes('optional') ||
-        lower.includes('java') || lower.includes('python') || lower.includes('aptitude')) {
+        lower.includes('java') || lower.includes('python') || lower.includes('database') || lower.includes('aptitude')) {
         return 'elective';
     }
     return 'general'; // default
@@ -108,7 +109,7 @@ function detectSubsection(sectionName) {
     if (lower.includes('java')) return 'java';
     if (lower.includes('python')) return 'python';
     if (lower.includes('aptitude')) return 'aptitude';
-    if (lower.includes('sql') || lower.includes('database')) return 'sql';
+    if (lower.includes('sql') || lower.includes('database')) return 'database';
 
     // Mappings for Fresher Drive Set
     if (lower.includes('computer') || lower.includes('cs') || lower.includes('technical') || lower.includes('testing') || lower.includes('software')) return 'computer_science';
@@ -343,13 +344,24 @@ export function parseQuestionsInSection(section, importData) {
                 detectedSubsection = 'python';
                 console.log(`      🟡 PYTHON detected in Q${questionNumber + 1}`);
             }
+            // Check for Database-specific keywords
+            else if (questionLower.includes('sql') || questionLower.includes('database') ||
+                questionLower.includes('rdbms') || questionLower.includes('query') ||
+                questionLower.includes('dbms')) {
+                detectedSection = 'elective';
+                detectedSubsection = 'database';
+                console.log(`      🟠 DATABASE detected in Q${questionNumber + 1}`);
+            }
+
+            // Strip the (Variant \d+) suffix from the question text so candidates don't see it
+            const cleanedQuestionText = currentQuestion.replace(/\s*\(Variant\s*\d+\)/gi, '').trim();
 
             questions.push({
                 criteria_id: importData.criteria_id,
                 category: importData.category || 'Set A',
                 section: detectedSection,
                 subsection: detectedSubsection,
-                question_text: currentQuestion,
+                question_text: cleanedQuestionText,
                 options: currentOptions,
                 correct_option: correctAnswer ? String.fromCharCode(65 + currentOptions.indexOf(correctAnswer)) : '',
                 difficulty: importData.difficulty,
@@ -418,6 +430,15 @@ export function parseQuestionsInSection(section, importData) {
             // If text exists, use it. If empty, initialize empty string
             const text = numberedMatch[2] ? numberedMatch[2].trim() : '';
             currentQuestion = text;
+            lastLine = line;
+            continue;
+        }
+
+        // 2.5 Detect Unnumbered Question Start (if previous question is done)
+        const isQuestionText = line.includes('?') || /^(What|Who|Where|When|Why|How|Which|Define|Explain)\s/i.test(line);
+        if (isQuestionText && currentOptions.length > 0 && !finalOptionMatch && !answerMatch) {
+            saveCurrentQuestion();
+            currentQuestion = line;
             lastLine = line;
             continue;
         }

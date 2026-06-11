@@ -118,8 +118,8 @@ export default function ManageAccess() {
                 {/* Header */}
                 <div className="flex justify-between items-center">
                     <div>
-                        <h1 className="text-3xl font-bold text-white mb-2">Access Control</h1>
-                        <p className="text-slate-400">Manage authorized IPs and devices for the Interview Portal (Aspirant App).</p>
+                        <h1 className="text-2xl font-black text-white tracking-tight">Access Control</h1>
+                        <p className="text-slate-500 text-sm mt-1">Manage IP addresses and devices allowed to access the system</p>
                     </div>
                     <button
                         onClick={fetchData}

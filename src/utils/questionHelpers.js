@@ -103,3 +103,14 @@ export function shuffleArray(array) {
     }
     return newArray;
 }
+
+/**
+ * Strips variant metadata suffixes like "(Variant 12)", "(Variation 5)", or "(Q3)" from question text.
+ * @param {string} text - The raw question text
+ * @returns {string} The cleaned question text
+ */
+export function cleanQuestionText(text) {
+    if (!text) return '';
+    return text.replace(/\s*\((?:Variant|Variation|Q)\s*\d+\)/gi, '').trim();
+}
+

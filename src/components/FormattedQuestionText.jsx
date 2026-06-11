@@ -64,6 +64,8 @@ function HoverCodeBlock({ language, code }) {
     );
 }
 
+import { cleanQuestionText } from '@/utils/questionHelpers';
+
 /**
  * A component to parse question text and render markdown-style code blocks
  * using the HoverCodeBlock component to save space.
@@ -71,6 +73,8 @@ function HoverCodeBlock({ language, code }) {
  */
 export default function FormattedQuestionText({ text }) {
     if (!text) return null;
+    const cleanedText = cleanQuestionText(text);
+    if (!cleanedText) return null;
 
     const parts = [];
 
@@ -93,20 +97,20 @@ export default function FormattedQuestionText({ text }) {
     };
 
     // 1. Check for standard Markdown Backticks
-    if (text.includes('```')) {
+    if (cleanedText.includes('```')) {
         const regex = /```(\w+)?\n?([\s\S]*?)```/g;
         let lastIndex = 0;
         let match;
 
-        while ((match = regex.exec(text)) !== null) {
-            pushText(text.slice(lastIndex, match.index));
+        while ((match = regex.exec(cleanedText)) !== null) {
+            pushText(cleanedText.slice(lastIndex, match.index));
             pushCode(match[1] || 'javascript', match[2]);
             lastIndex = regex.lastIndex;
         }
-        pushText(text.slice(lastIndex));
+        pushText(cleanedText.slice(lastIndex));
     } else {
         // 2. Smart Heuristic Auto-Detector for unformatted DB records
-        const lines = text.split('\n');
+        const lines = cleanedText.split('\n');
 
         let currentText = [];
         let currentCode = [];
@@ -169,7 +173,7 @@ export default function FormattedQuestionText({ text }) {
     }
 
     if (parts.length === 0) {
-        return <p className="whitespace-pre-wrap leading-relaxed">{text}</p>;
+        return <p className="whitespace-pre-wrap leading-relaxed">{cleanedText}</p>;
     }
 
     return (
@@ -178,3 +182,4 @@ export default function FormattedQuestionText({ text }) {
         </div>
     );
 }
+

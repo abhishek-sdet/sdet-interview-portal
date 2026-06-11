@@ -208,7 +208,10 @@ export default function LandingPage() {
             // IN OFFICE MODE: We skip this check to allow multiple people to use the same machine
             // OR if multiple assessments are available for the same candidate.
             
-            const startOfTodayString = startOfToday.toISOString().split('T')[0];
+            const now = new Date();
+            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const startOfTodayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            
             const { data: activeDrives } = await supabase
                 .from('scheduled_interviews')
                 .select('criteria_id')
@@ -435,7 +438,6 @@ export default function LandingPage() {
                                     <div className="text-left">
                                         <div className="text-[10px] font-bold text-brand-orange uppercase tracking-widest mb-0.5">Globally Recognized</div>
                                         <div className="text-lg font-bold text-white leading-none">Great Place To Work®</div>
-                                        <div className="text-xs text-slate-400 mt-0.5">Certified 2025-2026</div>
                                     </div>
                                 </div>
                             </div>

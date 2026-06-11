@@ -1,0 +1,5484 @@
+[Section: Computer Science]
+
+1. In System Design, what is the primary function of a Load Balancer in a highly available architecture? (Variant 1)
+A) To distribute incoming network traffic across multiple backend servers to prevent overload
+B) To encrypt database connections
+C) To serve static files to browsers
+D) To compile source code files
+Answer: A
+
+2. What is the time complexity of searching for a value in a balanced Binary Search Tree (BST) of size N? (Variant 2)
+A) O(1)
+B) O(N)
+C) O(N log N)
+D) O(log N)
+Answer: D
+
+3. According to the CAP Theorem, which two properties can a distributed system guarantee simultaneously in the presence of a network partition? (Variant 3)
+A) Either Consistency and Partition Tolerance, or Availability and Partition Tolerance
+B) None of the CAP properties can exist together
+C) Only Consistency and Availability
+D) Only CPU speed and Memory throughput
+Answer: A
+
+4. Which OOP concept represents the ability of different objects to respond to the same method invocation in their own unique way? (Variant 4)
+A) Encapsulation
+B) Inheritance
+C) Abstraction
+D) Polymorphism
+Answer: D
+
+5. What is the primary purpose of a reverse proxy server in modern web architectures? (Variant 5)
+A) To translate domain names to IP addresses
+B) To run automated test suites
+C) To store user passwords securely
+D) To forward client requests to backend servers and handle SSL termination/caching
+Answer: D
+
+6. What is the time complexity of the quicksort algorithm in the worst-case scenario? (Variant 6)
+A) O(log N)
+B) O(N)
+C) O(N log N)
+D) O(N^2)
+Answer: D
+
+7. Which architectural pattern involves breaking down a large monolithic system into independent, single-purpose services communicating via APIs? (Variant 7)
+A) Microservices Architecture
+B) Serverless Architecture
+C) Event-Driven Architecture
+D) Layered Architecture
+Answer: A
+
+8. What does the term 'Thrashing' refer to in Operating Systems memory management? (Variant 8)
+A) A state where the system spends more time swapping pages in and out of disk than executing processes
+B) A hardware failure in the RAM module
+C) A technique to clear cache values
+D) When a process consumes 100% CPU capacity
+Answer: A
+
+9. What is the main advantage of a document-based data store over a traditional relational storage system? (Variant 9)
+A) It allows for flexible, schema-less data storage and horizontal scalability
+B) It guarantees strict ACID compliance under all conditions
+C) It uses structured queries as its primary interface
+D) It requires less physical storage space
+Answer: A
+
+10. What is the role of a garbage collector in a programming language's runtime environment? (Variant 10)
+A) To optimize database execution plans
+B) To automatically identify and reclaim memory occupied by objects that are no longer reachable
+C) To format and indent source code files
+D) To package application code into containers
+Answer: B
+
+11. In System Design, what is the primary function of a Load Balancer in a highly available architecture? (Variant 11)
+A) To distribute incoming network traffic across multiple backend servers to prevent overload
+B) To encrypt database connections
+C) To compile source code files
+D) To serve static files to browsers
+Answer: A
+
+12. What is the time complexity of searching for a value in a balanced Binary Search Tree (BST) of size N? (Variant 12)
+A) O(log N)
+B) O(N)
+C) O(N log N)
+D) O(1)
+Answer: A
+
+13. According to the CAP Theorem, which two properties can a distributed system guarantee simultaneously in the presence of a network partition? (Variant 13)
+A) Only Consistency and Availability
+B) Either Consistency and Partition Tolerance, or Availability and Partition Tolerance
+C) None of the CAP properties can exist together
+D) Only CPU speed and Memory throughput
+Answer: B
+
+14. Which OOP concept represents the ability of different objects to respond to the same method invocation in their own unique way? (Variant 14)
+A) Encapsulation
+B) Abstraction
+C) Inheritance
+D) Polymorphism
+Answer: D
+
+15. What is the primary purpose of a reverse proxy server in modern web architectures? (Variant 15)
+A) To run automated test suites
+B) To store user passwords securely
+C) To forward client requests to backend servers and handle SSL termination/caching
+D) To translate domain names to IP addresses
+Answer: C
+
+16. What is the time complexity of the quicksort algorithm in the worst-case scenario? (Variant 16)
+A) O(N^2)
+B) O(N log N)
+C) O(log N)
+D) O(N)
+Answer: A
+
+17. Which architectural pattern involves breaking down a large monolithic system into independent, single-purpose services communicating via APIs? (Variant 17)
+A) Microservices Architecture
+B) Layered Architecture
+C) Event-Driven Architecture
+D) Serverless Architecture
+Answer: A
+
+18. What does the term 'Thrashing' refer to in Operating Systems memory management? (Variant 18)
+A) A hardware failure in the RAM module
+B) When a process consumes 100% CPU capacity
+C) A technique to clear cache values
+D) A state where the system spends more time swapping pages in and out of disk than executing processes
+Answer: D
+
+19. What is the main advantage of a document-based data store over a traditional relational storage system? (Variant 19)
+A) It allows for flexible, schema-less data storage and horizontal scalability
+B) It requires less physical storage space
+C) It guarantees strict ACID compliance under all conditions
+D) It uses structured queries as its primary interface
+Answer: A
+
+20. What is the role of a garbage collector in a programming language's runtime environment? (Variant 20)
+A) To automatically identify and reclaim memory occupied by objects that are no longer reachable
+B) To format and indent source code files
+C) To optimize database execution plans
+D) To package application code into containers
+Answer: A
+
+21. In System Design, what is the primary function of a Load Balancer in a highly available architecture? (Variant 21)
+A) To distribute incoming network traffic across multiple backend servers to prevent overload
+B) To encrypt database connections
+C) To compile source code files
+D) To serve static files to browsers
+Answer: A
+
+22. What is the time complexity of searching for a value in a balanced Binary Search Tree (BST) of size N? (Variant 22)
+A) O(log N)
+B) O(N log N)
+C) O(N)
+D) O(1)
+Answer: A
+
+23. According to the CAP Theorem, which two properties can a distributed system guarantee simultaneously in the presence of a network partition? (Variant 23)
+A) Only CPU speed and Memory throughput
+B) Either Consistency and Partition Tolerance, or Availability and Partition Tolerance
+C) None of the CAP properties can exist together
+D) Only Consistency and Availability
+Answer: B
+
+24. Which OOP concept represents the ability of different objects to respond to the same method invocation in their own unique way? (Variant 24)
+A) Inheritance
+B) Encapsulation
+C) Abstraction
+D) Polymorphism
+Answer: D
+
+25. What is the primary purpose of a reverse proxy server in modern web architectures? (Variant 25)
+A) To run automated test suites
+B) To translate domain names to IP addresses
+C) To store user passwords securely
+D) To forward client requests to backend servers and handle SSL termination/caching
+Answer: D
+
+26. What is the time complexity of the quicksort algorithm in the worst-case scenario? (Variant 26)
+A) O(N)
+B) O(N log N)
+C) O(log N)
+D) O(N^2)
+Answer: D
+
+27. Which architectural pattern involves breaking down a large monolithic system into independent, single-purpose services communicating via APIs? (Variant 27)
+A) Microservices Architecture
+B) Layered Architecture
+C) Serverless Architecture
+D) Event-Driven Architecture
+Answer: A
+
+28. What does the term 'Thrashing' refer to in Operating Systems memory management? (Variant 28)
+A) A technique to clear cache values
+B) When a process consumes 100% CPU capacity
+C) A hardware failure in the RAM module
+D) A state where the system spends more time swapping pages in and out of disk than executing processes
+Answer: D
+
+29. What is the main advantage of a document-based data store over a traditional relational storage system? (Variant 29)
+A) It requires less physical storage space
+B) It uses structured queries as its primary interface
+C) It guarantees strict ACID compliance under all conditions
+D) It allows for flexible, schema-less data storage and horizontal scalability
+Answer: D
+
+30. What is the role of a garbage collector in a programming language's runtime environment? (Variant 30)
+A) To automatically identify and reclaim memory occupied by objects that are no longer reachable
+B) To format and indent source code files
+C) To optimize database execution plans
+D) To package application code into containers
+Answer: A
+
+31. In System Design, what is the primary function of a Load Balancer in a highly available architecture? (Variant 31)
+A) To distribute incoming network traffic across multiple backend servers to prevent overload
+B) To serve static files to browsers
+C) To encrypt database connections
+D) To compile source code files
+Answer: A
+
+32. What is the time complexity of searching for a value in a balanced Binary Search Tree (BST) of size N? (Variant 32)
+A) O(N log N)
+B) O(1)
+C) O(N)
+D) O(log N)
+Answer: D
+
+33. According to the CAP Theorem, which two properties can a distributed system guarantee simultaneously in the presence of a network partition? (Variant 33)
+A) Either Consistency and Partition Tolerance, or Availability and Partition Tolerance
+B) None of the CAP properties can exist together
+C) Only CPU speed and Memory throughput
+D) Only Consistency and Availability
+Answer: A
+
+34. Which OOP concept represents the ability of different objects to respond to the same method invocation in their own unique way? (Variant 34)
+A) Encapsulation
+B) Abstraction
+C) Inheritance
+D) Polymorphism
+Answer: D
+
+35. What is the primary purpose of a reverse proxy server in modern web architectures? (Variant 35)
+A) To forward client requests to backend servers and handle SSL termination/caching
+B) To store user passwords securely
+C) To run automated test suites
+D) To translate domain names to IP addresses
+Answer: A
+
+36. What is the time complexity of the quicksort algorithm in the worst-case scenario? (Variant 36)
+A) O(log N)
+B) O(N^2)
+C) O(N log N)
+D) O(N)
+Answer: B
+
+37. Which architectural pattern involves breaking down a large monolithic system into independent, single-purpose services communicating via APIs? (Variant 37)
+A) Serverless Architecture
+B) Event-Driven Architecture
+C) Layered Architecture
+D) Microservices Architecture
+Answer: D
+
+38. What does the term 'Thrashing' refer to in Operating Systems memory management? (Variant 38)
+A) A state where the system spends more time swapping pages in and out of disk than executing processes
+B) A hardware failure in the RAM module
+C) When a process consumes 100% CPU capacity
+D) A technique to clear cache values
+Answer: A
+
+39. What is the main advantage of a document-based data store over a traditional relational storage system? (Variant 39)
+A) It guarantees strict ACID compliance under all conditions
+B) It uses structured queries as its primary interface
+C) It allows for flexible, schema-less data storage and horizontal scalability
+D) It requires less physical storage space
+Answer: C
+
+40. What is the role of a garbage collector in a programming language's runtime environment? (Variant 40)
+A) To package application code into containers
+B) To optimize database execution plans
+C) To format and indent source code files
+D) To automatically identify and reclaim memory occupied by objects that are no longer reachable
+Answer: D
+
+41. In System Design, what is the primary function of a Load Balancer in a highly available architecture? (Variant 41)
+A) To serve static files to browsers
+B) To distribute incoming network traffic across multiple backend servers to prevent overload
+C) To encrypt database connections
+D) To compile source code files
+Answer: B
+
+42. What is the time complexity of searching for a value in a balanced Binary Search Tree (BST) of size N? (Variant 42)
+A) O(log N)
+B) O(N log N)
+C) O(1)
+D) O(N)
+Answer: A
+
+43. According to the CAP Theorem, which two properties can a distributed system guarantee simultaneously in the presence of a network partition? (Variant 43)
+A) Only CPU speed and Memory throughput
+B) Only Consistency and Availability
+C) Either Consistency and Partition Tolerance, or Availability and Partition Tolerance
+D) None of the CAP properties can exist together
+Answer: C
+
+44. Which OOP concept represents the ability of different objects to respond to the same method invocation in their own unique way? (Variant 44)
+A) Abstraction
+B) Inheritance
+C) Polymorphism
+D) Encapsulation
+Answer: C
+
+45. What is the primary purpose of a reverse proxy server in modern web architectures? (Variant 45)
+A) To run automated test suites
+B) To store user passwords securely
+C) To forward client requests to backend servers and handle SSL termination/caching
+D) To translate domain names to IP addresses
+Answer: C
+
+46. What is the time complexity of the quicksort algorithm in the worst-case scenario? (Variant 46)
+A) O(N^2)
+B) O(N)
+C) O(log N)
+D) O(N log N)
+Answer: A
+
+47. Which architectural pattern involves breaking down a large monolithic system into independent, single-purpose services communicating via APIs? (Variant 47)
+A) Serverless Architecture
+B) Layered Architecture
+C) Event-Driven Architecture
+D) Microservices Architecture
+Answer: D
+
+48. What does the term 'Thrashing' refer to in Operating Systems memory management? (Variant 48)
+A) A state where the system spends more time swapping pages in and out of disk than executing processes
+B) A hardware failure in the RAM module
+C) A technique to clear cache values
+D) When a process consumes 100% CPU capacity
+Answer: A
+
+49. What is the main advantage of a document-based data store over a traditional relational storage system? (Variant 49)
+A) It guarantees strict ACID compliance under all conditions
+B) It uses structured queries as its primary interface
+C) It requires less physical storage space
+D) It allows for flexible, schema-less data storage and horizontal scalability
+Answer: D
+
+50. What is the role of a garbage collector in a programming language's runtime environment? (Variant 50)
+A) To optimize database execution plans
+B) To package application code into containers
+C) To automatically identify and reclaim memory occupied by objects that are no longer reachable
+D) To format and indent source code files
+Answer: C
+
+51. In System Design, what is the primary function of a Load Balancer in a highly available architecture? (Variant 51)
+A) To encrypt database connections
+B) To distribute incoming network traffic across multiple backend servers to prevent overload
+C) To serve static files to browsers
+D) To compile source code files
+Answer: B
+
+52. What is the time complexity of searching for a value in a balanced Binary Search Tree (BST) of size N? (Variant 52)
+A) O(1)
+B) O(N log N)
+C) O(log N)
+D) O(N)
+Answer: C
+
+53. According to the CAP Theorem, which two properties can a distributed system guarantee simultaneously in the presence of a network partition? (Variant 53)
+A) None of the CAP properties can exist together
+B) Only CPU speed and Memory throughput
+C) Only Consistency and Availability
+D) Either Consistency and Partition Tolerance, or Availability and Partition Tolerance
+Answer: D
+
+54. Which OOP concept represents the ability of different objects to respond to the same method invocation in their own unique way? (Variant 54)
+A) Encapsulation
+B) Abstraction
+C) Inheritance
+D) Polymorphism
+Answer: D
+
+55. What is the primary purpose of a reverse proxy server in modern web architectures? (Variant 55)
+A) To run automated test suites
+B) To store user passwords securely
+C) To forward client requests to backend servers and handle SSL termination/caching
+D) To translate domain names to IP addresses
+Answer: C
+
+56. What is the time complexity of the quicksort algorithm in the worst-case scenario? (Variant 56)
+A) O(N^2)
+B) O(N log N)
+C) O(N)
+D) O(log N)
+Answer: A
+
+57. Which architectural pattern involves breaking down a large monolithic system into independent, single-purpose services communicating via APIs? (Variant 57)
+A) Microservices Architecture
+B) Layered Architecture
+C) Event-Driven Architecture
+D) Serverless Architecture
+Answer: A
+
+58. What does the term 'Thrashing' refer to in Operating Systems memory management? (Variant 58)
+A) A technique to clear cache values
+B) A hardware failure in the RAM module
+C) When a process consumes 100% CPU capacity
+D) A state where the system spends more time swapping pages in and out of disk than executing processes
+Answer: D
+
+59. What is the main advantage of a document-based data store over a traditional relational storage system? (Variant 59)
+A) It requires less physical storage space
+B) It uses structured queries as its primary interface
+C) It guarantees strict ACID compliance under all conditions
+D) It allows for flexible, schema-less data storage and horizontal scalability
+Answer: D
+
+60. What is the role of a garbage collector in a programming language's runtime environment? (Variant 60)
+A) To format and indent source code files
+B) To automatically identify and reclaim memory occupied by objects that are no longer reachable
+C) To optimize database execution plans
+D) To package application code into containers
+Answer: B
+
+61. In System Design, what is the primary function of a Load Balancer in a highly available architecture? (Variant 61)
+A) To distribute incoming network traffic across multiple backend servers to prevent overload
+B) To serve static files to browsers
+C) To encrypt database connections
+D) To compile source code files
+Answer: A
+
+62. What is the time complexity of searching for a value in a balanced Binary Search Tree (BST) of size N? (Variant 62)
+A) O(N log N)
+B) O(1)
+C) O(N)
+D) O(log N)
+Answer: D
+
+63. According to the CAP Theorem, which two properties can a distributed system guarantee simultaneously in the presence of a network partition? (Variant 63)
+A) None of the CAP properties can exist together
+B) Only CPU speed and Memory throughput
+C) Either Consistency and Partition Tolerance, or Availability and Partition Tolerance
+D) Only Consistency and Availability
+Answer: C
+
+64. Which OOP concept represents the ability of different objects to respond to the same method invocation in their own unique way? (Variant 64)
+A) Abstraction
+B) Inheritance
+C) Polymorphism
+D) Encapsulation
+Answer: C
+
+65. What is the primary purpose of a reverse proxy server in modern web architectures? (Variant 65)
+A) To forward client requests to backend servers and handle SSL termination/caching
+B) To run automated test suites
+C) To translate domain names to IP addresses
+D) To store user passwords securely
+Answer: A
+
+66. What is the time complexity of the quicksort algorithm in the worst-case scenario? (Variant 66)
+A) O(N^2)
+B) O(N log N)
+C) O(N)
+D) O(log N)
+Answer: A
+
+67. Which architectural pattern involves breaking down a large monolithic system into independent, single-purpose services communicating via APIs? (Variant 67)
+A) Microservices Architecture
+B) Layered Architecture
+C) Serverless Architecture
+D) Event-Driven Architecture
+Answer: A
+
+68. What does the term 'Thrashing' refer to in Operating Systems memory management? (Variant 68)
+A) A state where the system spends more time swapping pages in and out of disk than executing processes
+B) A hardware failure in the RAM module
+C) A technique to clear cache values
+D) When a process consumes 100% CPU capacity
+Answer: A
+
+69. What is the main advantage of a document-based data store over a traditional relational storage system? (Variant 69)
+A) It requires less physical storage space
+B) It uses structured queries as its primary interface
+C) It guarantees strict ACID compliance under all conditions
+D) It allows for flexible, schema-less data storage and horizontal scalability
+Answer: D
+
+70. What is the role of a garbage collector in a programming language's runtime environment? (Variant 70)
+A) To automatically identify and reclaim memory occupied by objects that are no longer reachable
+B) To format and indent source code files
+C) To optimize database execution plans
+D) To package application code into containers
+Answer: A
+
+71. In System Design, what is the primary function of a Load Balancer in a highly available architecture? (Variant 71)
+A) To distribute incoming network traffic across multiple backend servers to prevent overload
+B) To encrypt database connections
+C) To compile source code files
+D) To serve static files to browsers
+Answer: A
+
+72. What is the time complexity of searching for a value in a balanced Binary Search Tree (BST) of size N? (Variant 72)
+A) O(log N)
+B) O(N)
+C) O(1)
+D) O(N log N)
+Answer: A
+
+73. According to the CAP Theorem, which two properties can a distributed system guarantee simultaneously in the presence of a network partition? (Variant 73)
+A) Either Consistency and Partition Tolerance, or Availability and Partition Tolerance
+B) Only Consistency and Availability
+C) Only CPU speed and Memory throughput
+D) None of the CAP properties can exist together
+Answer: A
+
+74. Which OOP concept represents the ability of different objects to respond to the same method invocation in their own unique way? (Variant 74)
+A) Inheritance
+B) Encapsulation
+C) Abstraction
+D) Polymorphism
+Answer: D
+
+75. What is the primary purpose of a reverse proxy server in modern web architectures? (Variant 75)
+A) To forward client requests to backend servers and handle SSL termination/caching
+B) To store user passwords securely
+C) To run automated test suites
+D) To translate domain names to IP addresses
+Answer: A
+
+76. What is the time complexity of the quicksort algorithm in the worst-case scenario? (Variant 76)
+A) O(log N)
+B) O(N log N)
+C) O(N)
+D) O(N^2)
+Answer: D
+
+77. Which architectural pattern involves breaking down a large monolithic system into independent, single-purpose services communicating via APIs? (Variant 77)
+A) Event-Driven Architecture
+B) Layered Architecture
+C) Serverless Architecture
+D) Microservices Architecture
+Answer: D
+
+78. What does the term 'Thrashing' refer to in Operating Systems memory management? (Variant 78)
+A) A technique to clear cache values
+B) When a process consumes 100% CPU capacity
+C) A hardware failure in the RAM module
+D) A state where the system spends more time swapping pages in and out of disk than executing processes
+Answer: D
+
+79. What is the main advantage of a document-based data store over a traditional relational storage system? (Variant 79)
+A) It allows for flexible, schema-less data storage and horizontal scalability
+B) It requires less physical storage space
+C) It guarantees strict ACID compliance under all conditions
+D) It uses structured queries as its primary interface
+Answer: A
+
+80. What is the role of a garbage collector in a programming language's runtime environment? (Variant 80)
+A) To format and indent source code files
+B) To package application code into containers
+C) To automatically identify and reclaim memory occupied by objects that are no longer reachable
+D) To optimize database execution plans
+Answer: C
+
+81. In System Design, what is the primary function of a Load Balancer in a highly available architecture? (Variant 81)
+A) To serve static files to browsers
+B) To compile source code files
+C) To encrypt database connections
+D) To distribute incoming network traffic across multiple backend servers to prevent overload
+Answer: D
+
+82. What is the time complexity of searching for a value in a balanced Binary Search Tree (BST) of size N? (Variant 82)
+A) O(log N)
+B) O(1)
+C) O(N)
+D) O(N log N)
+Answer: A
+
+83. According to the CAP Theorem, which two properties can a distributed system guarantee simultaneously in the presence of a network partition? (Variant 83)
+A) Either Consistency and Partition Tolerance, or Availability and Partition Tolerance
+B) Only Consistency and Availability
+C) Only CPU speed and Memory throughput
+D) None of the CAP properties can exist together
+Answer: A
+
+84. Which OOP concept represents the ability of different objects to respond to the same method invocation in their own unique way? (Variant 84)
+A) Polymorphism
+B) Inheritance
+C) Encapsulation
+D) Abstraction
+Answer: A
+
+85. What is the primary purpose of a reverse proxy server in modern web architectures? (Variant 85)
+A) To forward client requests to backend servers and handle SSL termination/caching
+B) To store user passwords securely
+C) To run automated test suites
+D) To translate domain names to IP addresses
+Answer: A
+
+86. What is the time complexity of the quicksort algorithm in the worst-case scenario? (Variant 86)
+A) O(log N)
+B) O(N)
+C) O(N log N)
+D) O(N^2)
+Answer: D
+
+87. Which architectural pattern involves breaking down a large monolithic system into independent, single-purpose services communicating via APIs? (Variant 87)
+A) Event-Driven Architecture
+B) Microservices Architecture
+C) Serverless Architecture
+D) Layered Architecture
+Answer: B
+
+88. What does the term 'Thrashing' refer to in Operating Systems memory management? (Variant 88)
+A) When a process consumes 100% CPU capacity
+B) A hardware failure in the RAM module
+C) A technique to clear cache values
+D) A state where the system spends more time swapping pages in and out of disk than executing processes
+Answer: D
+
+89. What is the main advantage of a document-based data store over a traditional relational storage system? (Variant 89)
+A) It requires less physical storage space
+B) It allows for flexible, schema-less data storage and horizontal scalability
+C) It guarantees strict ACID compliance under all conditions
+D) It uses structured queries as its primary interface
+Answer: B
+
+90. What is the role of a garbage collector in a programming language's runtime environment? (Variant 90)
+A) To automatically identify and reclaim memory occupied by objects that are no longer reachable
+B) To package application code into containers
+C) To format and indent source code files
+D) To optimize database execution plans
+Answer: A
+
+91. In System Design, what is the primary function of a Load Balancer in a highly available architecture? (Variant 91)
+A) To compile source code files
+B) To distribute incoming network traffic across multiple backend servers to prevent overload
+C) To serve static files to browsers
+D) To encrypt database connections
+Answer: B
+
+92. What is the time complexity of searching for a value in a balanced Binary Search Tree (BST) of size N? (Variant 92)
+A) O(log N)
+B) O(N)
+C) O(N log N)
+D) O(1)
+Answer: A
+
+93. According to the CAP Theorem, which two properties can a distributed system guarantee simultaneously in the presence of a network partition? (Variant 93)
+A) Only Consistency and Availability
+B) Either Consistency and Partition Tolerance, or Availability and Partition Tolerance
+C) Only CPU speed and Memory throughput
+D) None of the CAP properties can exist together
+Answer: B
+
+94. Which OOP concept represents the ability of different objects to respond to the same method invocation in their own unique way? (Variant 94)
+A) Polymorphism
+B) Encapsulation
+C) Inheritance
+D) Abstraction
+Answer: A
+
+95. What is the primary purpose of a reverse proxy server in modern web architectures? (Variant 95)
+A) To translate domain names to IP addresses
+B) To run automated test suites
+C) To store user passwords securely
+D) To forward client requests to backend servers and handle SSL termination/caching
+Answer: D
+
+96. What is the time complexity of the quicksort algorithm in the worst-case scenario? (Variant 96)
+A) O(N^2)
+B) O(N)
+C) O(log N)
+D) O(N log N)
+Answer: A
+
+97. Which architectural pattern involves breaking down a large monolithic system into independent, single-purpose services communicating via APIs? (Variant 97)
+A) Layered Architecture
+B) Serverless Architecture
+C) Microservices Architecture
+D) Event-Driven Architecture
+Answer: C
+
+98. What does the term 'Thrashing' refer to in Operating Systems memory management? (Variant 98)
+A) A state where the system spends more time swapping pages in and out of disk than executing processes
+B) A hardware failure in the RAM module
+C) When a process consumes 100% CPU capacity
+D) A technique to clear cache values
+Answer: A
+
+99. What is the main advantage of a document-based data store over a traditional relational storage system? (Variant 99)
+A) It requires less physical storage space
+B) It uses structured queries as its primary interface
+C) It guarantees strict ACID compliance under all conditions
+D) It allows for flexible, schema-less data storage and horizontal scalability
+Answer: D
+
+100. What is the role of a garbage collector in a programming language's runtime environment? (Variant 100)
+A) To automatically identify and reclaim memory occupied by objects that are no longer reachable
+B) To format and indent source code files
+C) To optimize database execution plans
+D) To package application code into containers
+Answer: A
+
+[Section: Logical Reasoning]
+
+1. Evaluate the boolean condition: (A AND B) OR (NOT A AND C) where A = true, B = false, and C = true (Variant 1)?
+A) Error
+B) false
+C) true
+D) null
+Answer: B
+
+2. Determine the final value of the accumulator variable 'sum' after dry running this loop logic:
+```
+sum = 0
+for k from 1 to 6 inclusive:
+    if k % 3 == 0:
+        sum = sum + k
+``` (Variant 2)
+A) 12
+B) 9
+C) 0
+D) 6
+Answer: B
+
+3. A recursive function is defined as f(n) = f(n-1) + 2 with base case f(0) = 1. What is the returned value of f(5) (Variant 3)?
+A) 9
+B) 11
+C) 16
+D) 10
+Answer: B
+
+4. Trace the value of variable 'y' after executing the following branching logic:
+```
+y = 8
+if y % 2 == 0:
+    y = y / 2
+else:
+    y = y * 3 + 1
+if y > 10:
+    y = y - 5
+``` (Variant 4)
+A) 4
+B) 6
+C) 2
+D) 8
+Answer: A
+
+5. In logical deductions, if the statement "Every compiled module passes security checks" is assumed to be true, which of the following statements must also be logically true (Variant 5)?
+A) If a module was not compiled, then it fails security checks
+B) If a module passes security checks, then it was compiled
+C) If a module fails security checks, then it was not compiled
+D) No compiled modules pass security checks
+Answer: C
+
+6. If a loop runs while 'x < 5', starting with 'x = 0', and increments 'x' by 3 in each iteration, how many times will the loop execute (Variant 6)?
+A) 1
+B) 5
+C) 3
+D) 2
+Answer: D
+
+7. Find the final value of 'status' after evaluating the nested conditional logic:
+```
+val = 4
+if val % 2 == 0:
+    status = "Even-High" if val > 3 else "Even-Low"
+else:
+    status = "Odd-High" if val > 2 else "Odd-Low"
+``` (Variant 7)
+A) Even-High
+B) Unknown
+C) Even-Low
+D) Odd-High
+Answer: A
+
+8. Which boolean logic expression is equivalent to: NOT (A AND B) according to De Morgan's Laws (Variant 8)?
+A) A OR B
+B) NOT A AND NOT B
+C) (NOT A) AND (NOT B)
+D) (NOT A) OR (NOT B)
+Answer: D
+
+9. What is the value of 'count' after executing this while loop logic:
+```
+count = 0
+n = 20
+while n > 1:
+    count = count + 1
+    n = n / 2
+``` (Variant 9)
+A) 4
+B) 6
+C) 5
+D) 0
+Answer: C
+
+10. In logical bitwise shifts, if the integer value 8 (binary 1000) is shifted to the right by 2 positions (8 >> 2), what is the resulting integer value (Variant 10)?
+A) 4
+B) 32
+C) 2
+D) 16
+Answer: C
+
+11. Evaluate the boolean condition: (A AND B) OR (NOT A AND C) where A = true, B = false, and C = true (Variant 11)?
+A) true
+B) null
+C) false
+D) Error
+Answer: C
+
+12. Determine the final value of the accumulator variable 'sum' after dry running this loop logic:
+```
+sum = 0
+for k from 1 to 8 inclusive:
+    if k % 3 == 0:
+        sum = sum + k
+``` (Variant 12)
+A) 6
+B) 9
+C) 0
+D) 12
+Answer: B
+
+13. A recursive function is defined as f(n) = f(n-1) + 2 with base case f(0) = 1. What is the returned value of f(3) (Variant 13)?
+A) 7
+B) 6
+C) 5
+D) 10
+Answer: A
+
+14. Trace the value of variable 'y' after executing the following branching logic:
+```
+y = 8
+if y % 2 == 0:
+    y = y / 2
+else:
+    y = y * 3 + 1
+if y > 10:
+    y = y - 5
+``` (Variant 14)
+A) 2
+B) 6
+C) 8
+D) 4
+Answer: D
+
+15. In logical deductions, if the statement "Every compiled module passes security checks" is assumed to be true, which of the following statements must also be logically true (Variant 15)?
+A) No compiled modules pass security checks
+B) If a module was not compiled, then it fails security checks
+C) If a module fails security checks, then it was not compiled
+D) If a module passes security checks, then it was compiled
+Answer: C
+
+16. If a loop runs while 'x < 5', starting with 'x = 0', and increments 'x' by 3 in each iteration, how many times will the loop execute (Variant 16)?
+A) 1
+B) 5
+C) 2
+D) 3
+Answer: C
+
+17. Find the final value of 'status' after evaluating the nested conditional logic:
+```
+val = 2
+if val % 2 == 0:
+    status = "Even-High" if val > 3 else "Even-Low"
+else:
+    status = "Odd-High" if val > 2 else "Odd-Low"
+``` (Variant 17)
+A) Even-High
+B) Unknown
+C) Even-Low
+D) Odd-High
+Answer: C
+
+18. Which boolean logic expression is equivalent to: NOT (A AND B) according to De Morgan's Laws (Variant 18)?
+A) A OR B
+B) (NOT A) OR (NOT B)
+C) (NOT A) AND (NOT B)
+D) NOT A AND NOT B
+Answer: B
+
+19. What is the value of 'count' after executing this while loop logic:
+```
+count = 0
+n = 12
+while n > 1:
+    count = count + 1
+    n = n / 2
+``` (Variant 19)
+A) 0
+B) 5
+C) 4
+D) 3
+Answer: C
+
+20. In logical bitwise shifts, if the integer value 8 (binary 1000) is shifted to the right by 2 positions (8 >> 2), what is the resulting integer value (Variant 20)?
+A) 32
+B) 16
+C) 4
+D) 2
+Answer: D
+
+21. Evaluate the boolean condition: (A AND B) OR (NOT A AND C) where A = true, B = false, and C = true (Variant 21)?
+A) false
+B) null
+C) Error
+D) true
+Answer: A
+
+22. Determine the final value of the accumulator variable 'sum' after dry running this loop logic:
+```
+sum = 0
+for k from 1 to 6 inclusive:
+    if k % 3 == 0:
+        sum = sum + k
+``` (Variant 22)
+A) 12
+B) 0
+C) 6
+D) 9
+Answer: D
+
+23. A recursive function is defined as f(n) = f(n-1) + 2 with base case f(0) = 1. What is the returned value of f(4) (Variant 23)?
+A) 9
+B) 13
+C) 8
+D) 7
+Answer: A
+
+24. Trace the value of variable 'y' after executing the following branching logic:
+```
+y = 8
+if y % 2 == 0:
+    y = y / 2
+else:
+    y = y * 3 + 1
+if y > 10:
+    y = y - 5
+``` (Variant 24)
+A) 4
+B) 6
+C) 2
+D) 8
+Answer: A
+
+25. In logical deductions, if the statement "Every compiled module passes security checks" is assumed to be true, which of the following statements must also be logically true (Variant 25)?
+A) If a module fails security checks, then it was not compiled
+B) If a module passes security checks, then it was compiled
+C) No compiled modules pass security checks
+D) If a module was not compiled, then it fails security checks
+Answer: A
+
+26. If a loop runs while 'x < 5', starting with 'x = 0', and increments 'x' by 3 in each iteration, how many times will the loop execute (Variant 26)?
+A) 5
+B) 3
+C) 2
+D) 1
+Answer: C
+
+27. Find the final value of 'status' after evaluating the nested conditional logic:
+```
+val = 4
+if val % 2 == 0:
+    status = "Even-High" if val > 3 else "Even-Low"
+else:
+    status = "Odd-High" if val > 2 else "Odd-Low"
+``` (Variant 27)
+A) Odd-High
+B) Even-High
+C) Even-Low
+D) Unknown
+Answer: B
+
+28. Which boolean logic expression is equivalent to: NOT (A AND B) according to De Morgan's Laws (Variant 28)?
+A) (NOT A) OR (NOT B)
+B) (NOT A) AND (NOT B)
+C) NOT A AND NOT B
+D) A OR B
+Answer: A
+
+29. What is the value of 'count' after executing this while loop logic:
+```
+count = 0
+n = 16
+while n > 1:
+    count = count + 1
+    n = n / 2
+``` (Variant 29)
+A) 5
+B) 4
+C) 3
+D) 0
+Answer: B
+
+30. In logical bitwise shifts, if the integer value 8 (binary 1000) is shifted to the right by 2 positions (8 >> 2), what is the resulting integer value (Variant 30)?
+A) 32
+B) 16
+C) 4
+D) 2
+Answer: D
+
+31. Evaluate the boolean condition: (A AND B) OR (NOT A AND C) where A = true, B = false, and C = true (Variant 31)?
+A) null
+B) Error
+C) true
+D) false
+Answer: D
+
+32. Determine the final value of the accumulator variable 'sum' after dry running this loop logic:
+```
+sum = 0
+for k from 1 to 8 inclusive:
+    if k % 3 == 0:
+        sum = sum + k
+``` (Variant 32)
+A) 6
+B) 12
+C) 0
+D) 9
+Answer: D
+
+33. A recursive function is defined as f(n) = f(n-1) + 2 with base case f(0) = 1. What is the returned value of f(5) (Variant 33)?
+A) 9
+B) 10
+C) 11
+D) 16
+Answer: C
+
+34. Trace the value of variable 'y' after executing the following branching logic:
+```
+y = 8
+if y % 2 == 0:
+    y = y / 2
+else:
+    y = y * 3 + 1
+if y > 10:
+    y = y - 5
+``` (Variant 34)
+A) 8
+B) 2
+C) 4
+D) 6
+Answer: C
+
+35. In logical deductions, if the statement "Every compiled module passes security checks" is assumed to be true, which of the following statements must also be logically true (Variant 35)?
+A) No compiled modules pass security checks
+B) If a module was not compiled, then it fails security checks
+C) If a module passes security checks, then it was compiled
+D) If a module fails security checks, then it was not compiled
+Answer: D
+
+36. If a loop runs while 'x < 5', starting with 'x = 0', and increments 'x' by 3 in each iteration, how many times will the loop execute (Variant 36)?
+A) 2
+B) 5
+C) 1
+D) 3
+Answer: A
+
+37. Find the final value of 'status' after evaluating the nested conditional logic:
+```
+val = 2
+if val % 2 == 0:
+    status = "Even-High" if val > 3 else "Even-Low"
+else:
+    status = "Odd-High" if val > 2 else "Odd-Low"
+``` (Variant 37)
+A) Even-Low
+B) Even-High
+C) Odd-High
+D) Unknown
+Answer: A
+
+38. Which boolean logic expression is equivalent to: NOT (A AND B) according to De Morgan's Laws (Variant 38)?
+A) NOT A AND NOT B
+B) (NOT A) AND (NOT B)
+C) A OR B
+D) (NOT A) OR (NOT B)
+Answer: D
+
+39. What is the value of 'count' after executing this while loop logic:
+```
+count = 0
+n = 20
+while n > 1:
+    count = count + 1
+    n = n / 2
+``` (Variant 39)
+A) 5
+B) 0
+C) 6
+D) 4
+Answer: A
+
+40. In logical bitwise shifts, if the integer value 8 (binary 1000) is shifted to the right by 2 positions (8 >> 2), what is the resulting integer value (Variant 40)?
+A) 16
+B) 2
+C) 32
+D) 4
+Answer: B
+
+41. Evaluate the boolean condition: (A AND B) OR (NOT A AND C) where A = true, B = false, and C = true (Variant 41)?
+A) false
+B) null
+C) Error
+D) true
+Answer: A
+
+42. Determine the final value of the accumulator variable 'sum' after dry running this loop logic:
+```
+sum = 0
+for k from 1 to 6 inclusive:
+    if k % 3 == 0:
+        sum = sum + k
+``` (Variant 42)
+A) 9
+B) 12
+C) 6
+D) 0
+Answer: A
+
+43. A recursive function is defined as f(n) = f(n-1) + 2 with base case f(0) = 1. What is the returned value of f(3) (Variant 43)?
+A) 10
+B) 5
+C) 6
+D) 7
+Answer: D
+
+44. Trace the value of variable 'y' after executing the following branching logic:
+```
+y = 8
+if y % 2 == 0:
+    y = y / 2
+else:
+    y = y * 3 + 1
+if y > 10:
+    y = y - 5
+``` (Variant 44)
+A) 2
+B) 4
+C) 8
+D) 6
+Answer: B
+
+45. In logical deductions, if the statement "Every compiled module passes security checks" is assumed to be true, which of the following statements must also be logically true (Variant 45)?
+A) If a module passes security checks, then it was compiled
+B) No compiled modules pass security checks
+C) If a module was not compiled, then it fails security checks
+D) If a module fails security checks, then it was not compiled
+Answer: D
+
+46. If a loop runs while 'x < 5', starting with 'x = 0', and increments 'x' by 3 in each iteration, how many times will the loop execute (Variant 46)?
+A) 3
+B) 1
+C) 5
+D) 2
+Answer: D
+
+47. Find the final value of 'status' after evaluating the nested conditional logic:
+```
+val = 4
+if val % 2 == 0:
+    status = "Even-High" if val > 3 else "Even-Low"
+else:
+    status = "Odd-High" if val > 2 else "Odd-Low"
+``` (Variant 47)
+A) Odd-High
+B) Unknown
+C) Even-Low
+D) Even-High
+Answer: D
+
+48. Which boolean logic expression is equivalent to: NOT (A AND B) according to De Morgan's Laws (Variant 48)?
+A) (NOT A) OR (NOT B)
+B) A OR B
+C) NOT A AND NOT B
+D) (NOT A) AND (NOT B)
+Answer: A
+
+49. What is the value of 'count' after executing this while loop logic:
+```
+count = 0
+n = 12
+while n > 1:
+    count = count + 1
+    n = n / 2
+``` (Variant 49)
+A) 5
+B) 3
+C) 4
+D) 0
+Answer: C
+
+50. In logical bitwise shifts, if the integer value 8 (binary 1000) is shifted to the right by 2 positions (8 >> 2), what is the resulting integer value (Variant 50)?
+A) 32
+B) 16
+C) 2
+D) 4
+Answer: C
+
+51. Evaluate the boolean condition: (A AND B) OR (NOT A AND C) where A = true, B = false, and C = true (Variant 51)?
+A) false
+B) null
+C) true
+D) Error
+Answer: A
+
+52. Determine the final value of the accumulator variable 'sum' after dry running this loop logic:
+```
+sum = 0
+for k from 1 to 8 inclusive:
+    if k % 3 == 0:
+        sum = sum + k
+``` (Variant 52)
+A) 6
+B) 12
+C) 9
+D) 0
+Answer: C
+
+53. A recursive function is defined as f(n) = f(n-1) + 2 with base case f(0) = 1. What is the returned value of f(4) (Variant 53)?
+A) 7
+B) 13
+C) 8
+D) 9
+Answer: D
+
+54. Trace the value of variable 'y' after executing the following branching logic:
+```
+y = 8
+if y % 2 == 0:
+    y = y / 2
+else:
+    y = y * 3 + 1
+if y > 10:
+    y = y - 5
+``` (Variant 54)
+A) 8
+B) 4
+C) 2
+D) 6
+Answer: B
+
+55. In logical deductions, if the statement "Every compiled module passes security checks" is assumed to be true, which of the following statements must also be logically true (Variant 55)?
+A) No compiled modules pass security checks
+B) If a module was not compiled, then it fails security checks
+C) If a module passes security checks, then it was compiled
+D) If a module fails security checks, then it was not compiled
+Answer: D
+
+56. If a loop runs while 'x < 5', starting with 'x = 0', and increments 'x' by 3 in each iteration, how many times will the loop execute (Variant 56)?
+A) 1
+B) 5
+C) 3
+D) 2
+Answer: D
+
+57. Find the final value of 'status' after evaluating the nested conditional logic:
+```
+val = 2
+if val % 2 == 0:
+    status = "Even-High" if val > 3 else "Even-Low"
+else:
+    status = "Odd-High" if val > 2 else "Odd-Low"
+``` (Variant 57)
+A) Even-High
+B) Odd-High
+C) Unknown
+D) Even-Low
+Answer: D
+
+58. Which boolean logic expression is equivalent to: NOT (A AND B) according to De Morgan's Laws (Variant 58)?
+A) A OR B
+B) NOT A AND NOT B
+C) (NOT A) AND (NOT B)
+D) (NOT A) OR (NOT B)
+Answer: D
+
+59. What is the value of 'count' after executing this while loop logic:
+```
+count = 0
+n = 16
+while n > 1:
+    count = count + 1
+    n = n / 2
+``` (Variant 59)
+A) 4
+B) 3
+C) 0
+D) 5
+Answer: A
+
+60. In logical bitwise shifts, if the integer value 8 (binary 1000) is shifted to the right by 2 positions (8 >> 2), what is the resulting integer value (Variant 60)?
+A) 2
+B) 32
+C) 16
+D) 4
+Answer: A
+
+61. Evaluate the boolean condition: (A AND B) OR (NOT A AND C) where A = true, B = false, and C = true (Variant 61)?
+A) null
+B) Error
+C) true
+D) false
+Answer: D
+
+62. Determine the final value of the accumulator variable 'sum' after dry running this loop logic:
+```
+sum = 0
+for k from 1 to 6 inclusive:
+    if k % 3 == 0:
+        sum = sum + k
+``` (Variant 62)
+A) 0
+B) 6
+C) 12
+D) 9
+Answer: D
+
+63. A recursive function is defined as f(n) = f(n-1) + 2 with base case f(0) = 1. What is the returned value of f(5) (Variant 63)?
+A) 16
+B) 10
+C) 9
+D) 11
+Answer: D
+
+64. Trace the value of variable 'y' after executing the following branching logic:
+```
+y = 8
+if y % 2 == 0:
+    y = y / 2
+else:
+    y = y * 3 + 1
+if y > 10:
+    y = y - 5
+``` (Variant 64)
+A) 6
+B) 8
+C) 2
+D) 4
+Answer: D
+
+65. In logical deductions, if the statement "Every compiled module passes security checks" is assumed to be true, which of the following statements must also be logically true (Variant 65)?
+A) No compiled modules pass security checks
+B) If a module fails security checks, then it was not compiled
+C) If a module passes security checks, then it was compiled
+D) If a module was not compiled, then it fails security checks
+Answer: B
+
+66. If a loop runs while 'x < 5', starting with 'x = 0', and increments 'x' by 3 in each iteration, how many times will the loop execute (Variant 66)?
+A) 5
+B) 2
+C) 3
+D) 1
+Answer: B
+
+67. Find the final value of 'status' after evaluating the nested conditional logic:
+```
+val = 4
+if val % 2 == 0:
+    status = "Even-High" if val > 3 else "Even-Low"
+else:
+    status = "Odd-High" if val > 2 else "Odd-Low"
+``` (Variant 67)
+A) Unknown
+B) Even-Low
+C) Even-High
+D) Odd-High
+Answer: C
+
+68. Which boolean logic expression is equivalent to: NOT (A AND B) according to De Morgan's Laws (Variant 68)?
+A) (NOT A) OR (NOT B)
+B) A OR B
+C) (NOT A) AND (NOT B)
+D) NOT A AND NOT B
+Answer: A
+
+69. What is the value of 'count' after executing this while loop logic:
+```
+count = 0
+n = 20
+while n > 1:
+    count = count + 1
+    n = n / 2
+``` (Variant 69)
+A) 4
+B) 0
+C) 6
+D) 5
+Answer: D
+
+70. In logical bitwise shifts, if the integer value 8 (binary 1000) is shifted to the right by 2 positions (8 >> 2), what is the resulting integer value (Variant 70)?
+A) 16
+B) 4
+C) 32
+D) 2
+Answer: D
+
+71. Evaluate the boolean condition: (A AND B) OR (NOT A AND C) where A = true, B = false, and C = true (Variant 71)?
+A) Error
+B) null
+C) false
+D) true
+Answer: C
+
+72. Determine the final value of the accumulator variable 'sum' after dry running this loop logic:
+```
+sum = 0
+for k from 1 to 8 inclusive:
+    if k % 3 == 0:
+        sum = sum + k
+``` (Variant 72)
+A) 0
+B) 9
+C) 6
+D) 12
+Answer: B
+
+73. A recursive function is defined as f(n) = f(n-1) + 2 with base case f(0) = 1. What is the returned value of f(3) (Variant 73)?
+A) 10
+B) 5
+C) 6
+D) 7
+Answer: D
+
+74. Trace the value of variable 'y' after executing the following branching logic:
+```
+y = 8
+if y % 2 == 0:
+    y = y / 2
+else:
+    y = y * 3 + 1
+if y > 10:
+    y = y - 5
+``` (Variant 74)
+A) 4
+B) 8
+C) 2
+D) 6
+Answer: A
+
+75. In logical deductions, if the statement "Every compiled module passes security checks" is assumed to be true, which of the following statements must also be logically true (Variant 75)?
+A) If a module was not compiled, then it fails security checks
+B) If a module passes security checks, then it was compiled
+C) If a module fails security checks, then it was not compiled
+D) No compiled modules pass security checks
+Answer: C
+
+76. If a loop runs while 'x < 5', starting with 'x = 0', and increments 'x' by 3 in each iteration, how many times will the loop execute (Variant 76)?
+A) 2
+B) 5
+C) 1
+D) 3
+Answer: A
+
+77. Find the final value of 'status' after evaluating the nested conditional logic:
+```
+val = 2
+if val % 2 == 0:
+    status = "Even-High" if val > 3 else "Even-Low"
+else:
+    status = "Odd-High" if val > 2 else "Odd-Low"
+``` (Variant 77)
+A) Even-High
+B) Unknown
+C) Even-Low
+D) Odd-High
+Answer: C
+
+78. Which boolean logic expression is equivalent to: NOT (A AND B) according to De Morgan's Laws (Variant 78)?
+A) (NOT A) OR (NOT B)
+B) NOT A AND NOT B
+C) A OR B
+D) (NOT A) AND (NOT B)
+Answer: A
+
+79. What is the value of 'count' after executing this while loop logic:
+```
+count = 0
+n = 12
+while n > 1:
+    count = count + 1
+    n = n / 2
+``` (Variant 79)
+A) 5
+B) 4
+C) 3
+D) 0
+Answer: B
+
+80. In logical bitwise shifts, if the integer value 8 (binary 1000) is shifted to the right by 2 positions (8 >> 2), what is the resulting integer value (Variant 80)?
+A) 2
+B) 4
+C) 16
+D) 32
+Answer: A
+
+81. Evaluate the boolean condition: (A AND B) OR (NOT A AND C) where A = true, B = false, and C = true (Variant 81)?
+A) true
+B) Error
+C) false
+D) null
+Answer: C
+
+82. Determine the final value of the accumulator variable 'sum' after dry running this loop logic:
+```
+sum = 0
+for k from 1 to 6 inclusive:
+    if k % 3 == 0:
+        sum = sum + k
+``` (Variant 82)
+A) 9
+B) 0
+C) 12
+D) 6
+Answer: A
+
+83. A recursive function is defined as f(n) = f(n-1) + 2 with base case f(0) = 1. What is the returned value of f(4) (Variant 83)?
+A) 8
+B) 9
+C) 13
+D) 7
+Answer: B
+
+84. Trace the value of variable 'y' after executing the following branching logic:
+```
+y = 8
+if y % 2 == 0:
+    y = y / 2
+else:
+    y = y * 3 + 1
+if y > 10:
+    y = y - 5
+``` (Variant 84)
+A) 6
+B) 8
+C) 4
+D) 2
+Answer: C
+
+85. In logical deductions, if the statement "Every compiled module passes security checks" is assumed to be true, which of the following statements must also be logically true (Variant 85)?
+A) If a module fails security checks, then it was not compiled
+B) If a module passes security checks, then it was compiled
+C) No compiled modules pass security checks
+D) If a module was not compiled, then it fails security checks
+Answer: A
+
+86. If a loop runs while 'x < 5', starting with 'x = 0', and increments 'x' by 3 in each iteration, how many times will the loop execute (Variant 86)?
+A) 1
+B) 3
+C) 5
+D) 2
+Answer: D
+
+87. Find the final value of 'status' after evaluating the nested conditional logic:
+```
+val = 4
+if val % 2 == 0:
+    status = "Even-High" if val > 3 else "Even-Low"
+else:
+    status = "Odd-High" if val > 2 else "Odd-Low"
+``` (Variant 87)
+A) Even-High
+B) Even-Low
+C) Odd-High
+D) Unknown
+Answer: A
+
+88. Which boolean logic expression is equivalent to: NOT (A AND B) according to De Morgan's Laws (Variant 88)?
+A) (NOT A) OR (NOT B)
+B) (NOT A) AND (NOT B)
+C) NOT A AND NOT B
+D) A OR B
+Answer: A
+
+89. What is the value of 'count' after executing this while loop logic:
+```
+count = 0
+n = 16
+while n > 1:
+    count = count + 1
+    n = n / 2
+``` (Variant 89)
+A) 4
+B) 0
+C) 3
+D) 5
+Answer: A
+
+90. In logical bitwise shifts, if the integer value 8 (binary 1000) is shifted to the right by 2 positions (8 >> 2), what is the resulting integer value (Variant 90)?
+A) 16
+B) 32
+C) 2
+D) 4
+Answer: C
+
+91. Evaluate the boolean condition: (A AND B) OR (NOT A AND C) where A = true, B = false, and C = true (Variant 91)?
+A) false
+B) null
+C) true
+D) Error
+Answer: A
+
+92. Determine the final value of the accumulator variable 'sum' after dry running this loop logic:
+```
+sum = 0
+for k from 1 to 8 inclusive:
+    if k % 3 == 0:
+        sum = sum + k
+``` (Variant 92)
+A) 9
+B) 12
+C) 6
+D) 0
+Answer: A
+
+93. A recursive function is defined as f(n) = f(n-1) + 2 with base case f(0) = 1. What is the returned value of f(5) (Variant 93)?
+A) 16
+B) 10
+C) 9
+D) 11
+Answer: D
+
+94. Trace the value of variable 'y' after executing the following branching logic:
+```
+y = 8
+if y % 2 == 0:
+    y = y / 2
+else:
+    y = y * 3 + 1
+if y > 10:
+    y = y - 5
+``` (Variant 94)
+A) 8
+B) 2
+C) 4
+D) 6
+Answer: C
+
+95. In logical deductions, if the statement "Every compiled module passes security checks" is assumed to be true, which of the following statements must also be logically true (Variant 95)?
+A) No compiled modules pass security checks
+B) If a module fails security checks, then it was not compiled
+C) If a module was not compiled, then it fails security checks
+D) If a module passes security checks, then it was compiled
+Answer: B
+
+96. If a loop runs while 'x < 5', starting with 'x = 0', and increments 'x' by 3 in each iteration, how many times will the loop execute (Variant 96)?
+A) 3
+B) 5
+C) 2
+D) 1
+Answer: C
+
+97. Find the final value of 'status' after evaluating the nested conditional logic:
+```
+val = 2
+if val % 2 == 0:
+    status = "Even-High" if val > 3 else "Even-Low"
+else:
+    status = "Odd-High" if val > 2 else "Odd-Low"
+``` (Variant 97)
+A) Odd-High
+B) Unknown
+C) Even-High
+D) Even-Low
+Answer: D
+
+98. Which boolean logic expression is equivalent to: NOT (A AND B) according to De Morgan's Laws (Variant 98)?
+A) NOT A AND NOT B
+B) A OR B
+C) (NOT A) AND (NOT B)
+D) (NOT A) OR (NOT B)
+Answer: D
+
+99. What is the value of 'count' after executing this while loop logic:
+```
+count = 0
+n = 20
+while n > 1:
+    count = count + 1
+    n = n / 2
+``` (Variant 99)
+A) 6
+B) 4
+C) 5
+D) 0
+Answer: C
+
+100. In logical bitwise shifts, if the integer value 8 (binary 1000) is shifted to the right by 2 positions (8 >> 2), what is the resulting integer value (Variant 100)?
+A) 2
+B) 32
+C) 4
+D) 16
+Answer: A
+
+[Section: Miscellaneous]
+
+1. Which Regular Expression (Regex) pattern matches any string containing a word of exactly 4 alphanumeric characters (Variant 1)?
+A) \d{4}
+B) \b[a-zA-Z0-9]{4}\b
+C) [a-zA-Z0-9]{4}
+D) \b\w*\b
+Answer: B
+
+2. Which creational design pattern provides an interface for creating families of related or dependent objects without specifying their concrete classes (Variant 2)?
+A) Builder Pattern
+B) Abstract Factory Pattern
+C) Prototype Pattern
+D) Singleton Pattern
+Answer: B
+
+3. Which structured format is generally preferred for transmitting asynchronous data payloads over HTTP endpoints due to its native support and lightweight syntax in browsers (Variant 3)?
+A) JSON
+B) CSV
+C) XML
+D) YAML
+Answer: A
+
+4. Which Regex pattern matches any string that ends exactly with one or more special exclamation marks (Variant 4)?
+A) !+$
+B) ^!+
+C) [!]
+D) .*!
+Answer: A
+
+5. Which design pattern separates the construction of a complex object from its representation, allowing the same construction process to create different representations (Variant 5)?
+A) Facade Pattern
+B) Builder Pattern
+C) Factory Pattern
+D) Adapter Pattern
+Answer: B
+
+6. What is the primary role of data serialization in programming (Variant 6)?
+A) To secure configuration keys using hashing algorithms
+B) To clean up dereferenced object memory blocks from the program heap
+C) To convert in-memory object states into a format that can be stored or transmitted and reconstructed later
+D) To compile high-level source code into platform-specific machine bytecodes
+Answer: C
+
+7. Which behavioral design pattern defines a family of algorithms, encapsulates each one, and makes them interchangeable at runtime (Variant 7)?
+A) Observer Pattern
+B) Template Method Pattern
+C) Strategy Pattern
+D) State Pattern
+Answer: C
+
+8. Which Regex pattern matches a string that contains a valid IP address pattern format (e.g. 192.168.1.1) (Variant 8)?
+A) [0-9]\.[0-9]
+B) \d+\.\d+
+C) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}
+D) \w{3}\.\w{3}
+Answer: C
+
+9. Which structural design pattern is used to attach additional responsibilities to an object dynamically without modifying its class definition (Variant 9)?
+A) Bridge Pattern
+B) Proxy Pattern
+C) Adapter Pattern
+D) Decorator Pattern
+Answer: D
+
+10. Which type of testing verifies the structural flow and inner workings of a software component by directly examining its code implementation details (Variant 10)?
+A) White-Box Testing
+B) Grey-Box Testing
+C) Black-Box Testing
+D) Acceptance Testing
+Answer: A
+
+11. Which Regular Expression (Regex) pattern matches any string containing a word of exactly 4 alphanumeric characters (Variant 11)?
+A) \b[a-zA-Z0-9]{4}\b
+B) \d{4}
+C) [a-zA-Z0-9]{4}
+D) \b\w*\b
+Answer: A
+
+12. Which creational design pattern provides an interface for creating families of related or dependent objects without specifying their concrete classes (Variant 12)?
+A) Prototype Pattern
+B) Builder Pattern
+C) Singleton Pattern
+D) Abstract Factory Pattern
+Answer: D
+
+13. Which structured format is generally preferred for transmitting asynchronous data payloads over HTTP endpoints due to its native support and lightweight syntax in browsers (Variant 13)?
+A) YAML
+B) JSON
+C) CSV
+D) XML
+Answer: B
+
+14. Which Regex pattern matches any string that ends exactly with one or more special exclamation marks (Variant 14)?
+A) [!]
+B) .*!
+C) ^!+
+D) !+$
+Answer: D
+
+15. Which design pattern separates the construction of a complex object from its representation, allowing the same construction process to create different representations (Variant 15)?
+A) Facade Pattern
+B) Adapter Pattern
+C) Factory Pattern
+D) Builder Pattern
+Answer: D
+
+16. What is the primary role of data serialization in programming (Variant 16)?
+A) To clean up dereferenced object memory blocks from the program heap
+B) To compile high-level source code into platform-specific machine bytecodes
+C) To convert in-memory object states into a format that can be stored or transmitted and reconstructed later
+D) To secure configuration keys using hashing algorithms
+Answer: C
+
+17. Which behavioral design pattern defines a family of algorithms, encapsulates each one, and makes them interchangeable at runtime (Variant 17)?
+A) Observer Pattern
+B) State Pattern
+C) Template Method Pattern
+D) Strategy Pattern
+Answer: D
+
+18. Which Regex pattern matches a string that contains a valid IP address pattern format (e.g. 192.168.1.1) (Variant 18)?
+A) [0-9]\.[0-9]
+B) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}
+C) \d+\.\d+
+D) \w{3}\.\w{3}
+Answer: B
+
+19. Which structural design pattern is used to attach additional responsibilities to an object dynamically without modifying its class definition (Variant 19)?
+A) Decorator Pattern
+B) Adapter Pattern
+C) Proxy Pattern
+D) Bridge Pattern
+Answer: A
+
+20. Which type of testing verifies the structural flow and inner workings of a software component by directly examining its code implementation details (Variant 20)?
+A) Acceptance Testing
+B) Grey-Box Testing
+C) White-Box Testing
+D) Black-Box Testing
+Answer: C
+
+21. Which Regular Expression (Regex) pattern matches any string containing a word of exactly 4 alphanumeric characters (Variant 21)?
+A) \d{4}
+B) \b[a-zA-Z0-9]{4}\b
+C) [a-zA-Z0-9]{4}
+D) \b\w*\b
+Answer: B
+
+22. Which creational design pattern provides an interface for creating families of related or dependent objects without specifying their concrete classes (Variant 22)?
+A) Builder Pattern
+B) Singleton Pattern
+C) Abstract Factory Pattern
+D) Prototype Pattern
+Answer: C
+
+23. Which structured format is generally preferred for transmitting asynchronous data payloads over HTTP endpoints due to its native support and lightweight syntax in browsers (Variant 23)?
+A) XML
+B) YAML
+C) CSV
+D) JSON
+Answer: D
+
+24. Which Regex pattern matches any string that ends exactly with one or more special exclamation marks (Variant 24)?
+A) ^!+
+B) !+$
+C) [!]
+D) .*!
+Answer: B
+
+25. Which design pattern separates the construction of a complex object from its representation, allowing the same construction process to create different representations (Variant 25)?
+A) Adapter Pattern
+B) Builder Pattern
+C) Factory Pattern
+D) Facade Pattern
+Answer: B
+
+26. What is the primary role of data serialization in programming (Variant 26)?
+A) To secure configuration keys using hashing algorithms
+B) To clean up dereferenced object memory blocks from the program heap
+C) To compile high-level source code into platform-specific machine bytecodes
+D) To convert in-memory object states into a format that can be stored or transmitted and reconstructed later
+Answer: D
+
+27. Which behavioral design pattern defines a family of algorithms, encapsulates each one, and makes them interchangeable at runtime (Variant 27)?
+A) Template Method Pattern
+B) State Pattern
+C) Observer Pattern
+D) Strategy Pattern
+Answer: D
+
+28. Which Regex pattern matches a string that contains a valid IP address pattern format (e.g. 192.168.1.1) (Variant 28)?
+A) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}
+B) \d+\.\d+
+C) [0-9]\.[0-9]
+D) \w{3}\.\w{3}
+Answer: A
+
+29. Which structural design pattern is used to attach additional responsibilities to an object dynamically without modifying its class definition (Variant 29)?
+A) Decorator Pattern
+B) Bridge Pattern
+C) Adapter Pattern
+D) Proxy Pattern
+Answer: A
+
+30. Which type of testing verifies the structural flow and inner workings of a software component by directly examining its code implementation details (Variant 30)?
+A) Black-Box Testing
+B) White-Box Testing
+C) Grey-Box Testing
+D) Acceptance Testing
+Answer: B
+
+31. Which Regular Expression (Regex) pattern matches any string containing a word of exactly 4 alphanumeric characters (Variant 31)?
+A) \d{4}
+B) \b[a-zA-Z0-9]{4}\b
+C) [a-zA-Z0-9]{4}
+D) \b\w*\b
+Answer: B
+
+32. Which creational design pattern provides an interface for creating families of related or dependent objects without specifying their concrete classes (Variant 32)?
+A) Abstract Factory Pattern
+B) Prototype Pattern
+C) Builder Pattern
+D) Singleton Pattern
+Answer: A
+
+33. Which structured format is generally preferred for transmitting asynchronous data payloads over HTTP endpoints due to its native support and lightweight syntax in browsers (Variant 33)?
+A) XML
+B) JSON
+C) CSV
+D) YAML
+Answer: B
+
+34. Which Regex pattern matches any string that ends exactly with one or more special exclamation marks (Variant 34)?
+A) !+$
+B) .*!
+C) [!]
+D) ^!+
+Answer: A
+
+35. Which design pattern separates the construction of a complex object from its representation, allowing the same construction process to create different representations (Variant 35)?
+A) Builder Pattern
+B) Factory Pattern
+C) Adapter Pattern
+D) Facade Pattern
+Answer: A
+
+36. What is the primary role of data serialization in programming (Variant 36)?
+A) To clean up dereferenced object memory blocks from the program heap
+B) To convert in-memory object states into a format that can be stored or transmitted and reconstructed later
+C) To compile high-level source code into platform-specific machine bytecodes
+D) To secure configuration keys using hashing algorithms
+Answer: B
+
+37. Which behavioral design pattern defines a family of algorithms, encapsulates each one, and makes them interchangeable at runtime (Variant 37)?
+A) Observer Pattern
+B) State Pattern
+C) Template Method Pattern
+D) Strategy Pattern
+Answer: D
+
+38. Which Regex pattern matches a string that contains a valid IP address pattern format (e.g. 192.168.1.1) (Variant 38)?
+A) \w{3}\.\w{3}
+B) [0-9]\.[0-9]
+C) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}
+D) \d+\.\d+
+Answer: C
+
+39. Which structural design pattern is used to attach additional responsibilities to an object dynamically without modifying its class definition (Variant 39)?
+A) Bridge Pattern
+B) Proxy Pattern
+C) Decorator Pattern
+D) Adapter Pattern
+Answer: C
+
+40. Which type of testing verifies the structural flow and inner workings of a software component by directly examining its code implementation details (Variant 40)?
+A) White-Box Testing
+B) Grey-Box Testing
+C) Acceptance Testing
+D) Black-Box Testing
+Answer: A
+
+41. Which Regular Expression (Regex) pattern matches any string containing a word of exactly 4 alphanumeric characters (Variant 41)?
+A) [a-zA-Z0-9]{4}
+B) \d{4}
+C) \b[a-zA-Z0-9]{4}\b
+D) \b\w*\b
+Answer: C
+
+42. Which creational design pattern provides an interface for creating families of related or dependent objects without specifying their concrete classes (Variant 42)?
+A) Prototype Pattern
+B) Abstract Factory Pattern
+C) Singleton Pattern
+D) Builder Pattern
+Answer: B
+
+43. Which structured format is generally preferred for transmitting asynchronous data payloads over HTTP endpoints due to its native support and lightweight syntax in browsers (Variant 43)?
+A) YAML
+B) XML
+C) JSON
+D) CSV
+Answer: C
+
+44. Which Regex pattern matches any string that ends exactly with one or more special exclamation marks (Variant 44)?
+A) !+$
+B) ^!+
+C) .*!
+D) [!]
+Answer: A
+
+45. Which design pattern separates the construction of a complex object from its representation, allowing the same construction process to create different representations (Variant 45)?
+A) Factory Pattern
+B) Facade Pattern
+C) Adapter Pattern
+D) Builder Pattern
+Answer: D
+
+46. What is the primary role of data serialization in programming (Variant 46)?
+A) To clean up dereferenced object memory blocks from the program heap
+B) To convert in-memory object states into a format that can be stored or transmitted and reconstructed later
+C) To compile high-level source code into platform-specific machine bytecodes
+D) To secure configuration keys using hashing algorithms
+Answer: B
+
+47. Which behavioral design pattern defines a family of algorithms, encapsulates each one, and makes them interchangeable at runtime (Variant 47)?
+A) Strategy Pattern
+B) Observer Pattern
+C) Template Method Pattern
+D) State Pattern
+Answer: A
+
+48. Which Regex pattern matches a string that contains a valid IP address pattern format (e.g. 192.168.1.1) (Variant 48)?
+A) \d+\.\d+
+B) \w{3}\.\w{3}
+C) [0-9]\.[0-9]
+D) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}
+Answer: D
+
+49. Which structural design pattern is used to attach additional responsibilities to an object dynamically without modifying its class definition (Variant 49)?
+A) Proxy Pattern
+B) Bridge Pattern
+C) Adapter Pattern
+D) Decorator Pattern
+Answer: D
+
+50. Which type of testing verifies the structural flow and inner workings of a software component by directly examining its code implementation details (Variant 50)?
+A) Black-Box Testing
+B) Acceptance Testing
+C) Grey-Box Testing
+D) White-Box Testing
+Answer: D
+
+51. Which Regular Expression (Regex) pattern matches any string containing a word of exactly 4 alphanumeric characters (Variant 51)?
+A) \d{4}
+B) \b[a-zA-Z0-9]{4}\b
+C) \b\w*\b
+D) [a-zA-Z0-9]{4}
+Answer: B
+
+52. Which creational design pattern provides an interface for creating families of related or dependent objects without specifying their concrete classes (Variant 52)?
+A) Abstract Factory Pattern
+B) Singleton Pattern
+C) Builder Pattern
+D) Prototype Pattern
+Answer: A
+
+53. Which structured format is generally preferred for transmitting asynchronous data payloads over HTTP endpoints due to its native support and lightweight syntax in browsers (Variant 53)?
+A) XML
+B) CSV
+C) YAML
+D) JSON
+Answer: D
+
+54. Which Regex pattern matches any string that ends exactly with one or more special exclamation marks (Variant 54)?
+A) !+$
+B) [!]
+C) ^!+
+D) .*!
+Answer: A
+
+55. Which design pattern separates the construction of a complex object from its representation, allowing the same construction process to create different representations (Variant 55)?
+A) Adapter Pattern
+B) Factory Pattern
+C) Facade Pattern
+D) Builder Pattern
+Answer: D
+
+56. What is the primary role of data serialization in programming (Variant 56)?
+A) To compile high-level source code into platform-specific machine bytecodes
+B) To convert in-memory object states into a format that can be stored or transmitted and reconstructed later
+C) To secure configuration keys using hashing algorithms
+D) To clean up dereferenced object memory blocks from the program heap
+Answer: B
+
+57. Which behavioral design pattern defines a family of algorithms, encapsulates each one, and makes them interchangeable at runtime (Variant 57)?
+A) Strategy Pattern
+B) Template Method Pattern
+C) Observer Pattern
+D) State Pattern
+Answer: A
+
+58. Which Regex pattern matches a string that contains a valid IP address pattern format (e.g. 192.168.1.1) (Variant 58)?
+A) [0-9]\.[0-9]
+B) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}
+C) \w{3}\.\w{3}
+D) \d+\.\d+
+Answer: B
+
+59. Which structural design pattern is used to attach additional responsibilities to an object dynamically without modifying its class definition (Variant 59)?
+A) Proxy Pattern
+B) Decorator Pattern
+C) Adapter Pattern
+D) Bridge Pattern
+Answer: B
+
+60. Which type of testing verifies the structural flow and inner workings of a software component by directly examining its code implementation details (Variant 60)?
+A) Black-Box Testing
+B) Grey-Box Testing
+C) Acceptance Testing
+D) White-Box Testing
+Answer: D
+
+61. Which Regular Expression (Regex) pattern matches any string containing a word of exactly 4 alphanumeric characters (Variant 61)?
+A) \d{4}
+B) [a-zA-Z0-9]{4}
+C) \b[a-zA-Z0-9]{4}\b
+D) \b\w*\b
+Answer: C
+
+62. Which creational design pattern provides an interface for creating families of related or dependent objects without specifying their concrete classes (Variant 62)?
+A) Builder Pattern
+B) Prototype Pattern
+C) Singleton Pattern
+D) Abstract Factory Pattern
+Answer: D
+
+63. Which structured format is generally preferred for transmitting asynchronous data payloads over HTTP endpoints due to its native support and lightweight syntax in browsers (Variant 63)?
+A) CSV
+B) JSON
+C) XML
+D) YAML
+Answer: B
+
+64. Which Regex pattern matches any string that ends exactly with one or more special exclamation marks (Variant 64)?
+A) !+$
+B) ^!+
+C) .*!
+D) [!]
+Answer: A
+
+65. Which design pattern separates the construction of a complex object from its representation, allowing the same construction process to create different representations (Variant 65)?
+A) Factory Pattern
+B) Adapter Pattern
+C) Facade Pattern
+D) Builder Pattern
+Answer: D
+
+66. What is the primary role of data serialization in programming (Variant 66)?
+A) To secure configuration keys using hashing algorithms
+B) To clean up dereferenced object memory blocks from the program heap
+C) To compile high-level source code into platform-specific machine bytecodes
+D) To convert in-memory object states into a format that can be stored or transmitted and reconstructed later
+Answer: D
+
+67. Which behavioral design pattern defines a family of algorithms, encapsulates each one, and makes them interchangeable at runtime (Variant 67)?
+A) State Pattern
+B) Template Method Pattern
+C) Strategy Pattern
+D) Observer Pattern
+Answer: C
+
+68. Which Regex pattern matches a string that contains a valid IP address pattern format (e.g. 192.168.1.1) (Variant 68)?
+A) [0-9]\.[0-9]
+B) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}
+C) \w{3}\.\w{3}
+D) \d+\.\d+
+Answer: B
+
+69. Which structural design pattern is used to attach additional responsibilities to an object dynamically without modifying its class definition (Variant 69)?
+A) Bridge Pattern
+B) Proxy Pattern
+C) Adapter Pattern
+D) Decorator Pattern
+Answer: D
+
+70. Which type of testing verifies the structural flow and inner workings of a software component by directly examining its code implementation details (Variant 70)?
+A) White-Box Testing
+B) Black-Box Testing
+C) Grey-Box Testing
+D) Acceptance Testing
+Answer: A
+
+71. Which Regular Expression (Regex) pattern matches any string containing a word of exactly 4 alphanumeric characters (Variant 71)?
+A) \b[a-zA-Z0-9]{4}\b
+B) [a-zA-Z0-9]{4}
+C) \d{4}
+D) \b\w*\b
+Answer: A
+
+72. Which creational design pattern provides an interface for creating families of related or dependent objects without specifying their concrete classes (Variant 72)?
+A) Singleton Pattern
+B) Abstract Factory Pattern
+C) Builder Pattern
+D) Prototype Pattern
+Answer: B
+
+73. Which structured format is generally preferred for transmitting asynchronous data payloads over HTTP endpoints due to its native support and lightweight syntax in browsers (Variant 73)?
+A) YAML
+B) XML
+C) JSON
+D) CSV
+Answer: C
+
+74. Which Regex pattern matches any string that ends exactly with one or more special exclamation marks (Variant 74)?
+A) [!]
+B) ^!+
+C) !+$
+D) .*!
+Answer: C
+
+75. Which design pattern separates the construction of a complex object from its representation, allowing the same construction process to create different representations (Variant 75)?
+A) Facade Pattern
+B) Factory Pattern
+C) Builder Pattern
+D) Adapter Pattern
+Answer: C
+
+76. What is the primary role of data serialization in programming (Variant 76)?
+A) To convert in-memory object states into a format that can be stored or transmitted and reconstructed later
+B) To clean up dereferenced object memory blocks from the program heap
+C) To compile high-level source code into platform-specific machine bytecodes
+D) To secure configuration keys using hashing algorithms
+Answer: A
+
+77. Which behavioral design pattern defines a family of algorithms, encapsulates each one, and makes them interchangeable at runtime (Variant 77)?
+A) Strategy Pattern
+B) State Pattern
+C) Observer Pattern
+D) Template Method Pattern
+Answer: A
+
+78. Which Regex pattern matches a string that contains a valid IP address pattern format (e.g. 192.168.1.1) (Variant 78)?
+A) \d+\.\d+
+B) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}
+C) [0-9]\.[0-9]
+D) \w{3}\.\w{3}
+Answer: B
+
+79. Which structural design pattern is used to attach additional responsibilities to an object dynamically without modifying its class definition (Variant 79)?
+A) Proxy Pattern
+B) Adapter Pattern
+C) Bridge Pattern
+D) Decorator Pattern
+Answer: D
+
+80. Which type of testing verifies the structural flow and inner workings of a software component by directly examining its code implementation details (Variant 80)?
+A) Acceptance Testing
+B) Grey-Box Testing
+C) White-Box Testing
+D) Black-Box Testing
+Answer: C
+
+81. Which Regular Expression (Regex) pattern matches any string containing a word of exactly 4 alphanumeric characters (Variant 81)?
+A) \d{4}
+B) [a-zA-Z0-9]{4}
+C) \b\w*\b
+D) \b[a-zA-Z0-9]{4}\b
+Answer: D
+
+82. Which creational design pattern provides an interface for creating families of related or dependent objects without specifying their concrete classes (Variant 82)?
+A) Abstract Factory Pattern
+B) Singleton Pattern
+C) Builder Pattern
+D) Prototype Pattern
+Answer: A
+
+83. Which structured format is generally preferred for transmitting asynchronous data payloads over HTTP endpoints due to its native support and lightweight syntax in browsers (Variant 83)?
+A) JSON
+B) YAML
+C) CSV
+D) XML
+Answer: A
+
+84. Which Regex pattern matches any string that ends exactly with one or more special exclamation marks (Variant 84)?
+A) !+$
+B) ^!+
+C) [!]
+D) .*!
+Answer: A
+
+85. Which design pattern separates the construction of a complex object from its representation, allowing the same construction process to create different representations (Variant 85)?
+A) Facade Pattern
+B) Builder Pattern
+C) Adapter Pattern
+D) Factory Pattern
+Answer: B
+
+86. What is the primary role of data serialization in programming (Variant 86)?
+A) To secure configuration keys using hashing algorithms
+B) To compile high-level source code into platform-specific machine bytecodes
+C) To convert in-memory object states into a format that can be stored or transmitted and reconstructed later
+D) To clean up dereferenced object memory blocks from the program heap
+Answer: C
+
+87. Which behavioral design pattern defines a family of algorithms, encapsulates each one, and makes them interchangeable at runtime (Variant 87)?
+A) Strategy Pattern
+B) Template Method Pattern
+C) Observer Pattern
+D) State Pattern
+Answer: A
+
+88. Which Regex pattern matches a string that contains a valid IP address pattern format (e.g. 192.168.1.1) (Variant 88)?
+A) \d+\.\d+
+B) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}
+C) [0-9]\.[0-9]
+D) \w{3}\.\w{3}
+Answer: B
+
+89. Which structural design pattern is used to attach additional responsibilities to an object dynamically without modifying its class definition (Variant 89)?
+A) Bridge Pattern
+B) Adapter Pattern
+C) Decorator Pattern
+D) Proxy Pattern
+Answer: C
+
+90. Which type of testing verifies the structural flow and inner workings of a software component by directly examining its code implementation details (Variant 90)?
+A) Black-Box Testing
+B) White-Box Testing
+C) Grey-Box Testing
+D) Acceptance Testing
+Answer: B
+
+91. Which Regular Expression (Regex) pattern matches any string containing a word of exactly 4 alphanumeric characters (Variant 91)?
+A) \b\w*\b
+B) [a-zA-Z0-9]{4}
+C) \d{4}
+D) \b[a-zA-Z0-9]{4}\b
+Answer: D
+
+92. Which creational design pattern provides an interface for creating families of related or dependent objects without specifying their concrete classes (Variant 92)?
+A) Abstract Factory Pattern
+B) Builder Pattern
+C) Prototype Pattern
+D) Singleton Pattern
+Answer: A
+
+93. Which structured format is generally preferred for transmitting asynchronous data payloads over HTTP endpoints due to its native support and lightweight syntax in browsers (Variant 93)?
+A) JSON
+B) CSV
+C) XML
+D) YAML
+Answer: A
+
+94. Which Regex pattern matches any string that ends exactly with one or more special exclamation marks (Variant 94)?
+A) .*!
+B) !+$
+C) [!]
+D) ^!+
+Answer: B
+
+95. Which design pattern separates the construction of a complex object from its representation, allowing the same construction process to create different representations (Variant 95)?
+A) Adapter Pattern
+B) Facade Pattern
+C) Factory Pattern
+D) Builder Pattern
+Answer: D
+
+96. What is the primary role of data serialization in programming (Variant 96)?
+A) To compile high-level source code into platform-specific machine bytecodes
+B) To convert in-memory object states into a format that can be stored or transmitted and reconstructed later
+C) To clean up dereferenced object memory blocks from the program heap
+D) To secure configuration keys using hashing algorithms
+Answer: B
+
+97. Which behavioral design pattern defines a family of algorithms, encapsulates each one, and makes them interchangeable at runtime (Variant 97)?
+A) Strategy Pattern
+B) Observer Pattern
+C) State Pattern
+D) Template Method Pattern
+Answer: A
+
+98. Which Regex pattern matches a string that contains a valid IP address pattern format (e.g. 192.168.1.1) (Variant 98)?
+A) [0-9]\.[0-9]
+B) \w{3}\.\w{3}
+C) \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}
+D) \d+\.\d+
+Answer: C
+
+99. Which structural design pattern is used to attach additional responsibilities to an object dynamically without modifying its class definition (Variant 99)?
+A) Adapter Pattern
+B) Bridge Pattern
+C) Decorator Pattern
+D) Proxy Pattern
+Answer: C
+
+100. Which type of testing verifies the structural flow and inner workings of a software component by directly examining its code implementation details (Variant 100)?
+A) Acceptance Testing
+B) Grey-Box Testing
+C) Black-Box Testing
+D) White-Box Testing
+Answer: D
+
+[Section: Grammar]
+
+1. Choose the correct sentence regarding subject-verb agreement: (Variant 1)
+A) Neither the manager nor the employees are aware of the decision.
+B) Neither the manager nor the employees were aware of the decision.
+C) Neither the manager nor the employees was aware of the decision.
+D) Neither the manager or the employees was aware.
+Answer: B
+
+2. Identify the figure of speech in: 'The wind whispered through the dark forest.' (Variant 2)
+A) Hyperbole
+B) Metaphor
+C) Simile
+D) Personification
+Answer: D
+
+3. Which of the following sentences uses the subjunctive mood correctly? (Variant 3)
+A) I suggest that he study for the exam.
+B) I suggest that he studies for the exam.
+C) I suggest that he studying for the exam.
+D) I suggest that he studied for the exam.
+Answer: A
+
+4. Choose the exact meaning of the idiom: 'To beat around the bush' (Variant 4)
+A) To waste time in a forest
+B) To avoid talking about the main topic
+C) To physically attack someone secretly
+D) To search for something thoroughly
+Answer: B
+
+5. Identify the grammatical error: 'Hardly had I reached the station than the train left.' (Variant 5)
+A) Replace 'than' with 'when'
+B) Replace 'had' with 'have'
+C) Replace 'reached' with 'reaching'
+D) No error
+Answer: A
+
+6. What is a 'gerund'? (Variant 6)
+A) A verb form ending in -ing that functions as a noun
+B) A verb form that functions as an adjective
+C) A prepositional phrase
+D) An infinitive verb
+Answer: A
+
+7. Choose the appropriate word: The new evidence ___ his claim of innocence. (Variant 7)
+A) Delegates
+B) Corroborates
+C) Contradicts
+D) Eradicates
+Answer: B
+
+8. Select the correct active voice equivalent: 'The letter was written by her.' (Variant 8)
+A) She wrote the letter.
+B) She was writing the letter.
+C) She writes the letter.
+D) She had written the letter.
+Answer: A
+
+9. What does 'Eschew' mean? (Variant 9)
+A) To deliberately avoid using; abstain from
+B) To chew thoroughly
+C) To embrace warmly
+D) To discover accidentally
+Answer: A
+
+10. Which sentence uses the past perfect continuous tense? (Variant 10)
+A) They have been playing tennis for an hour.
+B) They had been playing tennis for an hour before it rained.
+C) They were playing tennis when it rained.
+D) They had played tennis before it rained.
+Answer: B
+
+11. Choose the correct sentence regarding subject-verb agreement: (Variant 11)
+A) Neither the manager nor the employees were aware of the decision.
+B) Neither the manager nor the employees was aware of the decision.
+C) Neither the manager or the employees was aware.
+D) Neither the manager nor the employees are aware of the decision.
+Answer: A
+
+12. Identify the figure of speech in: 'The wind whispered through the dark forest.' (Variant 12)
+A) Hyperbole
+B) Personification
+C) Simile
+D) Metaphor
+Answer: B
+
+13. Which of the following sentences uses the subjunctive mood correctly? (Variant 13)
+A) I suggest that he study for the exam.
+B) I suggest that he studies for the exam.
+C) I suggest that he studied for the exam.
+D) I suggest that he studying for the exam.
+Answer: A
+
+14. Choose the exact meaning of the idiom: 'To beat around the bush' (Variant 14)
+A) To waste time in a forest
+B) To search for something thoroughly
+C) To physically attack someone secretly
+D) To avoid talking about the main topic
+Answer: D
+
+15. Identify the grammatical error: 'Hardly had I reached the station than the train left.' (Variant 15)
+A) No error
+B) Replace 'reached' with 'reaching'
+C) Replace 'had' with 'have'
+D) Replace 'than' with 'when'
+Answer: D
+
+16. What is a 'gerund'? (Variant 16)
+A) A verb form ending in -ing that functions as a noun
+B) An infinitive verb
+C) A prepositional phrase
+D) A verb form that functions as an adjective
+Answer: A
+
+17. Choose the appropriate word: The new evidence ___ his claim of innocence. (Variant 17)
+A) Eradicates
+B) Contradicts
+C) Corroborates
+D) Delegates
+Answer: C
+
+18. Select the correct active voice equivalent: 'The letter was written by her.' (Variant 18)
+A) She had written the letter.
+B) She writes the letter.
+C) She was writing the letter.
+D) She wrote the letter.
+Answer: D
+
+19. What does 'Eschew' mean? (Variant 19)
+A) To discover accidentally
+B) To deliberately avoid using; abstain from
+C) To chew thoroughly
+D) To embrace warmly
+Answer: B
+
+20. Which sentence uses the past perfect continuous tense? (Variant 20)
+A) They have been playing tennis for an hour.
+B) They were playing tennis when it rained.
+C) They had been playing tennis for an hour before it rained.
+D) They had played tennis before it rained.
+Answer: C
+
+21. Choose the correct sentence regarding subject-verb agreement: (Variant 21)
+A) Neither the manager nor the employees were aware of the decision.
+B) Neither the manager nor the employees was aware of the decision.
+C) Neither the manager or the employees was aware.
+D) Neither the manager nor the employees are aware of the decision.
+Answer: A
+
+22. Identify the figure of speech in: 'The wind whispered through the dark forest.' (Variant 22)
+A) Simile
+B) Personification
+C) Metaphor
+D) Hyperbole
+Answer: B
+
+23. Which of the following sentences uses the subjunctive mood correctly? (Variant 23)
+A) I suggest that he studying for the exam.
+B) I suggest that he studied for the exam.
+C) I suggest that he studies for the exam.
+D) I suggest that he study for the exam.
+Answer: D
+
+24. Choose the exact meaning of the idiom: 'To beat around the bush' (Variant 24)
+A) To waste time in a forest
+B) To avoid talking about the main topic
+C) To search for something thoroughly
+D) To physically attack someone secretly
+Answer: B
+
+25. Identify the grammatical error: 'Hardly had I reached the station than the train left.' (Variant 25)
+A) Replace 'than' with 'when'
+B) Replace 'had' with 'have'
+C) Replace 'reached' with 'reaching'
+D) No error
+Answer: A
+
+26. What is a 'gerund'? (Variant 26)
+A) A verb form that functions as an adjective
+B) An infinitive verb
+C) A prepositional phrase
+D) A verb form ending in -ing that functions as a noun
+Answer: D
+
+27. Choose the appropriate word: The new evidence ___ his claim of innocence. (Variant 27)
+A) Contradicts
+B) Eradicates
+C) Delegates
+D) Corroborates
+Answer: D
+
+28. Select the correct active voice equivalent: 'The letter was written by her.' (Variant 28)
+A) She wrote the letter.
+B) She was writing the letter.
+C) She writes the letter.
+D) She had written the letter.
+Answer: A
+
+29. What does 'Eschew' mean? (Variant 29)
+A) To embrace warmly
+B) To deliberately avoid using; abstain from
+C) To chew thoroughly
+D) To discover accidentally
+Answer: B
+
+30. Which sentence uses the past perfect continuous tense? (Variant 30)
+A) They had played tennis before it rained.
+B) They have been playing tennis for an hour.
+C) They were playing tennis when it rained.
+D) They had been playing tennis for an hour before it rained.
+Answer: D
+
+31. Choose the correct sentence regarding subject-verb agreement: (Variant 31)
+A) Neither the manager nor the employees are aware of the decision.
+B) Neither the manager nor the employees were aware of the decision.
+C) Neither the manager nor the employees was aware of the decision.
+D) Neither the manager or the employees was aware.
+Answer: B
+
+32. Identify the figure of speech in: 'The wind whispered through the dark forest.' (Variant 32)
+A) Personification
+B) Hyperbole
+C) Metaphor
+D) Simile
+Answer: A
+
+33. Which of the following sentences uses the subjunctive mood correctly? (Variant 33)
+A) I suggest that he study for the exam.
+B) I suggest that he studies for the exam.
+C) I suggest that he studied for the exam.
+D) I suggest that he studying for the exam.
+Answer: A
+
+34. Choose the exact meaning of the idiom: 'To beat around the bush' (Variant 34)
+A) To avoid talking about the main topic
+B) To waste time in a forest
+C) To physically attack someone secretly
+D) To search for something thoroughly
+Answer: A
+
+35. Identify the grammatical error: 'Hardly had I reached the station than the train left.' (Variant 35)
+A) Replace 'reached' with 'reaching'
+B) Replace 'had' with 'have'
+C) Replace 'than' with 'when'
+D) No error
+Answer: C
+
+36. What is a 'gerund'? (Variant 36)
+A) A verb form ending in -ing that functions as a noun
+B) A verb form that functions as an adjective
+C) A prepositional phrase
+D) An infinitive verb
+Answer: A
+
+37. Choose the appropriate word: The new evidence ___ his claim of innocence. (Variant 37)
+A) Eradicates
+B) Contradicts
+C) Corroborates
+D) Delegates
+Answer: C
+
+38. Select the correct active voice equivalent: 'The letter was written by her.' (Variant 38)
+A) She wrote the letter.
+B) She was writing the letter.
+C) She had written the letter.
+D) She writes the letter.
+Answer: A
+
+39. What does 'Eschew' mean? (Variant 39)
+A) To discover accidentally
+B) To deliberately avoid using; abstain from
+C) To chew thoroughly
+D) To embrace warmly
+Answer: B
+
+40. Which sentence uses the past perfect continuous tense? (Variant 40)
+A) They had been playing tennis for an hour before it rained.
+B) They were playing tennis when it rained.
+C) They had played tennis before it rained.
+D) They have been playing tennis for an hour.
+Answer: A
+
+41. Choose the correct sentence regarding subject-verb agreement: (Variant 41)
+A) Neither the manager nor the employees were aware of the decision.
+B) Neither the manager nor the employees was aware of the decision.
+C) Neither the manager or the employees was aware.
+D) Neither the manager nor the employees are aware of the decision.
+Answer: A
+
+42. Identify the figure of speech in: 'The wind whispered through the dark forest.' (Variant 42)
+A) Hyperbole
+B) Metaphor
+C) Simile
+D) Personification
+Answer: D
+
+43. Which of the following sentences uses the subjunctive mood correctly? (Variant 43)
+A) I suggest that he study for the exam.
+B) I suggest that he studies for the exam.
+C) I suggest that he studied for the exam.
+D) I suggest that he studying for the exam.
+Answer: A
+
+44. Choose the exact meaning of the idiom: 'To beat around the bush' (Variant 44)
+A) To physically attack someone secretly
+B) To avoid talking about the main topic
+C) To waste time in a forest
+D) To search for something thoroughly
+Answer: B
+
+45. Identify the grammatical error: 'Hardly had I reached the station than the train left.' (Variant 45)
+A) Replace 'reached' with 'reaching'
+B) No error
+C) Replace 'had' with 'have'
+D) Replace 'than' with 'when'
+Answer: D
+
+46. What is a 'gerund'? (Variant 46)
+A) A verb form ending in -ing that functions as a noun
+B) An infinitive verb
+C) A verb form that functions as an adjective
+D) A prepositional phrase
+Answer: A
+
+47. Choose the appropriate word: The new evidence ___ his claim of innocence. (Variant 47)
+A) Corroborates
+B) Contradicts
+C) Eradicates
+D) Delegates
+Answer: A
+
+48. Select the correct active voice equivalent: 'The letter was written by her.' (Variant 48)
+A) She had written the letter.
+B) She wrote the letter.
+C) She was writing the letter.
+D) She writes the letter.
+Answer: B
+
+49. What does 'Eschew' mean? (Variant 49)
+A) To chew thoroughly
+B) To deliberately avoid using; abstain from
+C) To embrace warmly
+D) To discover accidentally
+Answer: B
+
+50. Which sentence uses the past perfect continuous tense? (Variant 50)
+A) They had been playing tennis for an hour before it rained.
+B) They were playing tennis when it rained.
+C) They have been playing tennis for an hour.
+D) They had played tennis before it rained.
+Answer: A
+
+51. Choose the correct sentence regarding subject-verb agreement: (Variant 51)
+A) Neither the manager or the employees was aware.
+B) Neither the manager nor the employees was aware of the decision.
+C) Neither the manager nor the employees are aware of the decision.
+D) Neither the manager nor the employees were aware of the decision.
+Answer: D
+
+52. Identify the figure of speech in: 'The wind whispered through the dark forest.' (Variant 52)
+A) Personification
+B) Metaphor
+C) Simile
+D) Hyperbole
+Answer: A
+
+53. Which of the following sentences uses the subjunctive mood correctly? (Variant 53)
+A) I suggest that he studied for the exam.
+B) I suggest that he studies for the exam.
+C) I suggest that he studying for the exam.
+D) I suggest that he study for the exam.
+Answer: D
+
+54. Choose the exact meaning of the idiom: 'To beat around the bush' (Variant 54)
+A) To waste time in a forest
+B) To search for something thoroughly
+C) To avoid talking about the main topic
+D) To physically attack someone secretly
+Answer: C
+
+55. Identify the grammatical error: 'Hardly had I reached the station than the train left.' (Variant 55)
+A) Replace 'had' with 'have'
+B) Replace 'reached' with 'reaching'
+C) No error
+D) Replace 'than' with 'when'
+Answer: D
+
+56. What is a 'gerund'? (Variant 56)
+A) A prepositional phrase
+B) An infinitive verb
+C) A verb form ending in -ing that functions as a noun
+D) A verb form that functions as an adjective
+Answer: C
+
+57. Choose the appropriate word: The new evidence ___ his claim of innocence. (Variant 57)
+A) Eradicates
+B) Contradicts
+C) Delegates
+D) Corroborates
+Answer: D
+
+58. Select the correct active voice equivalent: 'The letter was written by her.' (Variant 58)
+A) She writes the letter.
+B) She had written the letter.
+C) She was writing the letter.
+D) She wrote the letter.
+Answer: D
+
+59. What does 'Eschew' mean? (Variant 59)
+A) To discover accidentally
+B) To embrace warmly
+C) To chew thoroughly
+D) To deliberately avoid using; abstain from
+Answer: D
+
+60. Which sentence uses the past perfect continuous tense? (Variant 60)
+A) They had been playing tennis for an hour before it rained.
+B) They were playing tennis when it rained.
+C) They had played tennis before it rained.
+D) They have been playing tennis for an hour.
+Answer: A
+
+61. Choose the correct sentence regarding subject-verb agreement: (Variant 61)
+A) Neither the manager nor the employees was aware of the decision.
+B) Neither the manager nor the employees are aware of the decision.
+C) Neither the manager nor the employees were aware of the decision.
+D) Neither the manager or the employees was aware.
+Answer: C
+
+62. Identify the figure of speech in: 'The wind whispered through the dark forest.' (Variant 62)
+A) Personification
+B) Hyperbole
+C) Simile
+D) Metaphor
+Answer: A
+
+63. Which of the following sentences uses the subjunctive mood correctly? (Variant 63)
+A) I suggest that he studying for the exam.
+B) I suggest that he studied for the exam.
+C) I suggest that he study for the exam.
+D) I suggest that he studies for the exam.
+Answer: C
+
+64. Choose the exact meaning of the idiom: 'To beat around the bush' (Variant 64)
+A) To waste time in a forest
+B) To physically attack someone secretly
+C) To avoid talking about the main topic
+D) To search for something thoroughly
+Answer: C
+
+65. Identify the grammatical error: 'Hardly had I reached the station than the train left.' (Variant 65)
+A) Replace 'than' with 'when'
+B) No error
+C) Replace 'had' with 'have'
+D) Replace 'reached' with 'reaching'
+Answer: A
+
+66. What is a 'gerund'? (Variant 66)
+A) A prepositional phrase
+B) A verb form that functions as an adjective
+C) An infinitive verb
+D) A verb form ending in -ing that functions as a noun
+Answer: D
+
+67. Choose the appropriate word: The new evidence ___ his claim of innocence. (Variant 67)
+A) Contradicts
+B) Corroborates
+C) Delegates
+D) Eradicates
+Answer: B
+
+68. Select the correct active voice equivalent: 'The letter was written by her.' (Variant 68)
+A) She writes the letter.
+B) She had written the letter.
+C) She wrote the letter.
+D) She was writing the letter.
+Answer: C
+
+69. What does 'Eschew' mean? (Variant 69)
+A) To deliberately avoid using; abstain from
+B) To discover accidentally
+C) To chew thoroughly
+D) To embrace warmly
+Answer: A
+
+70. Which sentence uses the past perfect continuous tense? (Variant 70)
+A) They have been playing tennis for an hour.
+B) They were playing tennis when it rained.
+C) They had been playing tennis for an hour before it rained.
+D) They had played tennis before it rained.
+Answer: C
+
+71. Choose the correct sentence regarding subject-verb agreement: (Variant 71)
+A) Neither the manager nor the employees were aware of the decision.
+B) Neither the manager nor the employees was aware of the decision.
+C) Neither the manager or the employees was aware.
+D) Neither the manager nor the employees are aware of the decision.
+Answer: A
+
+72. Identify the figure of speech in: 'The wind whispered through the dark forest.' (Variant 72)
+A) Personification
+B) Simile
+C) Metaphor
+D) Hyperbole
+Answer: A
+
+73. Which of the following sentences uses the subjunctive mood correctly? (Variant 73)
+A) I suggest that he study for the exam.
+B) I suggest that he studies for the exam.
+C) I suggest that he studied for the exam.
+D) I suggest that he studying for the exam.
+Answer: A
+
+74. Choose the exact meaning of the idiom: 'To beat around the bush' (Variant 74)
+A) To waste time in a forest
+B) To search for something thoroughly
+C) To physically attack someone secretly
+D) To avoid talking about the main topic
+Answer: D
+
+75. Identify the grammatical error: 'Hardly had I reached the station than the train left.' (Variant 75)
+A) Replace 'than' with 'when'
+B) Replace 'reached' with 'reaching'
+C) No error
+D) Replace 'had' with 'have'
+Answer: A
+
+76. What is a 'gerund'? (Variant 76)
+A) A prepositional phrase
+B) A verb form that functions as an adjective
+C) A verb form ending in -ing that functions as a noun
+D) An infinitive verb
+Answer: C
+
+77. Choose the appropriate word: The new evidence ___ his claim of innocence. (Variant 77)
+A) Corroborates
+B) Delegates
+C) Contradicts
+D) Eradicates
+Answer: A
+
+78. Select the correct active voice equivalent: 'The letter was written by her.' (Variant 78)
+A) She writes the letter.
+B) She was writing the letter.
+C) She wrote the letter.
+D) She had written the letter.
+Answer: C
+
+79. What does 'Eschew' mean? (Variant 79)
+A) To discover accidentally
+B) To deliberately avoid using; abstain from
+C) To chew thoroughly
+D) To embrace warmly
+Answer: B
+
+80. Which sentence uses the past perfect continuous tense? (Variant 80)
+A) They had played tennis before it rained.
+B) They have been playing tennis for an hour.
+C) They had been playing tennis for an hour before it rained.
+D) They were playing tennis when it rained.
+Answer: C
+
+81. Choose the correct sentence regarding subject-verb agreement: (Variant 81)
+A) Neither the manager nor the employees are aware of the decision.
+B) Neither the manager or the employees was aware.
+C) Neither the manager nor the employees was aware of the decision.
+D) Neither the manager nor the employees were aware of the decision.
+Answer: D
+
+82. Identify the figure of speech in: 'The wind whispered through the dark forest.' (Variant 82)
+A) Personification
+B) Simile
+C) Metaphor
+D) Hyperbole
+Answer: A
+
+83. Which of the following sentences uses the subjunctive mood correctly? (Variant 83)
+A) I suggest that he study for the exam.
+B) I suggest that he studies for the exam.
+C) I suggest that he studying for the exam.
+D) I suggest that he studied for the exam.
+Answer: A
+
+84. Choose the exact meaning of the idiom: 'To beat around the bush' (Variant 84)
+A) To waste time in a forest
+B) To search for something thoroughly
+C) To physically attack someone secretly
+D) To avoid talking about the main topic
+Answer: D
+
+85. Identify the grammatical error: 'Hardly had I reached the station than the train left.' (Variant 85)
+A) No error
+B) Replace 'had' with 'have'
+C) Replace 'than' with 'when'
+D) Replace 'reached' with 'reaching'
+Answer: C
+
+86. What is a 'gerund'? (Variant 86)
+A) An infinitive verb
+B) A prepositional phrase
+C) A verb form that functions as an adjective
+D) A verb form ending in -ing that functions as a noun
+Answer: D
+
+87. Choose the appropriate word: The new evidence ___ his claim of innocence. (Variant 87)
+A) Contradicts
+B) Delegates
+C) Corroborates
+D) Eradicates
+Answer: C
+
+88. Select the correct active voice equivalent: 'The letter was written by her.' (Variant 88)
+A) She had written the letter.
+B) She writes the letter.
+C) She was writing the letter.
+D) She wrote the letter.
+Answer: D
+
+89. What does 'Eschew' mean? (Variant 89)
+A) To deliberately avoid using; abstain from
+B) To chew thoroughly
+C) To embrace warmly
+D) To discover accidentally
+Answer: A
+
+90. Which sentence uses the past perfect continuous tense? (Variant 90)
+A) They have been playing tennis for an hour.
+B) They had played tennis before it rained.
+C) They were playing tennis when it rained.
+D) They had been playing tennis for an hour before it rained.
+Answer: D
+
+91. Choose the correct sentence regarding subject-verb agreement: (Variant 91)
+A) Neither the manager nor the employees was aware of the decision.
+B) Neither the manager nor the employees were aware of the decision.
+C) Neither the manager nor the employees are aware of the decision.
+D) Neither the manager or the employees was aware.
+Answer: B
+
+92. Identify the figure of speech in: 'The wind whispered through the dark forest.' (Variant 92)
+A) Personification
+B) Simile
+C) Metaphor
+D) Hyperbole
+Answer: A
+
+93. Which of the following sentences uses the subjunctive mood correctly? (Variant 93)
+A) I suggest that he studied for the exam.
+B) I suggest that he studying for the exam.
+C) I suggest that he studies for the exam.
+D) I suggest that he study for the exam.
+Answer: D
+
+94. Choose the exact meaning of the idiom: 'To beat around the bush' (Variant 94)
+A) To search for something thoroughly
+B) To physically attack someone secretly
+C) To waste time in a forest
+D) To avoid talking about the main topic
+Answer: D
+
+95. Identify the grammatical error: 'Hardly had I reached the station than the train left.' (Variant 95)
+A) No error
+B) Replace 'reached' with 'reaching'
+C) Replace 'had' with 'have'
+D) Replace 'than' with 'when'
+Answer: D
+
+96. What is a 'gerund'? (Variant 96)
+A) A prepositional phrase
+B) A verb form ending in -ing that functions as a noun
+C) A verb form that functions as an adjective
+D) An infinitive verb
+Answer: B
+
+97. Choose the appropriate word: The new evidence ___ his claim of innocence. (Variant 97)
+A) Delegates
+B) Corroborates
+C) Contradicts
+D) Eradicates
+Answer: B
+
+98. Select the correct active voice equivalent: 'The letter was written by her.' (Variant 98)
+A) She had written the letter.
+B) She writes the letter.
+C) She was writing the letter.
+D) She wrote the letter.
+Answer: D
+
+99. What does 'Eschew' mean? (Variant 99)
+A) To deliberately avoid using; abstain from
+B) To discover accidentally
+C) To embrace warmly
+D) To chew thoroughly
+Answer: A
+
+100. Which sentence uses the past perfect continuous tense? (Variant 100)
+A) They had played tennis before it rained.
+B) They were playing tennis when it rained.
+C) They have been playing tennis for an hour.
+D) They had been playing tennis for an hour before it rained.
+Answer: D
+
+[Section: Java]
+
+1. What is the expected behavior of the following Java snippet?
+```java
+List<Integer> list = new ArrayList<>(Arrays.asList(1, 2, 3));
+for (Integer n : list) {
+    if (n == 2) list.remove(n);
+}
+``` (Variant 1)
+A) List remains [1, 2, 3] without changes
+B) List becomes [1, 3] successfully
+C) ConcurrentModificationException is thrown at runtime
+D) Compilation Error
+Answer: C
+
+2. Which phase of Generational Garbage Collection in Java is responsible for identifying active heap objects and reclaiming memory space (Variant 2)?
+A) Reference Counting Phase
+B) Copying Phase
+C) Mark and Compact Phase
+D) Mark and Sweep Phase
+Answer: D
+
+3. What is the output of the following Java Stream snippet?
+```java
+int sum = IntStream.range(1, 5).map(n -> n * 4).filter(n -> n % 2 == 0).sum();
+System.out.println(sum);
+``` (Variant 3)
+A) 0
+B) 40
+C) 36
+D) 44
+Answer: B
+
+4. What is the primary purpose of the 'volatile' keyword when applied to a variable in Java concurrent programming (Variant 4)?
+A) To lock the object instance automatically
+B) To declare a constant read-only variable
+C) To guarantee thread visibility of changes made to the variable across CPUs
+D) To prevent a variable from being serialized
+Answer: C
+
+5. What is the output of the following Java integer comparison code?
+```java
+Integer a = 100, b = 100;
+Integer c = 1000, d = 1000;
+System.out.println((a == b) + " " + (c == d));
+``` (Variant 5)
+A) false true
+B) false false
+C) true true
+D) true false
+Answer: D
+
+6. Which class instantiation pattern is typically implemented by the Java 'java.lang.Runtime.getRuntime()' method (Variant 6)?
+A) Prototype Design Pattern
+B) Singleton Design Pattern
+C) Factory Design Pattern
+D) Builder Design Pattern
+Answer: B
+
+7. What is the primary difference between a HashMap and a Hashtable in Java collections framework (Variant 7)?
+A) Hashtable is faster than HashMap
+B) There is no functional difference between them
+C) HashMap is non-synchronized and allows null values, while Hashtable is synchronized and does not allow nulls
+D) HashMap extends Dictionary class, while Hashtable implements Map
+Answer: C
+
+8. What happens if a Java thread invokes wait() on an object without first acquiring that object's intrinsic monitor lock (Variant 8)?
+A) InterruptedException is thrown
+B) IllegalMonitorStateException is thrown at runtime
+C) The thread enters WAITING state indefinitely
+D) A deadlock occurs immediately
+Answer: B
+
+9. Which Java classloader is responsible for loading the core Java API library classes located in rt.jar (Variant 9)?
+A) Application ClassLoader
+B) Extension ClassLoader
+C) Bootstrap ClassLoader
+D) System ClassLoader
+Answer: C
+
+10. Which of the following interfaces does java.util.Hashtable implement that java.util.HashMap does not in Java (Variant 10)?
+A) Map
+B) Dictionary class inheritance (Hashtable extends Dictionary)
+C) Serializable
+D) Cloneable
+Answer: B
+
+11. What is the expected behavior of the following Java snippet?
+```java
+List<Integer> list = new ArrayList<>(Arrays.asList(1, 2, 3));
+for (Integer n : list) {
+    if (n == 2) list.remove(n);
+}
+``` (Variant 11)
+A) List becomes [1, 3] successfully
+B) ConcurrentModificationException is thrown at runtime
+C) List remains [1, 2, 3] without changes
+D) Compilation Error
+Answer: B
+
+12. Which phase of Generational Garbage Collection in Java is responsible for identifying active heap objects and reclaiming memory space (Variant 12)?
+A) Copying Phase
+B) Reference Counting Phase
+C) Mark and Sweep Phase
+D) Mark and Compact Phase
+Answer: C
+
+13. What is the output of the following Java Stream snippet?
+```java
+int sum = IntStream.range(1, 5).map(n -> n * 4).filter(n -> n % 2 == 0).sum();
+System.out.println(sum);
+``` (Variant 13)
+A) 44
+B) 40
+C) 36
+D) 0
+Answer: B
+
+14. What is the primary purpose of the 'volatile' keyword when applied to a variable in Java concurrent programming (Variant 14)?
+A) To guarantee thread visibility of changes made to the variable across CPUs
+B) To lock the object instance automatically
+C) To declare a constant read-only variable
+D) To prevent a variable from being serialized
+Answer: A
+
+15. What is the output of the following Java integer comparison code?
+```java
+Integer a = 100, b = 100;
+Integer c = 1000, d = 1000;
+System.out.println((a == b) + " " + (c == d));
+``` (Variant 15)
+A) true false
+B) false true
+C) true true
+D) false false
+Answer: A
+
+16. Which class instantiation pattern is typically implemented by the Java 'java.lang.Runtime.getRuntime()' method (Variant 16)?
+A) Builder Design Pattern
+B) Singleton Design Pattern
+C) Prototype Design Pattern
+D) Factory Design Pattern
+Answer: B
+
+17. What is the primary difference between a HashMap and a Hashtable in Java collections framework (Variant 17)?
+A) There is no functional difference between them
+B) HashMap extends Dictionary class, while Hashtable implements Map
+C) HashMap is non-synchronized and allows null values, while Hashtable is synchronized and does not allow nulls
+D) Hashtable is faster than HashMap
+Answer: C
+
+18. What happens if a Java thread invokes wait() on an object without first acquiring that object's intrinsic monitor lock (Variant 18)?
+A) InterruptedException is thrown
+B) A deadlock occurs immediately
+C) The thread enters WAITING state indefinitely
+D) IllegalMonitorStateException is thrown at runtime
+Answer: D
+
+19. Which Java classloader is responsible for loading the core Java API library classes located in rt.jar (Variant 19)?
+A) Application ClassLoader
+B) Extension ClassLoader
+C) System ClassLoader
+D) Bootstrap ClassLoader
+Answer: D
+
+20. Which of the following interfaces does java.util.Hashtable implement that java.util.HashMap does not in Java (Variant 20)?
+A) Dictionary class inheritance (Hashtable extends Dictionary)
+B) Serializable
+C) Cloneable
+D) Map
+Answer: A
+
+21. What is the expected behavior of the following Java snippet?
+```java
+List<Integer> list = new ArrayList<>(Arrays.asList(1, 2, 3));
+for (Integer n : list) {
+    if (n == 2) list.remove(n);
+}
+``` (Variant 21)
+A) ConcurrentModificationException is thrown at runtime
+B) List becomes [1, 3] successfully
+C) List remains [1, 2, 3] without changes
+D) Compilation Error
+Answer: A
+
+22. Which phase of Generational Garbage Collection in Java is responsible for identifying active heap objects and reclaiming memory space (Variant 22)?
+A) Mark and Compact Phase
+B) Copying Phase
+C) Reference Counting Phase
+D) Mark and Sweep Phase
+Answer: D
+
+23. What is the output of the following Java Stream snippet?
+```java
+int sum = IntStream.range(1, 5).map(n -> n * 4).filter(n -> n % 2 == 0).sum();
+System.out.println(sum);
+``` (Variant 23)
+A) 36
+B) 0
+C) 44
+D) 40
+Answer: D
+
+24. What is the primary purpose of the 'volatile' keyword when applied to a variable in Java concurrent programming (Variant 24)?
+A) To guarantee thread visibility of changes made to the variable across CPUs
+B) To prevent a variable from being serialized
+C) To lock the object instance automatically
+D) To declare a constant read-only variable
+Answer: A
+
+25. What is the output of the following Java integer comparison code?
+```java
+Integer a = 100, b = 100;
+Integer c = 1000, d = 1000;
+System.out.println((a == b) + " " + (c == d));
+``` (Variant 25)
+A) true true
+B) false false
+C) true false
+D) false true
+Answer: C
+
+26. Which class instantiation pattern is typically implemented by the Java 'java.lang.Runtime.getRuntime()' method (Variant 26)?
+A) Prototype Design Pattern
+B) Singleton Design Pattern
+C) Factory Design Pattern
+D) Builder Design Pattern
+Answer: B
+
+27. What is the primary difference between a HashMap and a Hashtable in Java collections framework (Variant 27)?
+A) HashMap is non-synchronized and allows null values, while Hashtable is synchronized and does not allow nulls
+B) Hashtable is faster than HashMap
+C) HashMap extends Dictionary class, while Hashtable implements Map
+D) There is no functional difference between them
+Answer: A
+
+28. What happens if a Java thread invokes wait() on an object without first acquiring that object's intrinsic monitor lock (Variant 28)?
+A) InterruptedException is thrown
+B) The thread enters WAITING state indefinitely
+C) A deadlock occurs immediately
+D) IllegalMonitorStateException is thrown at runtime
+Answer: D
+
+29. Which Java classloader is responsible for loading the core Java API library classes located in rt.jar (Variant 29)?
+A) Application ClassLoader
+B) System ClassLoader
+C) Extension ClassLoader
+D) Bootstrap ClassLoader
+Answer: D
+
+30. Which of the following interfaces does java.util.Hashtable implement that java.util.HashMap does not in Java (Variant 30)?
+A) Map
+B) Serializable
+C) Dictionary class inheritance (Hashtable extends Dictionary)
+D) Cloneable
+Answer: C
+
+31. What is the expected behavior of the following Java snippet?
+```java
+List<Integer> list = new ArrayList<>(Arrays.asList(1, 2, 3));
+for (Integer n : list) {
+    if (n == 2) list.remove(n);
+}
+``` (Variant 31)
+A) Compilation Error
+B) List remains [1, 2, 3] without changes
+C) List becomes [1, 3] successfully
+D) ConcurrentModificationException is thrown at runtime
+Answer: D
+
+32. Which phase of Generational Garbage Collection in Java is responsible for identifying active heap objects and reclaiming memory space (Variant 32)?
+A) Reference Counting Phase
+B) Copying Phase
+C) Mark and Sweep Phase
+D) Mark and Compact Phase
+Answer: C
+
+33. What is the output of the following Java Stream snippet?
+```java
+int sum = IntStream.range(1, 5).map(n -> n * 4).filter(n -> n % 2 == 0).sum();
+System.out.println(sum);
+``` (Variant 33)
+A) 0
+B) 44
+C) 36
+D) 40
+Answer: D
+
+34. What is the primary purpose of the 'volatile' keyword when applied to a variable in Java concurrent programming (Variant 34)?
+A) To declare a constant read-only variable
+B) To prevent a variable from being serialized
+C) To guarantee thread visibility of changes made to the variable across CPUs
+D) To lock the object instance automatically
+Answer: C
+
+35. What is the output of the following Java integer comparison code?
+```java
+Integer a = 100, b = 100;
+Integer c = 1000, d = 1000;
+System.out.println((a == b) + " " + (c == d));
+``` (Variant 35)
+A) true false
+B) true true
+C) false false
+D) false true
+Answer: A
+
+36. Which class instantiation pattern is typically implemented by the Java 'java.lang.Runtime.getRuntime()' method (Variant 36)?
+A) Factory Design Pattern
+B) Prototype Design Pattern
+C) Singleton Design Pattern
+D) Builder Design Pattern
+Answer: C
+
+37. What is the primary difference between a HashMap and a Hashtable in Java collections framework (Variant 37)?
+A) Hashtable is faster than HashMap
+B) HashMap extends Dictionary class, while Hashtable implements Map
+C) HashMap is non-synchronized and allows null values, while Hashtable is synchronized and does not allow nulls
+D) There is no functional difference between them
+Answer: C
+
+38. What happens if a Java thread invokes wait() on an object without first acquiring that object's intrinsic monitor lock (Variant 38)?
+A) InterruptedException is thrown
+B) A deadlock occurs immediately
+C) IllegalMonitorStateException is thrown at runtime
+D) The thread enters WAITING state indefinitely
+Answer: C
+
+39. Which Java classloader is responsible for loading the core Java API library classes located in rt.jar (Variant 39)?
+A) Bootstrap ClassLoader
+B) System ClassLoader
+C) Application ClassLoader
+D) Extension ClassLoader
+Answer: A
+
+40. Which of the following interfaces does java.util.Hashtable implement that java.util.HashMap does not in Java (Variant 40)?
+A) Map
+B) Serializable
+C) Dictionary class inheritance (Hashtable extends Dictionary)
+D) Cloneable
+Answer: C
+
+41. What is the expected behavior of the following Java snippet?
+```java
+List<Integer> list = new ArrayList<>(Arrays.asList(1, 2, 3));
+for (Integer n : list) {
+    if (n == 2) list.remove(n);
+}
+``` (Variant 41)
+A) List becomes [1, 3] successfully
+B) List remains [1, 2, 3] without changes
+C) ConcurrentModificationException is thrown at runtime
+D) Compilation Error
+Answer: C
+
+42. Which phase of Generational Garbage Collection in Java is responsible for identifying active heap objects and reclaiming memory space (Variant 42)?
+A) Mark and Compact Phase
+B) Reference Counting Phase
+C) Copying Phase
+D) Mark and Sweep Phase
+Answer: D
+
+43. What is the output of the following Java Stream snippet?
+```java
+int sum = IntStream.range(1, 5).map(n -> n * 4).filter(n -> n % 2 == 0).sum();
+System.out.println(sum);
+``` (Variant 43)
+A) 40
+B) 0
+C) 36
+D) 44
+Answer: A
+
+44. What is the primary purpose of the 'volatile' keyword when applied to a variable in Java concurrent programming (Variant 44)?
+A) To guarantee thread visibility of changes made to the variable across CPUs
+B) To lock the object instance automatically
+C) To prevent a variable from being serialized
+D) To declare a constant read-only variable
+Answer: A
+
+45. What is the output of the following Java integer comparison code?
+```java
+Integer a = 100, b = 100;
+Integer c = 1000, d = 1000;
+System.out.println((a == b) + " " + (c == d));
+``` (Variant 45)
+A) false true
+B) false false
+C) true true
+D) true false
+Answer: D
+
+46. Which class instantiation pattern is typically implemented by the Java 'java.lang.Runtime.getRuntime()' method (Variant 46)?
+A) Prototype Design Pattern
+B) Factory Design Pattern
+C) Singleton Design Pattern
+D) Builder Design Pattern
+Answer: C
+
+47. What is the primary difference between a HashMap and a Hashtable in Java collections framework (Variant 47)?
+A) HashMap is non-synchronized and allows null values, while Hashtable is synchronized and does not allow nulls
+B) HashMap extends Dictionary class, while Hashtable implements Map
+C) There is no functional difference between them
+D) Hashtable is faster than HashMap
+Answer: A
+
+48. What happens if a Java thread invokes wait() on an object without first acquiring that object's intrinsic monitor lock (Variant 48)?
+A) The thread enters WAITING state indefinitely
+B) A deadlock occurs immediately
+C) IllegalMonitorStateException is thrown at runtime
+D) InterruptedException is thrown
+Answer: C
+
+49. Which Java classloader is responsible for loading the core Java API library classes located in rt.jar (Variant 49)?
+A) System ClassLoader
+B) Extension ClassLoader
+C) Application ClassLoader
+D) Bootstrap ClassLoader
+Answer: D
+
+50. Which of the following interfaces does java.util.Hashtable implement that java.util.HashMap does not in Java (Variant 50)?
+A) Dictionary class inheritance (Hashtable extends Dictionary)
+B) Map
+C) Serializable
+D) Cloneable
+Answer: A
+
+51. What is the expected behavior of the following Java snippet?
+```java
+List<Integer> list = new ArrayList<>(Arrays.asList(1, 2, 3));
+for (Integer n : list) {
+    if (n == 2) list.remove(n);
+}
+``` (Variant 51)
+A) List remains [1, 2, 3] without changes
+B) Compilation Error
+C) ConcurrentModificationException is thrown at runtime
+D) List becomes [1, 3] successfully
+Answer: C
+
+52. Which phase of Generational Garbage Collection in Java is responsible for identifying active heap objects and reclaiming memory space (Variant 52)?
+A) Mark and Sweep Phase
+B) Reference Counting Phase
+C) Copying Phase
+D) Mark and Compact Phase
+Answer: A
+
+53. What is the output of the following Java Stream snippet?
+```java
+int sum = IntStream.range(1, 5).map(n -> n * 4).filter(n -> n % 2 == 0).sum();
+System.out.println(sum);
+``` (Variant 53)
+A) 0
+B) 36
+C) 44
+D) 40
+Answer: D
+
+54. What is the primary purpose of the 'volatile' keyword when applied to a variable in Java concurrent programming (Variant 54)?
+A) To declare a constant read-only variable
+B) To lock the object instance automatically
+C) To guarantee thread visibility of changes made to the variable across CPUs
+D) To prevent a variable from being serialized
+Answer: C
+
+55. What is the output of the following Java integer comparison code?
+```java
+Integer a = 100, b = 100;
+Integer c = 1000, d = 1000;
+System.out.println((a == b) + " " + (c == d));
+``` (Variant 55)
+A) true false
+B) true true
+C) false false
+D) false true
+Answer: A
+
+56. Which class instantiation pattern is typically implemented by the Java 'java.lang.Runtime.getRuntime()' method (Variant 56)?
+A) Builder Design Pattern
+B) Prototype Design Pattern
+C) Singleton Design Pattern
+D) Factory Design Pattern
+Answer: C
+
+57. What is the primary difference between a HashMap and a Hashtable in Java collections framework (Variant 57)?
+A) There is no functional difference between them
+B) HashMap extends Dictionary class, while Hashtable implements Map
+C) Hashtable is faster than HashMap
+D) HashMap is non-synchronized and allows null values, while Hashtable is synchronized and does not allow nulls
+Answer: D
+
+58. What happens if a Java thread invokes wait() on an object without first acquiring that object's intrinsic monitor lock (Variant 58)?
+A) InterruptedException is thrown
+B) The thread enters WAITING state indefinitely
+C) A deadlock occurs immediately
+D) IllegalMonitorStateException is thrown at runtime
+Answer: D
+
+59. Which Java classloader is responsible for loading the core Java API library classes located in rt.jar (Variant 59)?
+A) Bootstrap ClassLoader
+B) Extension ClassLoader
+C) Application ClassLoader
+D) System ClassLoader
+Answer: A
+
+60. Which of the following interfaces does java.util.Hashtable implement that java.util.HashMap does not in Java (Variant 60)?
+A) Dictionary class inheritance (Hashtable extends Dictionary)
+B) Map
+C) Cloneable
+D) Serializable
+Answer: A
+
+61. What is the expected behavior of the following Java snippet?
+```java
+List<Integer> list = new ArrayList<>(Arrays.asList(1, 2, 3));
+for (Integer n : list) {
+    if (n == 2) list.remove(n);
+}
+``` (Variant 61)
+A) List becomes [1, 3] successfully
+B) List remains [1, 2, 3] without changes
+C) ConcurrentModificationException is thrown at runtime
+D) Compilation Error
+Answer: C
+
+62. Which phase of Generational Garbage Collection in Java is responsible for identifying active heap objects and reclaiming memory space (Variant 62)?
+A) Copying Phase
+B) Reference Counting Phase
+C) Mark and Compact Phase
+D) Mark and Sweep Phase
+Answer: D
+
+63. What is the output of the following Java Stream snippet?
+```java
+int sum = IntStream.range(1, 5).map(n -> n * 4).filter(n -> n % 2 == 0).sum();
+System.out.println(sum);
+``` (Variant 63)
+A) 44
+B) 36
+C) 0
+D) 40
+Answer: D
+
+64. What is the primary purpose of the 'volatile' keyword when applied to a variable in Java concurrent programming (Variant 64)?
+A) To lock the object instance automatically
+B) To declare a constant read-only variable
+C) To prevent a variable from being serialized
+D) To guarantee thread visibility of changes made to the variable across CPUs
+Answer: D
+
+65. What is the output of the following Java integer comparison code?
+```java
+Integer a = 100, b = 100;
+Integer c = 1000, d = 1000;
+System.out.println((a == b) + " " + (c == d));
+``` (Variant 65)
+A) true true
+B) true false
+C) false true
+D) false false
+Answer: B
+
+66. Which class instantiation pattern is typically implemented by the Java 'java.lang.Runtime.getRuntime()' method (Variant 66)?
+A) Prototype Design Pattern
+B) Builder Design Pattern
+C) Singleton Design Pattern
+D) Factory Design Pattern
+Answer: C
+
+67. What is the primary difference between a HashMap and a Hashtable in Java collections framework (Variant 67)?
+A) There is no functional difference between them
+B) Hashtable is faster than HashMap
+C) HashMap extends Dictionary class, while Hashtable implements Map
+D) HashMap is non-synchronized and allows null values, while Hashtable is synchronized and does not allow nulls
+Answer: D
+
+68. What happens if a Java thread invokes wait() on an object without first acquiring that object's intrinsic monitor lock (Variant 68)?
+A) IllegalMonitorStateException is thrown at runtime
+B) A deadlock occurs immediately
+C) The thread enters WAITING state indefinitely
+D) InterruptedException is thrown
+Answer: A
+
+69. Which Java classloader is responsible for loading the core Java API library classes located in rt.jar (Variant 69)?
+A) Extension ClassLoader
+B) Bootstrap ClassLoader
+C) System ClassLoader
+D) Application ClassLoader
+Answer: B
+
+70. Which of the following interfaces does java.util.Hashtable implement that java.util.HashMap does not in Java (Variant 70)?
+A) Cloneable
+B) Serializable
+C) Map
+D) Dictionary class inheritance (Hashtable extends Dictionary)
+Answer: D
+
+71. What is the expected behavior of the following Java snippet?
+```java
+List<Integer> list = new ArrayList<>(Arrays.asList(1, 2, 3));
+for (Integer n : list) {
+    if (n == 2) list.remove(n);
+}
+``` (Variant 71)
+A) List remains [1, 2, 3] without changes
+B) ConcurrentModificationException is thrown at runtime
+C) List becomes [1, 3] successfully
+D) Compilation Error
+Answer: B
+
+72. Which phase of Generational Garbage Collection in Java is responsible for identifying active heap objects and reclaiming memory space (Variant 72)?
+A) Mark and Sweep Phase
+B) Mark and Compact Phase
+C) Reference Counting Phase
+D) Copying Phase
+Answer: A
+
+73. What is the output of the following Java Stream snippet?
+```java
+int sum = IntStream.range(1, 5).map(n -> n * 4).filter(n -> n % 2 == 0).sum();
+System.out.println(sum);
+``` (Variant 73)
+A) 44
+B) 40
+C) 36
+D) 0
+Answer: B
+
+74. What is the primary purpose of the 'volatile' keyword when applied to a variable in Java concurrent programming (Variant 74)?
+A) To prevent a variable from being serialized
+B) To declare a constant read-only variable
+C) To lock the object instance automatically
+D) To guarantee thread visibility of changes made to the variable across CPUs
+Answer: D
+
+75. What is the output of the following Java integer comparison code?
+```java
+Integer a = 100, b = 100;
+Integer c = 1000, d = 1000;
+System.out.println((a == b) + " " + (c == d));
+``` (Variant 75)
+A) true false
+B) false true
+C) true true
+D) false false
+Answer: A
+
+76. Which class instantiation pattern is typically implemented by the Java 'java.lang.Runtime.getRuntime()' method (Variant 76)?
+A) Singleton Design Pattern
+B) Factory Design Pattern
+C) Builder Design Pattern
+D) Prototype Design Pattern
+Answer: A
+
+77. What is the primary difference between a HashMap and a Hashtable in Java collections framework (Variant 77)?
+A) HashMap extends Dictionary class, while Hashtable implements Map
+B) There is no functional difference between them
+C) Hashtable is faster than HashMap
+D) HashMap is non-synchronized and allows null values, while Hashtable is synchronized and does not allow nulls
+Answer: D
+
+78. What happens if a Java thread invokes wait() on an object without first acquiring that object's intrinsic monitor lock (Variant 78)?
+A) A deadlock occurs immediately
+B) The thread enters WAITING state indefinitely
+C) InterruptedException is thrown
+D) IllegalMonitorStateException is thrown at runtime
+Answer: D
+
+79. Which Java classloader is responsible for loading the core Java API library classes located in rt.jar (Variant 79)?
+A) Application ClassLoader
+B) Extension ClassLoader
+C) System ClassLoader
+D) Bootstrap ClassLoader
+Answer: D
+
+80. Which of the following interfaces does java.util.Hashtable implement that java.util.HashMap does not in Java (Variant 80)?
+A) Dictionary class inheritance (Hashtable extends Dictionary)
+B) Map
+C) Cloneable
+D) Serializable
+Answer: A
+
+81. What is the expected behavior of the following Java snippet?
+```java
+List<Integer> list = new ArrayList<>(Arrays.asList(1, 2, 3));
+for (Integer n : list) {
+    if (n == 2) list.remove(n);
+}
+``` (Variant 81)
+A) Compilation Error
+B) ConcurrentModificationException is thrown at runtime
+C) List becomes [1, 3] successfully
+D) List remains [1, 2, 3] without changes
+Answer: B
+
+82. Which phase of Generational Garbage Collection in Java is responsible for identifying active heap objects and reclaiming memory space (Variant 82)?
+A) Mark and Sweep Phase
+B) Reference Counting Phase
+C) Copying Phase
+D) Mark and Compact Phase
+Answer: A
+
+83. What is the output of the following Java Stream snippet?
+```java
+int sum = IntStream.range(1, 5).map(n -> n * 4).filter(n -> n % 2 == 0).sum();
+System.out.println(sum);
+``` (Variant 83)
+A) 36
+B) 0
+C) 40
+D) 44
+Answer: C
+
+84. What is the primary purpose of the 'volatile' keyword when applied to a variable in Java concurrent programming (Variant 84)?
+A) To guarantee thread visibility of changes made to the variable across CPUs
+B) To declare a constant read-only variable
+C) To lock the object instance automatically
+D) To prevent a variable from being serialized
+Answer: A
+
+85. What is the output of the following Java integer comparison code?
+```java
+Integer a = 100, b = 100;
+Integer c = 1000, d = 1000;
+System.out.println((a == b) + " " + (c == d));
+``` (Variant 85)
+A) true true
+B) false true
+C) false false
+D) true false
+Answer: D
+
+86. Which class instantiation pattern is typically implemented by the Java 'java.lang.Runtime.getRuntime()' method (Variant 86)?
+A) Factory Design Pattern
+B) Singleton Design Pattern
+C) Prototype Design Pattern
+D) Builder Design Pattern
+Answer: B
+
+87. What is the primary difference between a HashMap and a Hashtable in Java collections framework (Variant 87)?
+A) HashMap is non-synchronized and allows null values, while Hashtable is synchronized and does not allow nulls
+B) Hashtable is faster than HashMap
+C) HashMap extends Dictionary class, while Hashtable implements Map
+D) There is no functional difference between them
+Answer: A
+
+88. What happens if a Java thread invokes wait() on an object without first acquiring that object's intrinsic monitor lock (Variant 88)?
+A) IllegalMonitorStateException is thrown at runtime
+B) InterruptedException is thrown
+C) The thread enters WAITING state indefinitely
+D) A deadlock occurs immediately
+Answer: A
+
+89. Which Java classloader is responsible for loading the core Java API library classes located in rt.jar (Variant 89)?
+A) Extension ClassLoader
+B) Application ClassLoader
+C) System ClassLoader
+D) Bootstrap ClassLoader
+Answer: D
+
+90. Which of the following interfaces does java.util.Hashtable implement that java.util.HashMap does not in Java (Variant 90)?
+A) Dictionary class inheritance (Hashtable extends Dictionary)
+B) Serializable
+C) Cloneable
+D) Map
+Answer: A
+
+91. What is the expected behavior of the following Java snippet?
+```java
+List<Integer> list = new ArrayList<>(Arrays.asList(1, 2, 3));
+for (Integer n : list) {
+    if (n == 2) list.remove(n);
+}
+``` (Variant 91)
+A) List becomes [1, 3] successfully
+B) ConcurrentModificationException is thrown at runtime
+C) Compilation Error
+D) List remains [1, 2, 3] without changes
+Answer: B
+
+92. Which phase of Generational Garbage Collection in Java is responsible for identifying active heap objects and reclaiming memory space (Variant 92)?
+A) Mark and Sweep Phase
+B) Copying Phase
+C) Mark and Compact Phase
+D) Reference Counting Phase
+Answer: A
+
+93. What is the output of the following Java Stream snippet?
+```java
+int sum = IntStream.range(1, 5).map(n -> n * 4).filter(n -> n % 2 == 0).sum();
+System.out.println(sum);
+``` (Variant 93)
+A) 36
+B) 0
+C) 44
+D) 40
+Answer: D
+
+94. What is the primary purpose of the 'volatile' keyword when applied to a variable in Java concurrent programming (Variant 94)?
+A) To prevent a variable from being serialized
+B) To lock the object instance automatically
+C) To guarantee thread visibility of changes made to the variable across CPUs
+D) To declare a constant read-only variable
+Answer: C
+
+95. What is the output of the following Java integer comparison code?
+```java
+Integer a = 100, b = 100;
+Integer c = 1000, d = 1000;
+System.out.println((a == b) + " " + (c == d));
+``` (Variant 95)
+A) true true
+B) true false
+C) false false
+D) false true
+Answer: B
+
+96. Which class instantiation pattern is typically implemented by the Java 'java.lang.Runtime.getRuntime()' method (Variant 96)?
+A) Singleton Design Pattern
+B) Factory Design Pattern
+C) Prototype Design Pattern
+D) Builder Design Pattern
+Answer: A
+
+97. What is the primary difference between a HashMap and a Hashtable in Java collections framework (Variant 97)?
+A) Hashtable is faster than HashMap
+B) HashMap is non-synchronized and allows null values, while Hashtable is synchronized and does not allow nulls
+C) HashMap extends Dictionary class, while Hashtable implements Map
+D) There is no functional difference between them
+Answer: B
+
+98. What happens if a Java thread invokes wait() on an object without first acquiring that object's intrinsic monitor lock (Variant 98)?
+A) A deadlock occurs immediately
+B) InterruptedException is thrown
+C) The thread enters WAITING state indefinitely
+D) IllegalMonitorStateException is thrown at runtime
+Answer: D
+
+99. Which Java classloader is responsible for loading the core Java API library classes located in rt.jar (Variant 99)?
+A) Application ClassLoader
+B) Extension ClassLoader
+C) System ClassLoader
+D) Bootstrap ClassLoader
+Answer: D
+
+100. Which of the following interfaces does java.util.Hashtable implement that java.util.HashMap does not in Java (Variant 100)?
+A) Cloneable
+B) Serializable
+C) Map
+D) Dictionary class inheritance (Hashtable extends Dictionary)
+Answer: D
+
+[Section: Python]
+
+1. What is the primary function of the Global Interpreter Lock (GIL) in standard CPython implementation (Variant 1)?
+A) It encrypts local variables to prevent memory sniffing
+B) It limits bytecode execution to a single native thread at a time per process
+C) It allows multi-core CPU parallel thread execution
+D) It automatically manages references to free memory
+Answer: B
+
+2. Which standard library module decorator is used to preserve the original function name and docstring when writing a Python decorator (Variant 2)?
+A) abc.abstractmethod
+B) itertools.chain
+C) sys.settrace
+D) functools.wraps
+Answer: D
+
+3. What is the output of the following Python default argument evaluation code?
+```python
+def foo(a, lst=[]):
+    lst.append(a)
+    return lst
+print(foo(1))
+print(foo(2))
+``` (Variant 3)
+A) [1] []
+B) [1] [2]
+C) Error
+D) [1] [1, 2] (printed as subsequent evaluations of the same list)
+Answer: D
+
+4. What is the difference between copy.copy() and copy.deepcopy() operations in Python (Variant 4)?
+A) copy() creates a shallow copy sharing nested references; deepcopy() copies recursively creating independent nested objects
+B) There is no structural difference
+C) copy() is faster and behaves identically to deepcopy()
+D) copy() is for lists only, deepcopy() is for custom classes
+Answer: A
+
+5. What does the 'yield' keyword do inside a Python function block (Variant 5)?
+A) It converts a synchronous block into an asynchronous coroutine
+B) It suspends function execution, returning a generator iterator and retaining local state
+C) It exits the current loop block completely
+D) It declares a static class variable
+Answer: B
+
+6. Which standard module interface should you import to trigger a completely forced garbage collection sweep in Python (Variant 6)?
+A) import sys; sys.cleanup()
+B) del globals()
+C) You cannot force garbage collection in Python
+D) import gc; gc.collect()
+Answer: D
+
+7. What is the output of the following Python shared list reference snippet?
+```python
+x = [1, 2, 3]
+y = x
+y += [4]
+print(x)
+``` (Variant 7)
+A) Error
+B) None
+C) [1, 2, 3, 4]
+D) [1, 2, 3]
+Answer: C
+
+8. What is a metaclass in Python programming (Variant 8)?
+A) A module-level namespace wrapper
+B) The absolute base class for integers
+C) A base class containing only static methods
+D) A class that defines the rules and behavior of another class (a class of a class)
+Answer: D
+
+9. What is the main benefit of utilizing the '__slots__' attribute inside a Python class definition (Variant 9)?
+A) It automatically serializes class methods
+B) It prevents dynamic attribute dictionary creation, saving significant memory for large numbers of instances
+C) It enables compiler optimization for multi-core processors
+D) It hides all class attributes from subclass inheritance
+Answer: B
+
+10. In Python, what is the primary role of the event loop in asynchronous programming (Variant 10)?
+A) To parse and execute database transaction SQL scripts
+B) To catch syntax exceptions in parallel processes
+C) To distribute execution loads across multiple CPU threads
+D) To monitor and coordinate the execution of asynchronous coroutines and tasks
+Answer: D
+
+11. What is the primary function of the Global Interpreter Lock (GIL) in standard CPython implementation (Variant 11)?
+A) It encrypts local variables to prevent memory sniffing
+B) It limits bytecode execution to a single native thread at a time per process
+C) It automatically manages references to free memory
+D) It allows multi-core CPU parallel thread execution
+Answer: B
+
+12. Which standard library module decorator is used to preserve the original function name and docstring when writing a Python decorator (Variant 12)?
+A) itertools.chain
+B) sys.settrace
+C) abc.abstractmethod
+D) functools.wraps
+Answer: D
+
+13. What is the output of the following Python default argument evaluation code?
+```python
+def foo(a, lst=[]):
+    lst.append(a)
+    return lst
+print(foo(1))
+print(foo(2))
+``` (Variant 13)
+A) [1] [1, 2] (printed as subsequent evaluations of the same list)
+B) Error
+C) [1] []
+D) [1] [2]
+Answer: A
+
+14. What is the difference between copy.copy() and copy.deepcopy() operations in Python (Variant 14)?
+A) copy() is faster and behaves identically to deepcopy()
+B) copy() is for lists only, deepcopy() is for custom classes
+C) There is no structural difference
+D) copy() creates a shallow copy sharing nested references; deepcopy() copies recursively creating independent nested objects
+Answer: D
+
+15. What does the 'yield' keyword do inside a Python function block (Variant 15)?
+A) It suspends function execution, returning a generator iterator and retaining local state
+B) It declares a static class variable
+C) It converts a synchronous block into an asynchronous coroutine
+D) It exits the current loop block completely
+Answer: A
+
+16. Which standard module interface should you import to trigger a completely forced garbage collection sweep in Python (Variant 16)?
+A) del globals()
+B) import gc; gc.collect()
+C) import sys; sys.cleanup()
+D) You cannot force garbage collection in Python
+Answer: B
+
+17. What is the output of the following Python shared list reference snippet?
+```python
+x = [1, 2, 3]
+y = x
+y += [4]
+print(x)
+``` (Variant 17)
+A) [1, 2, 3]
+B) None
+C) Error
+D) [1, 2, 3, 4]
+Answer: D
+
+18. What is a metaclass in Python programming (Variant 18)?
+A) A base class containing only static methods
+B) The absolute base class for integers
+C) A class that defines the rules and behavior of another class (a class of a class)
+D) A module-level namespace wrapper
+Answer: C
+
+19. What is the main benefit of utilizing the '__slots__' attribute inside a Python class definition (Variant 19)?
+A) It hides all class attributes from subclass inheritance
+B) It prevents dynamic attribute dictionary creation, saving significant memory for large numbers of instances
+C) It enables compiler optimization for multi-core processors
+D) It automatically serializes class methods
+Answer: B
+
+20. In Python, what is the primary role of the event loop in asynchronous programming (Variant 20)?
+A) To monitor and coordinate the execution of asynchronous coroutines and tasks
+B) To distribute execution loads across multiple CPU threads
+C) To parse and execute database transaction SQL scripts
+D) To catch syntax exceptions in parallel processes
+Answer: A
+
+21. What is the primary function of the Global Interpreter Lock (GIL) in standard CPython implementation (Variant 21)?
+A) It allows multi-core CPU parallel thread execution
+B) It automatically manages references to free memory
+C) It encrypts local variables to prevent memory sniffing
+D) It limits bytecode execution to a single native thread at a time per process
+Answer: D
+
+22. Which standard library module decorator is used to preserve the original function name and docstring when writing a Python decorator (Variant 22)?
+A) abc.abstractmethod
+B) sys.settrace
+C) functools.wraps
+D) itertools.chain
+Answer: C
+
+23. What is the output of the following Python default argument evaluation code?
+```python
+def foo(a, lst=[]):
+    lst.append(a)
+    return lst
+print(foo(1))
+print(foo(2))
+``` (Variant 23)
+A) [1] [1, 2] (printed as subsequent evaluations of the same list)
+B) [1] [2]
+C) Error
+D) [1] []
+Answer: A
+
+24. What is the difference between copy.copy() and copy.deepcopy() operations in Python (Variant 24)?
+A) copy() is faster and behaves identically to deepcopy()
+B) copy() creates a shallow copy sharing nested references; deepcopy() copies recursively creating independent nested objects
+C) There is no structural difference
+D) copy() is for lists only, deepcopy() is for custom classes
+Answer: B
+
+25. What does the 'yield' keyword do inside a Python function block (Variant 25)?
+A) It declares a static class variable
+B) It converts a synchronous block into an asynchronous coroutine
+C) It exits the current loop block completely
+D) It suspends function execution, returning a generator iterator and retaining local state
+Answer: D
+
+26. Which standard module interface should you import to trigger a completely forced garbage collection sweep in Python (Variant 26)?
+A) import gc; gc.collect()
+B) You cannot force garbage collection in Python
+C) import sys; sys.cleanup()
+D) del globals()
+Answer: A
+
+27. What is the output of the following Python shared list reference snippet?
+```python
+x = [1, 2, 3]
+y = x
+y += [4]
+print(x)
+``` (Variant 27)
+A) None
+B) [1, 2, 3, 4]
+C) [1, 2, 3]
+D) Error
+Answer: B
+
+28. What is a metaclass in Python programming (Variant 28)?
+A) The absolute base class for integers
+B) A base class containing only static methods
+C) A class that defines the rules and behavior of another class (a class of a class)
+D) A module-level namespace wrapper
+Answer: C
+
+29. What is the main benefit of utilizing the '__slots__' attribute inside a Python class definition (Variant 29)?
+A) It automatically serializes class methods
+B) It hides all class attributes from subclass inheritance
+C) It enables compiler optimization for multi-core processors
+D) It prevents dynamic attribute dictionary creation, saving significant memory for large numbers of instances
+Answer: D
+
+30. In Python, what is the primary role of the event loop in asynchronous programming (Variant 30)?
+A) To catch syntax exceptions in parallel processes
+B) To distribute execution loads across multiple CPU threads
+C) To monitor and coordinate the execution of asynchronous coroutines and tasks
+D) To parse and execute database transaction SQL scripts
+Answer: C
+
+31. What is the primary function of the Global Interpreter Lock (GIL) in standard CPython implementation (Variant 31)?
+A) It automatically manages references to free memory
+B) It limits bytecode execution to a single native thread at a time per process
+C) It allows multi-core CPU parallel thread execution
+D) It encrypts local variables to prevent memory sniffing
+Answer: B
+
+32. Which standard library module decorator is used to preserve the original function name and docstring when writing a Python decorator (Variant 32)?
+A) itertools.chain
+B) abc.abstractmethod
+C) functools.wraps
+D) sys.settrace
+Answer: C
+
+33. What is the output of the following Python default argument evaluation code?
+```python
+def foo(a, lst=[]):
+    lst.append(a)
+    return lst
+print(foo(1))
+print(foo(2))
+``` (Variant 33)
+A) Error
+B) [1] []
+C) [1] [2]
+D) [1] [1, 2] (printed as subsequent evaluations of the same list)
+Answer: D
+
+34. What is the difference between copy.copy() and copy.deepcopy() operations in Python (Variant 34)?
+A) copy() creates a shallow copy sharing nested references; deepcopy() copies recursively creating independent nested objects
+B) copy() is faster and behaves identically to deepcopy()
+C) copy() is for lists only, deepcopy() is for custom classes
+D) There is no structural difference
+Answer: A
+
+35. What does the 'yield' keyword do inside a Python function block (Variant 35)?
+A) It suspends function execution, returning a generator iterator and retaining local state
+B) It exits the current loop block completely
+C) It converts a synchronous block into an asynchronous coroutine
+D) It declares a static class variable
+Answer: A
+
+36. Which standard module interface should you import to trigger a completely forced garbage collection sweep in Python (Variant 36)?
+A) You cannot force garbage collection in Python
+B) del globals()
+C) import sys; sys.cleanup()
+D) import gc; gc.collect()
+Answer: D
+
+37. What is the output of the following Python shared list reference snippet?
+```python
+x = [1, 2, 3]
+y = x
+y += [4]
+print(x)
+``` (Variant 37)
+A) None
+B) [1, 2, 3]
+C) [1, 2, 3, 4]
+D) Error
+Answer: C
+
+38. What is a metaclass in Python programming (Variant 38)?
+A) The absolute base class for integers
+B) A base class containing only static methods
+C) A module-level namespace wrapper
+D) A class that defines the rules and behavior of another class (a class of a class)
+Answer: D
+
+39. What is the main benefit of utilizing the '__slots__' attribute inside a Python class definition (Variant 39)?
+A) It prevents dynamic attribute dictionary creation, saving significant memory for large numbers of instances
+B) It automatically serializes class methods
+C) It enables compiler optimization for multi-core processors
+D) It hides all class attributes from subclass inheritance
+Answer: A
+
+40. In Python, what is the primary role of the event loop in asynchronous programming (Variant 40)?
+A) To distribute execution loads across multiple CPU threads
+B) To parse and execute database transaction SQL scripts
+C) To catch syntax exceptions in parallel processes
+D) To monitor and coordinate the execution of asynchronous coroutines and tasks
+Answer: D
+
+41. What is the primary function of the Global Interpreter Lock (GIL) in standard CPython implementation (Variant 41)?
+A) It encrypts local variables to prevent memory sniffing
+B) It allows multi-core CPU parallel thread execution
+C) It limits bytecode execution to a single native thread at a time per process
+D) It automatically manages references to free memory
+Answer: C
+
+42. Which standard library module decorator is used to preserve the original function name and docstring when writing a Python decorator (Variant 42)?
+A) sys.settrace
+B) abc.abstractmethod
+C) itertools.chain
+D) functools.wraps
+Answer: D
+
+43. What is the output of the following Python default argument evaluation code?
+```python
+def foo(a, lst=[]):
+    lst.append(a)
+    return lst
+print(foo(1))
+print(foo(2))
+``` (Variant 43)
+A) Error
+B) [1] []
+C) [1] [2]
+D) [1] [1, 2] (printed as subsequent evaluations of the same list)
+Answer: D
+
+44. What is the difference between copy.copy() and copy.deepcopy() operations in Python (Variant 44)?
+A) copy() creates a shallow copy sharing nested references; deepcopy() copies recursively creating independent nested objects
+B) copy() is for lists only, deepcopy() is for custom classes
+C) copy() is faster and behaves identically to deepcopy()
+D) There is no structural difference
+Answer: A
+
+45. What does the 'yield' keyword do inside a Python function block (Variant 45)?
+A) It suspends function execution, returning a generator iterator and retaining local state
+B) It declares a static class variable
+C) It exits the current loop block completely
+D) It converts a synchronous block into an asynchronous coroutine
+Answer: A
+
+46. Which standard module interface should you import to trigger a completely forced garbage collection sweep in Python (Variant 46)?
+A) import sys; sys.cleanup()
+B) import gc; gc.collect()
+C) del globals()
+D) You cannot force garbage collection in Python
+Answer: B
+
+47. What is the output of the following Python shared list reference snippet?
+```python
+x = [1, 2, 3]
+y = x
+y += [4]
+print(x)
+``` (Variant 47)
+A) None
+B) Error
+C) [1, 2, 3]
+D) [1, 2, 3, 4]
+Answer: D
+
+48. What is a metaclass in Python programming (Variant 48)?
+A) A class that defines the rules and behavior of another class (a class of a class)
+B) A module-level namespace wrapper
+C) The absolute base class for integers
+D) A base class containing only static methods
+Answer: A
+
+49. What is the main benefit of utilizing the '__slots__' attribute inside a Python class definition (Variant 49)?
+A) It automatically serializes class methods
+B) It enables compiler optimization for multi-core processors
+C) It prevents dynamic attribute dictionary creation, saving significant memory for large numbers of instances
+D) It hides all class attributes from subclass inheritance
+Answer: C
+
+50. In Python, what is the primary role of the event loop in asynchronous programming (Variant 50)?
+A) To parse and execute database transaction SQL scripts
+B) To monitor and coordinate the execution of asynchronous coroutines and tasks
+C) To distribute execution loads across multiple CPU threads
+D) To catch syntax exceptions in parallel processes
+Answer: B
+
+51. What is the primary function of the Global Interpreter Lock (GIL) in standard CPython implementation (Variant 51)?
+A) It encrypts local variables to prevent memory sniffing
+B) It limits bytecode execution to a single native thread at a time per process
+C) It automatically manages references to free memory
+D) It allows multi-core CPU parallel thread execution
+Answer: B
+
+52. Which standard library module decorator is used to preserve the original function name and docstring when writing a Python decorator (Variant 52)?
+A) functools.wraps
+B) sys.settrace
+C) itertools.chain
+D) abc.abstractmethod
+Answer: A
+
+53. What is the output of the following Python default argument evaluation code?
+```python
+def foo(a, lst=[]):
+    lst.append(a)
+    return lst
+print(foo(1))
+print(foo(2))
+``` (Variant 53)
+A) [1] [1, 2] (printed as subsequent evaluations of the same list)
+B) [1] []
+C) Error
+D) [1] [2]
+Answer: A
+
+54. What is the difference between copy.copy() and copy.deepcopy() operations in Python (Variant 54)?
+A) There is no structural difference
+B) copy() creates a shallow copy sharing nested references; deepcopy() copies recursively creating independent nested objects
+C) copy() is for lists only, deepcopy() is for custom classes
+D) copy() is faster and behaves identically to deepcopy()
+Answer: B
+
+55. What does the 'yield' keyword do inside a Python function block (Variant 55)?
+A) It declares a static class variable
+B) It converts a synchronous block into an asynchronous coroutine
+C) It exits the current loop block completely
+D) It suspends function execution, returning a generator iterator and retaining local state
+Answer: D
+
+56. Which standard module interface should you import to trigger a completely forced garbage collection sweep in Python (Variant 56)?
+A) import sys; sys.cleanup()
+B) del globals()
+C) You cannot force garbage collection in Python
+D) import gc; gc.collect()
+Answer: D
+
+57. What is the output of the following Python shared list reference snippet?
+```python
+x = [1, 2, 3]
+y = x
+y += [4]
+print(x)
+``` (Variant 57)
+A) None
+B) Error
+C) [1, 2, 3]
+D) [1, 2, 3, 4]
+Answer: D
+
+58. What is a metaclass in Python programming (Variant 58)?
+A) The absolute base class for integers
+B) A class that defines the rules and behavior of another class (a class of a class)
+C) A module-level namespace wrapper
+D) A base class containing only static methods
+Answer: B
+
+59. What is the main benefit of utilizing the '__slots__' attribute inside a Python class definition (Variant 59)?
+A) It enables compiler optimization for multi-core processors
+B) It hides all class attributes from subclass inheritance
+C) It prevents dynamic attribute dictionary creation, saving significant memory for large numbers of instances
+D) It automatically serializes class methods
+Answer: C
+
+60. In Python, what is the primary role of the event loop in asynchronous programming (Variant 60)?
+A) To monitor and coordinate the execution of asynchronous coroutines and tasks
+B) To catch syntax exceptions in parallel processes
+C) To distribute execution loads across multiple CPU threads
+D) To parse and execute database transaction SQL scripts
+Answer: A
+
+61. What is the primary function of the Global Interpreter Lock (GIL) in standard CPython implementation (Variant 61)?
+A) It limits bytecode execution to a single native thread at a time per process
+B) It encrypts local variables to prevent memory sniffing
+C) It automatically manages references to free memory
+D) It allows multi-core CPU parallel thread execution
+Answer: A
+
+62. Which standard library module decorator is used to preserve the original function name and docstring when writing a Python decorator (Variant 62)?
+A) abc.abstractmethod
+B) itertools.chain
+C) sys.settrace
+D) functools.wraps
+Answer: D
+
+63. What is the output of the following Python default argument evaluation code?
+```python
+def foo(a, lst=[]):
+    lst.append(a)
+    return lst
+print(foo(1))
+print(foo(2))
+``` (Variant 63)
+A) [1] [1, 2] (printed as subsequent evaluations of the same list)
+B) [1] [2]
+C) Error
+D) [1] []
+Answer: A
+
+64. What is the difference between copy.copy() and copy.deepcopy() operations in Python (Variant 64)?
+A) copy() creates a shallow copy sharing nested references; deepcopy() copies recursively creating independent nested objects
+B) There is no structural difference
+C) copy() is for lists only, deepcopy() is for custom classes
+D) copy() is faster and behaves identically to deepcopy()
+Answer: A
+
+65. What does the 'yield' keyword do inside a Python function block (Variant 65)?
+A) It converts a synchronous block into an asynchronous coroutine
+B) It exits the current loop block completely
+C) It declares a static class variable
+D) It suspends function execution, returning a generator iterator and retaining local state
+Answer: D
+
+66. Which standard module interface should you import to trigger a completely forced garbage collection sweep in Python (Variant 66)?
+A) import sys; sys.cleanup()
+B) del globals()
+C) You cannot force garbage collection in Python
+D) import gc; gc.collect()
+Answer: D
+
+67. What is the output of the following Python shared list reference snippet?
+```python
+x = [1, 2, 3]
+y = x
+y += [4]
+print(x)
+``` (Variant 67)
+A) None
+B) [1, 2, 3, 4]
+C) Error
+D) [1, 2, 3]
+Answer: B
+
+68. What is a metaclass in Python programming (Variant 68)?
+A) A class that defines the rules and behavior of another class (a class of a class)
+B) A base class containing only static methods
+C) The absolute base class for integers
+D) A module-level namespace wrapper
+Answer: A
+
+69. What is the main benefit of utilizing the '__slots__' attribute inside a Python class definition (Variant 69)?
+A) It hides all class attributes from subclass inheritance
+B) It automatically serializes class methods
+C) It enables compiler optimization for multi-core processors
+D) It prevents dynamic attribute dictionary creation, saving significant memory for large numbers of instances
+Answer: D
+
+70. In Python, what is the primary role of the event loop in asynchronous programming (Variant 70)?
+A) To monitor and coordinate the execution of asynchronous coroutines and tasks
+B) To distribute execution loads across multiple CPU threads
+C) To catch syntax exceptions in parallel processes
+D) To parse and execute database transaction SQL scripts
+Answer: A
+
+71. What is the primary function of the Global Interpreter Lock (GIL) in standard CPython implementation (Variant 71)?
+A) It allows multi-core CPU parallel thread execution
+B) It limits bytecode execution to a single native thread at a time per process
+C) It encrypts local variables to prevent memory sniffing
+D) It automatically manages references to free memory
+Answer: B
+
+72. Which standard library module decorator is used to preserve the original function name and docstring when writing a Python decorator (Variant 72)?
+A) sys.settrace
+B) functools.wraps
+C) itertools.chain
+D) abc.abstractmethod
+Answer: B
+
+73. What is the output of the following Python default argument evaluation code?
+```python
+def foo(a, lst=[]):
+    lst.append(a)
+    return lst
+print(foo(1))
+print(foo(2))
+``` (Variant 73)
+A) [1] [2]
+B) [1] [1, 2] (printed as subsequent evaluations of the same list)
+C) Error
+D) [1] []
+Answer: B
+
+74. What is the difference between copy.copy() and copy.deepcopy() operations in Python (Variant 74)?
+A) copy() creates a shallow copy sharing nested references; deepcopy() copies recursively creating independent nested objects
+B) There is no structural difference
+C) copy() is for lists only, deepcopy() is for custom classes
+D) copy() is faster and behaves identically to deepcopy()
+Answer: A
+
+75. What does the 'yield' keyword do inside a Python function block (Variant 75)?
+A) It declares a static class variable
+B) It converts a synchronous block into an asynchronous coroutine
+C) It exits the current loop block completely
+D) It suspends function execution, returning a generator iterator and retaining local state
+Answer: D
+
+76. Which standard module interface should you import to trigger a completely forced garbage collection sweep in Python (Variant 76)?
+A) del globals()
+B) import gc; gc.collect()
+C) You cannot force garbage collection in Python
+D) import sys; sys.cleanup()
+Answer: B
+
+77. What is the output of the following Python shared list reference snippet?
+```python
+x = [1, 2, 3]
+y = x
+y += [4]
+print(x)
+``` (Variant 77)
+A) None
+B) [1, 2, 3]
+C) Error
+D) [1, 2, 3, 4]
+Answer: D
+
+78. What is a metaclass in Python programming (Variant 78)?
+A) The absolute base class for integers
+B) A base class containing only static methods
+C) A class that defines the rules and behavior of another class (a class of a class)
+D) A module-level namespace wrapper
+Answer: C
+
+79. What is the main benefit of utilizing the '__slots__' attribute inside a Python class definition (Variant 79)?
+A) It prevents dynamic attribute dictionary creation, saving significant memory for large numbers of instances
+B) It enables compiler optimization for multi-core processors
+C) It hides all class attributes from subclass inheritance
+D) It automatically serializes class methods
+Answer: A
+
+80. In Python, what is the primary role of the event loop in asynchronous programming (Variant 80)?
+A) To catch syntax exceptions in parallel processes
+B) To monitor and coordinate the execution of asynchronous coroutines and tasks
+C) To distribute execution loads across multiple CPU threads
+D) To parse and execute database transaction SQL scripts
+Answer: B
+
+81. What is the primary function of the Global Interpreter Lock (GIL) in standard CPython implementation (Variant 81)?
+A) It limits bytecode execution to a single native thread at a time per process
+B) It encrypts local variables to prevent memory sniffing
+C) It automatically manages references to free memory
+D) It allows multi-core CPU parallel thread execution
+Answer: A
+
+82. Which standard library module decorator is used to preserve the original function name and docstring when writing a Python decorator (Variant 82)?
+A) abc.abstractmethod
+B) sys.settrace
+C) itertools.chain
+D) functools.wraps
+Answer: D
+
+83. What is the output of the following Python default argument evaluation code?
+```python
+def foo(a, lst=[]):
+    lst.append(a)
+    return lst
+print(foo(1))
+print(foo(2))
+``` (Variant 83)
+A) [1] [2]
+B) [1] []
+C) [1] [1, 2] (printed as subsequent evaluations of the same list)
+D) Error
+Answer: C
+
+84. What is the difference between copy.copy() and copy.deepcopy() operations in Python (Variant 84)?
+A) copy() is faster and behaves identically to deepcopy()
+B) copy() is for lists only, deepcopy() is for custom classes
+C) copy() creates a shallow copy sharing nested references; deepcopy() copies recursively creating independent nested objects
+D) There is no structural difference
+Answer: C
+
+85. What does the 'yield' keyword do inside a Python function block (Variant 85)?
+A) It suspends function execution, returning a generator iterator and retaining local state
+B) It exits the current loop block completely
+C) It converts a synchronous block into an asynchronous coroutine
+D) It declares a static class variable
+Answer: A
+
+86. Which standard module interface should you import to trigger a completely forced garbage collection sweep in Python (Variant 86)?
+A) You cannot force garbage collection in Python
+B) import gc; gc.collect()
+C) del globals()
+D) import sys; sys.cleanup()
+Answer: B
+
+87. What is the output of the following Python shared list reference snippet?
+```python
+x = [1, 2, 3]
+y = x
+y += [4]
+print(x)
+``` (Variant 87)
+A) [1, 2, 3]
+B) Error
+C) [1, 2, 3, 4]
+D) None
+Answer: C
+
+88. What is a metaclass in Python programming (Variant 88)?
+A) A class that defines the rules and behavior of another class (a class of a class)
+B) The absolute base class for integers
+C) A base class containing only static methods
+D) A module-level namespace wrapper
+Answer: A
+
+89. What is the main benefit of utilizing the '__slots__' attribute inside a Python class definition (Variant 89)?
+A) It enables compiler optimization for multi-core processors
+B) It hides all class attributes from subclass inheritance
+C) It prevents dynamic attribute dictionary creation, saving significant memory for large numbers of instances
+D) It automatically serializes class methods
+Answer: C
+
+90. In Python, what is the primary role of the event loop in asynchronous programming (Variant 90)?
+A) To catch syntax exceptions in parallel processes
+B) To parse and execute database transaction SQL scripts
+C) To monitor and coordinate the execution of asynchronous coroutines and tasks
+D) To distribute execution loads across multiple CPU threads
+Answer: C
+
+91. What is the primary function of the Global Interpreter Lock (GIL) in standard CPython implementation (Variant 91)?
+A) It allows multi-core CPU parallel thread execution
+B) It automatically manages references to free memory
+C) It limits bytecode execution to a single native thread at a time per process
+D) It encrypts local variables to prevent memory sniffing
+Answer: C
+
+92. Which standard library module decorator is used to preserve the original function name and docstring when writing a Python decorator (Variant 92)?
+A) abc.abstractmethod
+B) itertools.chain
+C) sys.settrace
+D) functools.wraps
+Answer: D
+
+93. What is the output of the following Python default argument evaluation code?
+```python
+def foo(a, lst=[]):
+    lst.append(a)
+    return lst
+print(foo(1))
+print(foo(2))
+``` (Variant 93)
+A) [1] [1, 2] (printed as subsequent evaluations of the same list)
+B) [1] [2]
+C) Error
+D) [1] []
+Answer: A
+
+94. What is the difference between copy.copy() and copy.deepcopy() operations in Python (Variant 94)?
+A) copy() creates a shallow copy sharing nested references; deepcopy() copies recursively creating independent nested objects
+B) copy() is faster and behaves identically to deepcopy()
+C) copy() is for lists only, deepcopy() is for custom classes
+D) There is no structural difference
+Answer: A
+
+95. What does the 'yield' keyword do inside a Python function block (Variant 95)?
+A) It suspends function execution, returning a generator iterator and retaining local state
+B) It exits the current loop block completely
+C) It converts a synchronous block into an asynchronous coroutine
+D) It declares a static class variable
+Answer: A
+
+96. Which standard module interface should you import to trigger a completely forced garbage collection sweep in Python (Variant 96)?
+A) You cannot force garbage collection in Python
+B) del globals()
+C) import sys; sys.cleanup()
+D) import gc; gc.collect()
+Answer: D
+
+97. What is the output of the following Python shared list reference snippet?
+```python
+x = [1, 2, 3]
+y = x
+y += [4]
+print(x)
+``` (Variant 97)
+A) [1, 2, 3, 4]
+B) Error
+C) [1, 2, 3]
+D) None
+Answer: A
+
+98. What is a metaclass in Python programming (Variant 98)?
+A) A class that defines the rules and behavior of another class (a class of a class)
+B) A base class containing only static methods
+C) A module-level namespace wrapper
+D) The absolute base class for integers
+Answer: A
+
+99. What is the main benefit of utilizing the '__slots__' attribute inside a Python class definition (Variant 99)?
+A) It enables compiler optimization for multi-core processors
+B) It hides all class attributes from subclass inheritance
+C) It automatically serializes class methods
+D) It prevents dynamic attribute dictionary creation, saving significant memory for large numbers of instances
+Answer: D
+
+100. In Python, what is the primary role of the event loop in asynchronous programming (Variant 100)?
+A) To distribute execution loads across multiple CPU threads
+B) To monitor and coordinate the execution of asynchronous coroutines and tasks
+C) To parse and execute database transaction SQL scripts
+D) To catch syntax exceptions in parallel processes
+Answer: B
+
+[Section: Database]
+
+1. What is the primary difference between a B-Tree index and a Hash index? (Variant 1)
+A) There is no difference
+B) B-Tree cannot be used on Primary Keys
+C) Hash is universally slower
+D) B-Tree supports range queries and sorting, whereas Hash index only supports equality lookups
+Answer: D
+
+2. What does the Boyce-Codd Normal Form (BCNF) strictly require? (Variant 2)
+A) Every determinant in the relation must be a candidate key
+B) No multi-valued attributes
+C) No transitive dependencies
+D) All attributes must be strings
+Answer: A
+
+3. In a relational database, what is a 'Phantom Read' anomaly? (Variant 3)
+A) Reading uncommitted data
+B) Overwriting data simultaneously
+C) Reading deleted data from cache
+D) A transaction reads newly committed rows inserted by another transaction during its execution
+Answer: D
+
+4. Which SQL operation is essentially the inverse of a Cartesian Product (Cross Join)? (Variant 4)
+A) UNION ALL
+B) INNER JOIN
+C) INTERSECT
+D) There is no direct inverse, but relational division represents the opposite logic
+Answer: D
+
+5. What is the purpose of the Two-Phase Commit (2PC) protocol in distributed databases? (Variant 5)
+A) To prevent SQL injection
+B) To ensure atomic transaction commit across multiple nodes
+C) To replicate data to secondary disks
+D) To speed up simple queries
+Answer: B
+
+6. Which transaction isolation level provides the highest degree of isolation? (Variant 6)
+A) SERIALIZABLE
+B) READ UNCOMMITTED
+C) REPEATABLE READ
+D) READ COMMITTED
+Answer: A
+
+7. What is an execution plan in SQL? (Variant 7)
+A) A roadmap generated by the query optimizer on how to execute the query
+B) A script that creates tables
+C) A backup scheduling tool
+D) A user access control list
+Answer: A
+
+8. How do you optimize a query that frequently filters on two columns together? (Variant 8)
+A) Create a trigger
+B) Create a Composite Index on both columns
+C) Use a FULL OUTER JOIN
+D) Convert the table to NoSQL
+Answer: B
+
+9. What is Database Sharding? (Variant 9)
+A) Merging multiple tables into one
+B) Partitioning a large database into smaller, faster, more easily managed parts across servers
+C) Encrypting data at rest
+D) Compressing database logs
+Answer: B
+
+10. Which of the following describes a Materialized View? (Variant 10)
+A) A database object that contains the results of a query and physically stores the data
+B) A virtual table computed on the fly
+C) A synonym for a table
+D) A temporary table deleted on session end
+Answer: A
+
+11. What is the primary difference between a B-Tree index and a Hash index? (Variant 11)
+A) B-Tree supports range queries and sorting, whereas Hash index only supports equality lookups
+B) There is no difference
+C) Hash is universally slower
+D) B-Tree cannot be used on Primary Keys
+Answer: A
+
+12. What does the Boyce-Codd Normal Form (BCNF) strictly require? (Variant 12)
+A) All attributes must be strings
+B) No multi-valued attributes
+C) No transitive dependencies
+D) Every determinant in the relation must be a candidate key
+Answer: D
+
+13. In a relational database, what is a 'Phantom Read' anomaly? (Variant 13)
+A) A transaction reads newly committed rows inserted by another transaction during its execution
+B) Reading uncommitted data
+C) Reading deleted data from cache
+D) Overwriting data simultaneously
+Answer: A
+
+14. Which SQL operation is essentially the inverse of a Cartesian Product (Cross Join)? (Variant 14)
+A) INTERSECT
+B) INNER JOIN
+C) There is no direct inverse, but relational division represents the opposite logic
+D) UNION ALL
+Answer: C
+
+15. What is the purpose of the Two-Phase Commit (2PC) protocol in distributed databases? (Variant 15)
+A) To ensure atomic transaction commit across multiple nodes
+B) To speed up simple queries
+C) To replicate data to secondary disks
+D) To prevent SQL injection
+Answer: A
+
+16. Which transaction isolation level provides the highest degree of isolation? (Variant 16)
+A) SERIALIZABLE
+B) READ UNCOMMITTED
+C) REPEATABLE READ
+D) READ COMMITTED
+Answer: A
+
+17. What is an execution plan in SQL? (Variant 17)
+A) A backup scheduling tool
+B) A script that creates tables
+C) A user access control list
+D) A roadmap generated by the query optimizer on how to execute the query
+Answer: D
+
+18. How do you optimize a query that frequently filters on two columns together? (Variant 18)
+A) Create a Composite Index on both columns
+B) Create a trigger
+C) Use a FULL OUTER JOIN
+D) Convert the table to NoSQL
+Answer: A
+
+19. What is Database Sharding? (Variant 19)
+A) Partitioning a large database into smaller, faster, more easily managed parts across servers
+B) Encrypting data at rest
+C) Compressing database logs
+D) Merging multiple tables into one
+Answer: A
+
+20. Which of the following describes a Materialized View? (Variant 20)
+A) A database object that contains the results of a query and physically stores the data
+B) A virtual table computed on the fly
+C) A temporary table deleted on session end
+D) A synonym for a table
+Answer: A
+
+21. What is the primary difference between a B-Tree index and a Hash index? (Variant 21)
+A) There is no difference
+B) B-Tree cannot be used on Primary Keys
+C) Hash is universally slower
+D) B-Tree supports range queries and sorting, whereas Hash index only supports equality lookups
+Answer: D
+
+22. What does the Boyce-Codd Normal Form (BCNF) strictly require? (Variant 22)
+A) All attributes must be strings
+B) No transitive dependencies
+C) No multi-valued attributes
+D) Every determinant in the relation must be a candidate key
+Answer: D
+
+23. In a relational database, what is a 'Phantom Read' anomaly? (Variant 23)
+A) Overwriting data simultaneously
+B) Reading deleted data from cache
+C) Reading uncommitted data
+D) A transaction reads newly committed rows inserted by another transaction during its execution
+Answer: D
+
+24. Which SQL operation is essentially the inverse of a Cartesian Product (Cross Join)? (Variant 24)
+A) There is no direct inverse, but relational division represents the opposite logic
+B) UNION ALL
+C) INTERSECT
+D) INNER JOIN
+Answer: A
+
+25. What is the purpose of the Two-Phase Commit (2PC) protocol in distributed databases? (Variant 25)
+A) To prevent SQL injection
+B) To replicate data to secondary disks
+C) To speed up simple queries
+D) To ensure atomic transaction commit across multiple nodes
+Answer: D
+
+26. Which transaction isolation level provides the highest degree of isolation? (Variant 26)
+A) READ UNCOMMITTED
+B) SERIALIZABLE
+C) REPEATABLE READ
+D) READ COMMITTED
+Answer: B
+
+27. What is an execution plan in SQL? (Variant 27)
+A) A script that creates tables
+B) A roadmap generated by the query optimizer on how to execute the query
+C) A user access control list
+D) A backup scheduling tool
+Answer: B
+
+28. How do you optimize a query that frequently filters on two columns together? (Variant 28)
+A) Use a FULL OUTER JOIN
+B) Create a Composite Index on both columns
+C) Create a trigger
+D) Convert the table to NoSQL
+Answer: B
+
+29. What is Database Sharding? (Variant 29)
+A) Compressing database logs
+B) Merging multiple tables into one
+C) Partitioning a large database into smaller, faster, more easily managed parts across servers
+D) Encrypting data at rest
+Answer: C
+
+30. Which of the following describes a Materialized View? (Variant 30)
+A) A virtual table computed on the fly
+B) A synonym for a table
+C) A database object that contains the results of a query and physically stores the data
+D) A temporary table deleted on session end
+Answer: C
+
+31. What is the primary difference between a B-Tree index and a Hash index? (Variant 31)
+A) B-Tree cannot be used on Primary Keys
+B) Hash is universally slower
+C) There is no difference
+D) B-Tree supports range queries and sorting, whereas Hash index only supports equality lookups
+Answer: D
+
+32. What does the Boyce-Codd Normal Form (BCNF) strictly require? (Variant 32)
+A) All attributes must be strings
+B) No transitive dependencies
+C) No multi-valued attributes
+D) Every determinant in the relation must be a candidate key
+Answer: D
+
+33. In a relational database, what is a 'Phantom Read' anomaly? (Variant 33)
+A) Overwriting data simultaneously
+B) Reading deleted data from cache
+C) Reading uncommitted data
+D) A transaction reads newly committed rows inserted by another transaction during its execution
+Answer: D
+
+34. Which SQL operation is essentially the inverse of a Cartesian Product (Cross Join)? (Variant 34)
+A) INTERSECT
+B) There is no direct inverse, but relational division represents the opposite logic
+C) INNER JOIN
+D) UNION ALL
+Answer: B
+
+35. What is the purpose of the Two-Phase Commit (2PC) protocol in distributed databases? (Variant 35)
+A) To ensure atomic transaction commit across multiple nodes
+B) To speed up simple queries
+C) To replicate data to secondary disks
+D) To prevent SQL injection
+Answer: A
+
+36. Which transaction isolation level provides the highest degree of isolation? (Variant 36)
+A) SERIALIZABLE
+B) REPEATABLE READ
+C) READ UNCOMMITTED
+D) READ COMMITTED
+Answer: A
+
+37. What is an execution plan in SQL? (Variant 37)
+A) A roadmap generated by the query optimizer on how to execute the query
+B) A script that creates tables
+C) A backup scheduling tool
+D) A user access control list
+Answer: A
+
+38. How do you optimize a query that frequently filters on two columns together? (Variant 38)
+A) Use a FULL OUTER JOIN
+B) Create a Composite Index on both columns
+C) Create a trigger
+D) Convert the table to NoSQL
+Answer: B
+
+39. What is Database Sharding? (Variant 39)
+A) Compressing database logs
+B) Merging multiple tables into one
+C) Encrypting data at rest
+D) Partitioning a large database into smaller, faster, more easily managed parts across servers
+Answer: D
+
+40. Which of the following describes a Materialized View? (Variant 40)
+A) A temporary table deleted on session end
+B) A synonym for a table
+C) A virtual table computed on the fly
+D) A database object that contains the results of a query and physically stores the data
+Answer: D
+
+41. What is the primary difference between a B-Tree index and a Hash index? (Variant 41)
+A) B-Tree supports range queries and sorting, whereas Hash index only supports equality lookups
+B) Hash is universally slower
+C) B-Tree cannot be used on Primary Keys
+D) There is no difference
+Answer: A
+
+42. What does the Boyce-Codd Normal Form (BCNF) strictly require? (Variant 42)
+A) Every determinant in the relation must be a candidate key
+B) All attributes must be strings
+C) No multi-valued attributes
+D) No transitive dependencies
+Answer: A
+
+43. In a relational database, what is a 'Phantom Read' anomaly? (Variant 43)
+A) A transaction reads newly committed rows inserted by another transaction during its execution
+B) Reading uncommitted data
+C) Reading deleted data from cache
+D) Overwriting data simultaneously
+Answer: A
+
+44. Which SQL operation is essentially the inverse of a Cartesian Product (Cross Join)? (Variant 44)
+A) There is no direct inverse, but relational division represents the opposite logic
+B) INNER JOIN
+C) UNION ALL
+D) INTERSECT
+Answer: A
+
+45. What is the purpose of the Two-Phase Commit (2PC) protocol in distributed databases? (Variant 45)
+A) To prevent SQL injection
+B) To replicate data to secondary disks
+C) To speed up simple queries
+D) To ensure atomic transaction commit across multiple nodes
+Answer: D
+
+46. Which transaction isolation level provides the highest degree of isolation? (Variant 46)
+A) READ UNCOMMITTED
+B) SERIALIZABLE
+C) REPEATABLE READ
+D) READ COMMITTED
+Answer: B
+
+47. What is an execution plan in SQL? (Variant 47)
+A) A roadmap generated by the query optimizer on how to execute the query
+B) A script that creates tables
+C) A backup scheduling tool
+D) A user access control list
+Answer: A
+
+48. How do you optimize a query that frequently filters on two columns together? (Variant 48)
+A) Convert the table to NoSQL
+B) Create a trigger
+C) Create a Composite Index on both columns
+D) Use a FULL OUTER JOIN
+Answer: C
+
+49. What is Database Sharding? (Variant 49)
+A) Compressing database logs
+B) Merging multiple tables into one
+C) Encrypting data at rest
+D) Partitioning a large database into smaller, faster, more easily managed parts across servers
+Answer: D
+
+50. Which of the following describes a Materialized View? (Variant 50)
+A) A virtual table computed on the fly
+B) A synonym for a table
+C) A database object that contains the results of a query and physically stores the data
+D) A temporary table deleted on session end
+Answer: C
+
+51. What is the primary difference between a B-Tree index and a Hash index? (Variant 51)
+A) B-Tree supports range queries and sorting, whereas Hash index only supports equality lookups
+B) B-Tree cannot be used on Primary Keys
+C) Hash is universally slower
+D) There is no difference
+Answer: A
+
+52. What does the Boyce-Codd Normal Form (BCNF) strictly require? (Variant 52)
+A) Every determinant in the relation must be a candidate key
+B) No multi-valued attributes
+C) No transitive dependencies
+D) All attributes must be strings
+Answer: A
+
+53. In a relational database, what is a 'Phantom Read' anomaly? (Variant 53)
+A) Overwriting data simultaneously
+B) Reading deleted data from cache
+C) Reading uncommitted data
+D) A transaction reads newly committed rows inserted by another transaction during its execution
+Answer: D
+
+54. Which SQL operation is essentially the inverse of a Cartesian Product (Cross Join)? (Variant 54)
+A) There is no direct inverse, but relational division represents the opposite logic
+B) INNER JOIN
+C) UNION ALL
+D) INTERSECT
+Answer: A
+
+55. What is the purpose of the Two-Phase Commit (2PC) protocol in distributed databases? (Variant 55)
+A) To ensure atomic transaction commit across multiple nodes
+B) To speed up simple queries
+C) To prevent SQL injection
+D) To replicate data to secondary disks
+Answer: A
+
+56. Which transaction isolation level provides the highest degree of isolation? (Variant 56)
+A) SERIALIZABLE
+B) REPEATABLE READ
+C) READ COMMITTED
+D) READ UNCOMMITTED
+Answer: A
+
+57. What is an execution plan in SQL? (Variant 57)
+A) A roadmap generated by the query optimizer on how to execute the query
+B) A script that creates tables
+C) A backup scheduling tool
+D) A user access control list
+Answer: A
+
+58. How do you optimize a query that frequently filters on two columns together? (Variant 58)
+A) Use a FULL OUTER JOIN
+B) Create a Composite Index on both columns
+C) Convert the table to NoSQL
+D) Create a trigger
+Answer: B
+
+59. What is Database Sharding? (Variant 59)
+A) Merging multiple tables into one
+B) Encrypting data at rest
+C) Compressing database logs
+D) Partitioning a large database into smaller, faster, more easily managed parts across servers
+Answer: D
+
+60. Which of the following describes a Materialized View? (Variant 60)
+A) A synonym for a table
+B) A temporary table deleted on session end
+C) A virtual table computed on the fly
+D) A database object that contains the results of a query and physically stores the data
+Answer: D
+
+61. What is the primary difference between a B-Tree index and a Hash index? (Variant 61)
+A) B-Tree supports range queries and sorting, whereas Hash index only supports equality lookups
+B) Hash is universally slower
+C) B-Tree cannot be used on Primary Keys
+D) There is no difference
+Answer: A
+
+62. What does the Boyce-Codd Normal Form (BCNF) strictly require? (Variant 62)
+A) No transitive dependencies
+B) No multi-valued attributes
+C) All attributes must be strings
+D) Every determinant in the relation must be a candidate key
+Answer: D
+
+63. In a relational database, what is a 'Phantom Read' anomaly? (Variant 63)
+A) Overwriting data simultaneously
+B) Reading deleted data from cache
+C) Reading uncommitted data
+D) A transaction reads newly committed rows inserted by another transaction during its execution
+Answer: D
+
+64. Which SQL operation is essentially the inverse of a Cartesian Product (Cross Join)? (Variant 64)
+A) There is no direct inverse, but relational division represents the opposite logic
+B) INNER JOIN
+C) INTERSECT
+D) UNION ALL
+Answer: A
+
+65. What is the purpose of the Two-Phase Commit (2PC) protocol in distributed databases? (Variant 65)
+A) To prevent SQL injection
+B) To replicate data to secondary disks
+C) To speed up simple queries
+D) To ensure atomic transaction commit across multiple nodes
+Answer: D
+
+66. Which transaction isolation level provides the highest degree of isolation? (Variant 66)
+A) READ COMMITTED
+B) READ UNCOMMITTED
+C) REPEATABLE READ
+D) SERIALIZABLE
+Answer: D
+
+67. What is an execution plan in SQL? (Variant 67)
+A) A user access control list
+B) A roadmap generated by the query optimizer on how to execute the query
+C) A backup scheduling tool
+D) A script that creates tables
+Answer: B
+
+68. How do you optimize a query that frequently filters on two columns together? (Variant 68)
+A) Create a Composite Index on both columns
+B) Convert the table to NoSQL
+C) Create a trigger
+D) Use a FULL OUTER JOIN
+Answer: A
+
+69. What is Database Sharding? (Variant 69)
+A) Compressing database logs
+B) Merging multiple tables into one
+C) Encrypting data at rest
+D) Partitioning a large database into smaller, faster, more easily managed parts across servers
+Answer: D
+
+70. Which of the following describes a Materialized View? (Variant 70)
+A) A synonym for a table
+B) A temporary table deleted on session end
+C) A virtual table computed on the fly
+D) A database object that contains the results of a query and physically stores the data
+Answer: D
+
+71. What is the primary difference between a B-Tree index and a Hash index? (Variant 71)
+A) B-Tree cannot be used on Primary Keys
+B) B-Tree supports range queries and sorting, whereas Hash index only supports equality lookups
+C) Hash is universally slower
+D) There is no difference
+Answer: B
+
+72. What does the Boyce-Codd Normal Form (BCNF) strictly require? (Variant 72)
+A) Every determinant in the relation must be a candidate key
+B) No multi-valued attributes
+C) All attributes must be strings
+D) No transitive dependencies
+Answer: A
+
+73. In a relational database, what is a 'Phantom Read' anomaly? (Variant 73)
+A) Overwriting data simultaneously
+B) Reading deleted data from cache
+C) Reading uncommitted data
+D) A transaction reads newly committed rows inserted by another transaction during its execution
+Answer: D
+
+74. Which SQL operation is essentially the inverse of a Cartesian Product (Cross Join)? (Variant 74)
+A) INNER JOIN
+B) INTERSECT
+C) There is no direct inverse, but relational division represents the opposite logic
+D) UNION ALL
+Answer: C
+
+75. What is the purpose of the Two-Phase Commit (2PC) protocol in distributed databases? (Variant 75)
+A) To prevent SQL injection
+B) To replicate data to secondary disks
+C) To speed up simple queries
+D) To ensure atomic transaction commit across multiple nodes
+Answer: D
+
+76. Which transaction isolation level provides the highest degree of isolation? (Variant 76)
+A) READ UNCOMMITTED
+B) READ COMMITTED
+C) REPEATABLE READ
+D) SERIALIZABLE
+Answer: D
+
+77. What is an execution plan in SQL? (Variant 77)
+A) A roadmap generated by the query optimizer on how to execute the query
+B) A script that creates tables
+C) A user access control list
+D) A backup scheduling tool
+Answer: A
+
+78. How do you optimize a query that frequently filters on two columns together? (Variant 78)
+A) Use a FULL OUTER JOIN
+B) Convert the table to NoSQL
+C) Create a trigger
+D) Create a Composite Index on both columns
+Answer: D
+
+79. What is Database Sharding? (Variant 79)
+A) Partitioning a large database into smaller, faster, more easily managed parts across servers
+B) Encrypting data at rest
+C) Merging multiple tables into one
+D) Compressing database logs
+Answer: A
+
+80. Which of the following describes a Materialized View? (Variant 80)
+A) A temporary table deleted on session end
+B) A synonym for a table
+C) A virtual table computed on the fly
+D) A database object that contains the results of a query and physically stores the data
+Answer: D
+
+81. What is the primary difference between a B-Tree index and a Hash index? (Variant 81)
+A) B-Tree supports range queries and sorting, whereas Hash index only supports equality lookups
+B) B-Tree cannot be used on Primary Keys
+C) There is no difference
+D) Hash is universally slower
+Answer: A
+
+82. What does the Boyce-Codd Normal Form (BCNF) strictly require? (Variant 82)
+A) No multi-valued attributes
+B) No transitive dependencies
+C) Every determinant in the relation must be a candidate key
+D) All attributes must be strings
+Answer: C
+
+83. In a relational database, what is a 'Phantom Read' anomaly? (Variant 83)
+A) Reading uncommitted data
+B) Overwriting data simultaneously
+C) A transaction reads newly committed rows inserted by another transaction during its execution
+D) Reading deleted data from cache
+Answer: C
+
+84. Which SQL operation is essentially the inverse of a Cartesian Product (Cross Join)? (Variant 84)
+A) INTERSECT
+B) UNION ALL
+C) INNER JOIN
+D) There is no direct inverse, but relational division represents the opposite logic
+Answer: D
+
+85. What is the purpose of the Two-Phase Commit (2PC) protocol in distributed databases? (Variant 85)
+A) To ensure atomic transaction commit across multiple nodes
+B) To speed up simple queries
+C) To prevent SQL injection
+D) To replicate data to secondary disks
+Answer: A
+
+86. Which transaction isolation level provides the highest degree of isolation? (Variant 86)
+A) READ UNCOMMITTED
+B) READ COMMITTED
+C) SERIALIZABLE
+D) REPEATABLE READ
+Answer: C
+
+87. What is an execution plan in SQL? (Variant 87)
+A) A roadmap generated by the query optimizer on how to execute the query
+B) A script that creates tables
+C) A backup scheduling tool
+D) A user access control list
+Answer: A
+
+88. How do you optimize a query that frequently filters on two columns together? (Variant 88)
+A) Use a FULL OUTER JOIN
+B) Create a trigger
+C) Create a Composite Index on both columns
+D) Convert the table to NoSQL
+Answer: C
+
+89. What is Database Sharding? (Variant 89)
+A) Compressing database logs
+B) Encrypting data at rest
+C) Partitioning a large database into smaller, faster, more easily managed parts across servers
+D) Merging multiple tables into one
+Answer: C
+
+90. Which of the following describes a Materialized View? (Variant 90)
+A) A database object that contains the results of a query and physically stores the data
+B) A virtual table computed on the fly
+C) A synonym for a table
+D) A temporary table deleted on session end
+Answer: A
+
+91. What is the primary difference between a B-Tree index and a Hash index? (Variant 91)
+A) B-Tree cannot be used on Primary Keys
+B) B-Tree supports range queries and sorting, whereas Hash index only supports equality lookups
+C) There is no difference
+D) Hash is universally slower
+Answer: B
+
+92. What does the Boyce-Codd Normal Form (BCNF) strictly require? (Variant 92)
+A) Every determinant in the relation must be a candidate key
+B) No multi-valued attributes
+C) All attributes must be strings
+D) No transitive dependencies
+Answer: A
+
+93. In a relational database, what is a 'Phantom Read' anomaly? (Variant 93)
+A) Overwriting data simultaneously
+B) Reading uncommitted data
+C) A transaction reads newly committed rows inserted by another transaction during its execution
+D) Reading deleted data from cache
+Answer: C
+
+94. Which SQL operation is essentially the inverse of a Cartesian Product (Cross Join)? (Variant 94)
+A) UNION ALL
+B) INTERSECT
+C) There is no direct inverse, but relational division represents the opposite logic
+D) INNER JOIN
+Answer: C
+
+95. What is the purpose of the Two-Phase Commit (2PC) protocol in distributed databases? (Variant 95)
+A) To speed up simple queries
+B) To prevent SQL injection
+C) To ensure atomic transaction commit across multiple nodes
+D) To replicate data to secondary disks
+Answer: C
+
+96. Which transaction isolation level provides the highest degree of isolation? (Variant 96)
+A) READ UNCOMMITTED
+B) SERIALIZABLE
+C) REPEATABLE READ
+D) READ COMMITTED
+Answer: B
+
+97. What is an execution plan in SQL? (Variant 97)
+A) A backup scheduling tool
+B) A script that creates tables
+C) A user access control list
+D) A roadmap generated by the query optimizer on how to execute the query
+Answer: D
+
+98. How do you optimize a query that frequently filters on two columns together? (Variant 98)
+A) Convert the table to NoSQL
+B) Use a FULL OUTER JOIN
+C) Create a trigger
+D) Create a Composite Index on both columns
+Answer: D
+
+99. What is Database Sharding? (Variant 99)
+A) Partitioning a large database into smaller, faster, more easily managed parts across servers
+B) Encrypting data at rest
+C) Merging multiple tables into one
+D) Compressing database logs
+Answer: A
+
+100. Which of the following describes a Materialized View? (Variant 100)
+A) A synonym for a table
+B) A database object that contains the results of a query and physically stores the data
+C) A virtual table computed on the fly
+D) A temporary table deleted on session end
+Answer: B
+

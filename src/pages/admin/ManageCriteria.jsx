@@ -30,7 +30,14 @@ export default function ManageCriteria() {
         description: '',
         timer_duration: '',
         passing_percentage: '',
-        allow_multiple_attempts: false
+        allow_multiple_attempts: false,
+        module_counts: {
+            computer_science: 10,
+            logical_reasoning: 5,
+            miscellaneous: 3,
+            grammar: 5,
+            elective: 7
+        }
     });
 
     // Fetch Criteria
@@ -224,7 +231,14 @@ export default function ManageCriteria() {
             description: c.description || '',
             timer_duration: c.timer_duration || 45,
             passing_percentage: c.passing_percentage || 70,
-            allow_multiple_attempts: c.allow_multiple_attempts || false
+            allow_multiple_attempts: c.allow_multiple_attempts || false,
+            module_counts: c.metadata?.module_counts || {
+                computer_science: 10,
+                logical_reasoning: 5,
+                miscellaneous: 3,
+                grammar: 5,
+                elective: 7
+            }
         });
     };
 
@@ -237,7 +251,14 @@ export default function ManageCriteria() {
             description: '',
             timer_duration: 30,
             passing_percentage: 50,
-            allow_multiple_attempts: false
+            allow_multiple_attempts: false,
+            module_counts: {
+                computer_science: 10,
+                logical_reasoning: 5,
+                miscellaneous: 3,
+                grammar: 5,
+                elective: 7
+            }
         });
     };
 
@@ -250,7 +271,14 @@ export default function ManageCriteria() {
             description: '',
             timer_duration: '',
             passing_percentage: '',
-            allow_multiple_attempts: false
+            allow_multiple_attempts: false,
+            module_counts: {
+                computer_science: 10,
+                logical_reasoning: 5,
+                miscellaneous: 3,
+                grammar: 5,
+                elective: 7
+            }
         });
     };
 
@@ -282,6 +310,7 @@ export default function ManageCriteria() {
                         sub_heading: editForm.sub_heading?.trim(),
                         timer_duration: duration,
                         allow_multiple_attempts: editForm.allow_multiple_attempts,
+                        metadata: { module_counts: editForm.module_counts },
                         is_active: true
                     });
 
@@ -297,6 +326,7 @@ export default function ManageCriteria() {
                         sub_heading: editForm.sub_heading?.trim(),
                         timer_duration: duration,
                         allow_multiple_attempts: editForm.allow_multiple_attempts,
+                        metadata: { module_counts: editForm.module_counts }
                     })
                     .eq('id', id);
 
@@ -343,94 +373,94 @@ export default function ManageCriteria() {
             <div className="space-y-6">
                 <div className="flex justify-between items-center">
                     <div>
-                        <h1 className="text-2xl font-bold text-white">Exam Configuration</h1>
-                        <p className="text-slate-400 text-sm mt-1">Manage criteria, time limits, and rules.</p>
+                        <h1 className="text-2xl font-black text-white tracking-tight">Exam Configuration</h1>
+                        <p className="text-slate-500 text-sm mt-1">Manage exam formats, cutoffs, and time limits</p>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
                         {/* Screenshots Toggle */}
-                        <div className="bg-[#0f172a]/80 backdrop-blur-md border border-slate-700/50 rounded-2xl px-6 py-4 flex items-center gap-4 shadow-xl">
-                            <div>
-                                <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Exam Screenshots</div>
-                                <div className={`text-sm font-bold ${allowScreenshots ? 'text-amber-400' : 'text-blue-400'}`}>
+                        <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-5 flex flex-col justify-between shadow-xl group hover:bg-white/[0.08] transition-all min-h-[110px]">
+                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Exam Screenshots</div>
+                            <div className="flex items-center justify-between mt-auto gap-2">
+                                <div className={`text-[11px] font-bold ${allowScreenshots ? 'text-amber-400' : 'text-slate-400'}`}>
                                     {allowScreenshots ? 'ALLOWED (WARNING)' : 'BLOCKED (SECURE)'}
                                 </div>
+                                <button
+                                    onClick={toggleScreenshotStatus}
+                                    disabled={updatingScreenshots}
+                                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${allowScreenshots ? 'bg-amber-500' : 'bg-slate-700'}`}
+                                >
+                                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${allowScreenshots ? 'translate-x-4' : 'translate-x-0'}`} />
+                                </button>
                             </div>
-                            <button
-                                onClick={toggleScreenshotStatus}
-                                disabled={updatingScreenshots}
-                                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${allowScreenshots ? 'bg-amber-500' : 'bg-slate-700'}`}
-                            >
-                                <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${allowScreenshots ? 'translate-x-5' : 'translate-x-0'}`} />
-                            </button>
                         </div>
 
-                        {/* Proctoring Auto-Submit Toggle */}
-                        <div className="bg-[#0f172a]/80 backdrop-blur-md border border-slate-700/50 rounded-2xl px-6 py-4 flex items-center gap-4 shadow-xl">
-                            <div>
-                                <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Strict Proctoring</div>
-                                <div className={`text-sm font-bold ${proctoringAutoSubmit ? 'text-red-400' : 'text-slate-400'}`}>
+                        {/* Proctoring Toggle */}
+                        <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-5 flex flex-col justify-between shadow-xl group hover:bg-white/[0.08] transition-all min-h-[110px]">
+                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Strict Proctoring</div>
+                            <div className="flex items-center justify-between mt-auto gap-2">
+                                <div className={`text-[11px] font-bold ${proctoringAutoSubmit ? 'text-red-400' : 'text-slate-400'}`}>
                                     {proctoringAutoSubmit ? 'ENABLED (STRICT)' : 'DISABLED (OPEN)'}
                                 </div>
+                                <button
+                                    onClick={toggleProctoringStatus}
+                                    disabled={updatingProctoring}
+                                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${proctoringAutoSubmit ? 'bg-red-500' : 'bg-slate-700'}`}
+                                >
+                                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${proctoringAutoSubmit ? 'translate-x-4' : 'translate-x-0'}`} />
+                                </button>
                             </div>
-                            <button
-                                onClick={toggleProctoringStatus}
-                                disabled={updatingProctoring}
-                                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${proctoringAutoSubmit ? 'bg-red-500' : 'bg-slate-700'}`}
-                            >
-                                <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${proctoringAutoSubmit ? 'translate-x-5' : 'translate-x-0'}`} />
-                            </button>
                         </div>
 
                         {/* Full Screen Mode Toggle */}
-                        <div className="bg-[#0f172a]/80 backdrop-blur-md border border-slate-700/50 rounded-2xl px-6 py-4 flex items-center gap-4 shadow-xl">
-                            <div>
-                                <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Full Screen Mode</div>
-                                <div className={`text-sm font-bold ${enforceFullScreen ? 'text-purple-400' : 'text-slate-400'}`}>
+                        <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-5 flex flex-col justify-between shadow-xl group hover:bg-white/[0.08] transition-all min-h-[110px]">
+                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Full Screen Mode</div>
+                            <div className="flex items-center justify-between mt-auto gap-2">
+                                <div className={`text-[11px] font-bold ${enforceFullScreen ? 'text-purple-400' : 'text-slate-400'}`}>
                                     {enforceFullScreen ? 'STRICT (ENFORCED)' : 'OPTIONAL (RELAXED)'}
                                 </div>
+                                <button
+                                    onClick={toggleFullScreenStatus}
+                                    disabled={updatingFullScreen}
+                                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${enforceFullScreen ? 'bg-purple-500' : 'bg-slate-700'}`}
+                                >
+                                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${enforceFullScreen ? 'translate-x-4' : 'translate-x-0'}`} />
+                                </button>
                             </div>
-                            <button
-                                onClick={toggleFullScreenStatus}
-                                disabled={updatingFullScreen}
-                                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${enforceFullScreen ? 'bg-purple-500' : 'bg-slate-700'}`}
-                            >
-                                <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${enforceFullScreen ? 'translate-x-5' : 'translate-x-0'}`} />
-                            </button>
                         </div>
 
                         {/* Shuffle Toggle */}
-                        <div className="bg-[#0f172a]/80 backdrop-blur-md border border-slate-700/50 rounded-2xl px-6 py-4 flex items-center gap-4 shadow-xl">
-                            <div>
-                                <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Shuffle Questions</div>
-                                <div className={`text-sm font-bold ${shuffleQuestions ? 'text-indigo-400' : 'text-slate-400'}`}>
+                        <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-5 flex flex-col justify-between shadow-xl group hover:bg-white/[0.08] transition-all min-h-[110px]">
+                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Shuffle Questions</div>
+                            <div className="flex items-center justify-between mt-auto gap-2">
+                                <div className={`text-[11px] font-bold ${shuffleQuestions ? 'text-indigo-400' : 'text-slate-400'}`}>
                                     {shuffleQuestions ? 'ENABLED (RANDOM)' : 'DISABLED (ORDERED)'}
                                 </div>
+                                <button
+                                    onClick={toggleShuffleStatus}
+                                    disabled={updatingShuffle}
+                                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${shuffleQuestions ? 'bg-indigo-500' : 'bg-slate-700'}`}
+                                >
+                                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${shuffleQuestions ? 'translate-x-4' : 'translate-x-0'}`} />
+                                </button>
                             </div>
-                            <button
-                                onClick={toggleShuffleStatus}
-                                disabled={updatingShuffle}
-                                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${shuffleQuestions ? 'bg-indigo-500' : 'bg-slate-700'}`}
-                            >
-                                <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${shuffleQuestions ? 'translate-x-5' : 'translate-x-0'}`} />
-                            </button>
                         </div>
 
-                        {/* Existing Site Status Toggle */}
-                        <div className="bg-[#0f172a]/80 backdrop-blur-md border border-slate-700/50 rounded-2xl px-6 py-4 flex items-center gap-4 shadow-xl">
-                            <div>
-                                <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Aspirant Site Status</div>
-                                <div className={`text-sm font-bold ${siteStatus ? 'text-green-400' : 'text-red-400'}`}>
+                        {/* Site Status Toggle */}
+                        <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-5 flex flex-col justify-between shadow-xl group hover:bg-white/[0.08] transition-all min-h-[110px]">
+                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Aspirant Site Status</div>
+                            <div className="flex items-center justify-between mt-auto gap-2">
+                                <div className={`text-[11px] font-bold ${siteStatus ? 'text-emerald-400' : 'text-red-400'}`}>
                                     {siteStatus ? 'ACTIVE & ONLINE' : 'OFFLINE / DISABLED'}
                                 </div>
+                                <button
+                                    onClick={toggleSiteStatus}
+                                    disabled={updatingSite}
+                                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${siteStatus ? 'bg-emerald-500' : 'bg-slate-700'}`}
+                                >
+                                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${siteStatus ? 'translate-x-4' : 'translate-x-0'}`} />
+                                </button>
                             </div>
-                            <button
-                                onClick={toggleSiteStatus}
-                                disabled={updatingSite}
-                                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${siteStatus ? 'bg-brand-blue' : 'bg-slate-700'}`}
-                            >
-                                <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${siteStatus ? 'translate-x-5' : 'translate-x-0'}`} />
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -511,6 +541,34 @@ export default function ManageCriteria() {
                                                 onChange={(e) => setEditForm({ ...editForm, passing_percentage: e.target.value })}
                                                 className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-blue"
                                             />
+                                        </div>
+                                    </div>
+                                    <div className="border border-slate-700/50 rounded-lg p-3 space-y-3 bg-black/20">
+                                        <div className="text-xs font-bold text-slate-300 mb-2 uppercase tracking-widest">Question Counts</div>
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                            <div>
+                                                <label className="text-[10px] text-slate-400 mb-1 block">Comp Science</label>
+                                                <input type="number" value={editForm.module_counts.computer_science} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, computer_science: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] text-slate-400 mb-1 block">Logical Reasoning</label>
+                                                <input type="number" value={editForm.module_counts.logical_reasoning} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, logical_reasoning: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] text-slate-400 mb-1 block">Miscellaneous</label>
+                                                <input type="number" value={editForm.module_counts.miscellaneous} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, miscellaneous: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] text-slate-400 mb-1 block">Grammar</label>
+                                                <input type="number" value={editForm.module_counts.grammar} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, grammar: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] text-slate-400 mb-1 block">Elective (Java/DB)</label>
+                                                <input type="number" value={editForm.module_counts.elective} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, elective: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
+                                            </div>
+                                            <div className="flex items-end justify-center pb-1">
+                                                <div className="text-xs text-brand-blue font-bold">Total: {Object.values(editForm.module_counts).reduce((a,b) => a+b, 0)}</div>
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-3 flex items-center justify-between">
@@ -607,6 +665,34 @@ export default function ManageCriteria() {
                                             </div>
                                             <p className="text-[10px] text-slate-500 mt-1">Minimum percentage required to pass</p>
                                         </div>
+                                        <div className="border border-slate-700/50 rounded-lg p-3 space-y-3 bg-black/20">
+                                            <div className="text-xs font-bold text-slate-300 mb-2 uppercase tracking-widest">Question Counts</div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="text-[10px] text-slate-400 mb-1 block">Comp Science</label>
+                                                    <input type="number" value={editForm.module_counts.computer_science} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, computer_science: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] text-slate-400 mb-1 block">Logical Reasoning</label>
+                                                    <input type="number" value={editForm.module_counts.logical_reasoning} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, logical_reasoning: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] text-slate-400 mb-1 block">Miscellaneous</label>
+                                                    <input type="number" value={editForm.module_counts.miscellaneous} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, miscellaneous: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] text-slate-400 mb-1 block">Grammar</label>
+                                                    <input type="number" value={editForm.module_counts.grammar} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, grammar: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] text-slate-400 mb-1 block">Elective</label>
+                                                    <input type="number" value={editForm.module_counts.elective} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, elective: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
+                                                </div>
+                                                <div className="flex items-end justify-start pb-1">
+                                                    <div className="text-xs text-brand-blue font-bold">Total: {Object.values(editForm.module_counts).reduce((a,b) => a+b, 0)}</div>
+                                                </div>
+                                            </div>
+                                        </div>
                                         <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-3 flex items-center justify-between">
                                             <div>
                                                 <div className="text-xs font-bold text-amber-500 tracking-wider flex items-center gap-2">
@@ -696,6 +782,13 @@ export default function ManageCriteria() {
                                                     Pass at {c.passing_percentage || 70}%
                                                 </span>
                                             </div>
+                                            {c.metadata?.module_counts && (
+                                                <div className="flex items-center gap-2 text-slate-300 bg-brand-blue/10 rounded-lg px-3 py-2 w-fit">
+                                                    <span className="text-sm font-medium text-brand-blue">
+                                                        Total Qs: {Object.values(c.metadata.module_counts).reduce((a,b) => a+b, 0)}
+                                                    </span>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="mt-4 pt-4 border-t border-slate-700/50 flex justify-between items-center text-xs text-slate-500">

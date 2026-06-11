@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Upload, Plus, AlertTriangle, Edit2, Trash2, Check, X } from 'lucide-react';
+import { cleanQuestionText } from '@/utils/questionHelpers';
 
 export default function SetCard({
     set,
@@ -239,7 +240,7 @@ function QuestionRow({ question, index, onEdit, onDelete }) {
                 <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                            <p className="text-white font-medium mb-2">{question.question_text}</p>
+                            <p className="text-white font-medium mb-2">{cleanQuestionText(question.question_text)}</p>
 
                             <div className="grid grid-cols-2 gap-2 text-sm">
                                 {question.options.map((option, i) => (

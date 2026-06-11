@@ -6,9 +6,6 @@ import { Layers, ArrowRight, CheckCircle2, Code2, BookOpen } from 'lucide-react'
 export default function ExamSetup() {
     const navigate = useNavigate();
     const location = useLocation();
-    const [loading, setLoading] = useState(true);
-    const [sets, setSets] = useState([]);
-    const [selectedSet, setSelectedSet] = useState(null);
     const [selectedSubject, setSelectedSubject] = useState(null);
     const [isLocked, setIsLocked] = useState(false);
 
@@ -16,10 +13,7 @@ export default function ExamSetup() {
     const electives = [
         { id: 'java', name: 'Java Programming', icon: Code2 },
         { id: 'python', name: 'Python Programming', icon: Code2 },
-        { id: 'csharp', name: 'C# Programming', icon: Code2 },
-        { id: 'testing', name: 'Manual Testing', icon: CheckCircle2 },
-        { id: 'automation', name: 'Automation Testing', icon: Code2 },
-        { id: 'sql', name: 'SQL & Database', icon: Layers }
+        { id: 'database', name: 'SQL & Database', icon: Layers }
     ];
 
     const candidateData = location.state?.candidateData;
@@ -40,49 +34,22 @@ export default function ExamSetup() {
         if (savedConfig) {
             try {
                 const config = JSON.parse(savedConfig);
-                setSelectedSet(config.set);
                 setSelectedSubject(config.subject);
                 setIsLocked(true);
             } catch (e) {
                 console.error('Error parsing saved config', e);
             }
         }
-
-        fetchAvailableSets();
     }, []);
 
-    const fetchAvailableSets = async () => {
-        try {
-            setLoading(true);
-            const { data, error } = await supabase
-                .from('questions')
-                .select('category')
-                .eq('criteria_id', criteriaId)
-                .eq('is_active', true);
-
-            if (error) throw error;
-
-            const uniqueSets = [...new Set(data.map(q => q.category).filter(Boolean))];
-            setSets(uniqueSets.sort());
-
-            if (uniqueSets.length === 1) {
-                setSelectedSet(uniqueSets[0]);
-            }
-        } catch (err) {
-            console.error('Failed to load sets:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const handleStartExam = () => {
-        if (!selectedSet || !selectedSubject) {
-            alert('Please select a Question Set and an Elective Subject');
+        if (!selectedSubject) {
+            alert('Please select an Elective Subject');
             return;
         }
 
         localStorage.setItem('examConfig', JSON.stringify({
-            set: selectedSet,
+            set: 'Common',
             subject: selectedSubject
         }));
 
@@ -91,20 +58,13 @@ export default function ExamSetup() {
                 candidateData,
                 criteriaId,
                 examConfig: {
-                    set: selectedSet,
+                    set: 'Common',
                     subject: selectedSubject
                 }
             }
         });
     };
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4">
-                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-cyan-400"></div>
-            </div>
-        );
-    }
 
     return (
         <div className="h-full bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4 overflow-y-auto">
@@ -133,45 +93,10 @@ export default function ExamSetup() {
                     </div>
                 )}
 
-                <div className="grid md:grid-cols-2 gap-8 mb-12">
-                    <div className="glass-panel p-8 rounded-2xl animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-black font-bold">1</div>
-                            <h3 className="text-xl font-bold text-white">Select Question Set</h3>
-                        </div>
-
-                        {sets.length > 0 ? (
-                            <div className="space-y-3">
-                                {sets.map((set) => (
-                                    <button
-                                        key={set}
-                                        onClick={() => !isLocked && setSelectedSet(set)}
-                                        disabled={isLocked}
-                                        className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all ${selectedSet === set
-                                            ? 'bg-cyan-500/20 border-cyan-400 shadow-lg shadow-cyan-500/20'
-                                            : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
-                                            }`}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <Layers size={20} className={selectedSet === set ? 'text-cyan-400' : 'text-slate-500'} />
-                                            <span className={`font-semibold ${selectedSet === set ? 'text-white' : 'text-slate-300'}`}>
-                                                {set}
-                                            </span>
-                                        </div>
-                                        {selectedSet === set && <CheckCircle2 size={20} className="text-cyan-400" />}
-                                    </button>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-200 text-sm">
-                                No Question Sets found. Please contact the administrator.
-                            </div>
-                        )}
-                    </div>
-
+                <div className="max-w-2xl mx-auto mb-12">
                     <div className="glass-panel p-8 rounded-2xl animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
                         <div className="flex items-center gap-3 mb-6">
-                            <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-white font-bold">2</div>
+                            <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-white font-bold">1</div>
                             <h3 className="text-xl font-bold text-white">Choose Elective Subject</h3>
                         </div>
 
@@ -208,7 +133,7 @@ export default function ExamSetup() {
                 <div className="flex justify-center animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
                     <button
                         onClick={handleStartExam}
-                        disabled={!selectedSet || !selectedSubject}
+                        disabled={!selectedSubject}
                         className="flex items-center gap-3 px-10 py-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 hover:from-cyan-400 hover:via-blue-400 hover:to-purple-500 text-white font-bold text-lg rounded-xl shadow-xl shadow-blue-500/30 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                     >
                         Start Examination

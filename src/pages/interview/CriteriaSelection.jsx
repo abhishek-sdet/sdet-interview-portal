@@ -192,8 +192,11 @@ export default function CriteriaSelection() {
                 localStorage.setItem('scheduledInterviewId', activeDriveId);
             }
 
-            // Navigate to set selection
-            navigate('/set-selection', {
+            // Clear any old exam config so it starts fresh without predefined subject
+            localStorage.removeItem('examConfig');
+            
+            // Navigate directly to quiz
+            navigate('/quiz', {
                 state: {
                     candidateData: {
                         id: candidateId,

@@ -1,12 +1,12 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* Import World-Class 3D Effects */
 @import './styles/3d-effects.css';
 
 /* Import Deep Space Intelligence Theme */
 @import './styles/deep-space-theme.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   :root {
@@ -405,7 +405,7 @@
   @apply px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-lg transition-all;
 }
 
-/* Base Styles - REFACTORED FOR 100% VIEWPORT */
+/* Base Styles - REFACTORED FOR RESPONSIVE SCROLLING AND VIEWPORT */
 html,
 body,
 #root {
@@ -413,8 +413,7 @@ body,
   width: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
-  /* Prevent scroll on body, handle inside app */
+  overflow: auto; /* Only show scroller if it overflows */
 }
 
 body {
@@ -425,34 +424,32 @@ body {
 
 /* 
  * ==========================================
- *  PREMIUM CUSTOM SCROLLBARS
+ *  PREMIUM CUSTOM SCROLLBARS (GLOBAL OVERRIDES)
  * ==========================================
  */
-@layer utilities {
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
 
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 8px;
-  }
+::-webkit-scrollbar-track {
+  background: #020617; /* Matches universe background */
+}
 
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-  }
+::-webkit-scrollbar-thumb {
+  background: rgba(14, 165, 233, 0.2); /* Soft brand blue */
+  border-radius: 4px;
+  border: 2px solid #020617;
+}
 
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
-  }
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(14, 165, 233, 0.5); /* Vivid brand blue on hover */
+}
 
-  /* Firefox Support */
-  .custom-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
-  }
+/* Firefox Support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(14, 165, 233, 0.25) #020617;
 }
 
 /* 

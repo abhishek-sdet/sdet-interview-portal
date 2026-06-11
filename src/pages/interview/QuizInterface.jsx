@@ -71,6 +71,7 @@ export default function QuizInterface() {
     const generalQuestionsRef = useRef([]);
     const javaQuestionsRef = useRef([]);
     const pythonQuestionsRef = useRef([]);
+    const databaseQuestionsRef = useRef([]);
     const lastWarningTimeRef = useRef(0); // For debouncing tab switches
     const criteriaNameRef = useRef(''); // Added to track criteria name for formatting
 
@@ -153,7 +154,7 @@ export default function QuizInterface() {
                 // For now, we rely on fetchQuestions to rebuild the question list based on criteria/specialization logic
                 // But we must ensure the timer considers the saved time
 
-                fetchQuestions(criteriaId, savedState.timeRemaining);
+                fetchQuestions(criteriaId, savedState.timeRemaining, savedState.specialization);
                 return; // fetchQuestions will handle the rest
             } catch (err) {
                 console.error('[INIT] Failed to parse saved state:', err);
@@ -161,7 +162,7 @@ export default function QuizInterface() {
             }
         }
 
-        fetchQuestions(criteriaId, null);
+        fetchQuestions(criteriaId);
     }, [navigate]);
 
     // NEW: Independent Security Settings Fetch with Retry logic
@@ -537,7 +538,7 @@ export default function QuizInterface() {
         };
     }, [submitting, proctoringStrict]);
 
-    const fetchQuestions = async (criteriaId, savedTimeRemaining = null) => {
+    const fetchQuestions = async (criteriaId, savedTimeRemaining = null, savedSpecialization = null) => {
         try {
             // Get interviewId from session storage
             const interviewId = localStorage.getItem('interviewId');
@@ -550,8 +551,25 @@ export default function QuizInterface() {
             const rawSet = examConfig?.set || localStorage.getItem('selectedSet');
             const selectedSet = (!rawSet || rawSet === 'undefined' || rawSet === 'null') ? null : rawSet;
             
-            const rawSubject = examConfig?.subject; // e.g., 'java', 'python'
-            const selectedSubject = (!rawSubject || rawSubject === 'undefined' || rawSubject === 'null') ? null : rawSubject;
+            const rawSubject = examConfig?.subject || savedSpecialization; // e.g., 'java', 'python'
+            const selectedSubject = (!rawSubject || rawSubject === 'undefined' || rawSubject === 'null') ? null : rawSubject.toLowerCase();
+
+            // Fetch Criteria to get dynamic module counts
+            const { data: criteriaMetaData, error: criteriaMetaError } = await supabase
+                .from('criteria')
+                .select('metadata')
+                .eq('id', criteriaId)
+                .maybeSingle();
+
+            const moduleCounts = criteriaMetaData?.metadata?.module_counts || {
+                computer_science: 10,
+                logical_reasoning: 5,
+                miscellaneous: 3,
+                grammar: 5,
+                elective: 7
+            };
+
+            const expectedGeneralTotal = moduleCounts.computer_science + moduleCounts.logical_reasoning + moduleCounts.miscellaneous + moduleCounts.grammar;
 
             let query = supabase
                 .from('questions')
@@ -574,17 +592,15 @@ export default function QuizInterface() {
             }
 
             // Categorize Questions by NEW structure: section + subsection
-            // General/Aptitude: Must match selected Set if applicable
+            // General/Aptitude
             let generalQs = data.filter(q => {
                 const isGeneral = q.section === 'general' || !q.section;
-                const matchesSet = selectedSet ? q.category === selectedSet : true;
-                return isGeneral && matchesSet;
+                return isGeneral;
             });
 
             let electiveQs = data.filter(q => {
                 const isElective = q.section === 'elective';
-                const matchesSet = selectedSet ? q.category === selectedSet : true;
-                return isElective && matchesSet;
+                return isElective;
             });
 
             // FALLBACK: If no section-categorized questions are found (e.g. custom exam like
@@ -610,67 +626,109 @@ export default function QuizInterface() {
             console.log('[FETCH] Selected elective questions:', selectedElectiveQs.length);
 
             // Organize general questions by subsection
-            const computerScienceQs = generalQs.filter(q => q.subsection === 'computer_science');
-            const logicalReasoningQs = generalQs.filter(q => q.subsection === 'logical_reasoning');
-            const miscellaneousQs = generalQs.filter(q => q.subsection === 'miscellaneous');
-            const grammarQs = generalQs.filter(q => q.subsection === 'grammar');
-            const aptitudeQs = generalQs.filter(q => q.subsection === 'aptitude');
-            // Catch-all: any questions that don't match known subsections (custom exam questions)
-            const knownSubsections = ['computer_science', 'logical_reasoning', 'miscellaneous', 'grammar', 'aptitude'];
-            const otherGeneralQs = generalQs.filter(q => !knownSubsections.includes(q.subsection));
+            const selectRandom = (arr, count) => shuffleArray([...arr]).slice(0, count);
 
-            console.log('[FETCH] Computer Science questions:', computerScienceQs.length);
-            console.log('[FETCH] Logical Reasoning questions:', logicalReasoningQs.length);
-            console.log('[FETCH] Miscellaneous Logic questions:', miscellaneousQs.length);
-            console.log('[FETCH] Grammar questions:', grammarQs.length);
-            console.log('[FETCH] Aptitude questions:', aptitudeQs.length);
-            console.log('[FETCH] Other/Custom questions:', otherGeneralQs.length);
+            let orderedGeneralQs = [];
+            const knownSubsections = ['computer_science', 'logical_reasoning', 'miscellaneous', 'grammar'];
+            const hasSectionedQuestions = generalQs.some(q => knownSubsections.includes(q.subsection));
 
-            // Combine in order. This now covers all possible subsections.
-            let orderedGeneralQs = [
-                ...computerScienceQs,
-                ...logicalReasoningQs,
-                ...miscellaneousQs,
-                ...grammarQs,
-                ...aptitudeQs,
-                ...otherGeneralQs
-            ];
+            if (hasSectionedQuestions) {
+                let computerScienceQs = selectRandom(generalQs.filter(q => q.subsection === 'computer_science'), moduleCounts.computer_science);
+                let logicalReasoningQs = selectRandom(generalQs.filter(q => q.subsection === 'logical_reasoning'), moduleCounts.logical_reasoning);
+                let miscellaneousQs = selectRandom(generalQs.filter(q => q.subsection === 'miscellaneous'), moduleCounts.miscellaneous);
+                let grammarQs = selectRandom(generalQs.filter(q => q.subsection === 'grammar'), moduleCounts.grammar);
 
-            // Final safety fallback: if still empty but generalQs has questions, use them all
-            if (orderedGeneralQs.length === 0 && generalQs.length > 0) {
-                console.log('[FETCH] Final fallback: using all generalQs directly.');
-                orderedGeneralQs = generalQs;
+                // Pad missing questions if any category is short (e.g. Experienced has no Miscellaneous)
+                let currentTotal = computerScienceQs.length + logicalReasoningQs.length + miscellaneousQs.length + grammarQs.length;
+                if (currentTotal < expectedGeneralTotal) {
+                    const missing = expectedGeneralTotal - currentTotal;
+                    // Try to pad from computer science first
+                    const csAvailable = generalQs.filter(q => q.subsection === 'computer_science' && !computerScienceQs.includes(q));
+                    const csPad = selectRandom(csAvailable, missing);
+                    computerScienceQs = [...computerScienceQs, ...csPad];
+                    
+                    // If still missing, pad from logical reasoning
+                    currentTotal = computerScienceQs.length + logicalReasoningQs.length + miscellaneousQs.length + grammarQs.length;
+                    if (currentTotal < expectedGeneralTotal) {
+                        const missingMore = expectedGeneralTotal - currentTotal;
+                        const lrAvailable = generalQs.filter(q => q.subsection === 'logical_reasoning' && !logicalReasoningQs.includes(q));
+                        const lrPad = selectRandom(lrAvailable, missingMore);
+                        logicalReasoningQs = [...logicalReasoningQs, ...lrPad];
+                    }
+                }
+                
+                orderedGeneralQs = [
+                    ...computerScienceQs,
+                    ...logicalReasoningQs,
+                    ...miscellaneousQs,
+                    ...grammarQs
+                ];
+
+                console.log('[FETCH] Computer Science questions:', computerScienceQs.length);
+                console.log('[FETCH] Logical Reasoning questions:', logicalReasoningQs.length);
+                console.log('[FETCH] Miscellaneous Logic questions:', miscellaneousQs.length);
+                console.log('[FETCH] Grammar questions:', grammarQs.length);
+            } else {
+                // Fallback for custom exams
+                orderedGeneralQs = generalQs.slice(0, expectedGeneralTotal + moduleCounts.elective);
+                console.log('[FETCH] Fallback: using unsectioned generalQs directly.', orderedGeneralQs.length);
             }
 
-            // Store in refs - Take first 50 general questions if it's a custom/large test, otherwise 23
-            const maxGeneral = orderedGeneralQs.length >= 30 ? orderedGeneralQs.length : 23;
-            generalQuestionsRef.current = orderedGeneralQs.slice(0, maxGeneral);
+            // Store in refs
+            generalQuestionsRef.current = orderedGeneralQs;
             console.log('[FETCH] Stored general questions:', generalQuestionsRef.current.length);
 
             // Determine if we should SKIP the specialization phase
-            // We skip if we already have enough general questions (>= 30) or if it's functional assessment
-            const skipSpecialization = generalQuestionsRef.current.length >= 30;
+            // We skip if we already have enough general questions (>= expectedGeneralTotal + elective) or if it's functional assessment
+            const totalExpected = expectedGeneralTotal + moduleCounts.elective;
+            const skipSpecialization = generalQuestionsRef.current.length >= totalExpected;
 
             // For backward compatibility with old specialization flow, store by subject
             if (selectedSubject && !skipSpecialization) {
-                // Store selected elective questions (take top 7)
+                // Store selected elective questions
+                const electiveRef = selectRandom(selectedElectiveQs, moduleCounts.elective);
                 if (selectedSubject === 'java') {
-                    javaQuestionsRef.current = selectedElectiveQs.slice(0, 7);
+                    javaQuestionsRef.current = electiveRef;
                 } else if (selectedSubject === 'python') {
-                    pythonQuestionsRef.current = selectedElectiveQs.slice(0, 7);
+                    pythonQuestionsRef.current = electiveRef;
+                } else if (selectedSubject === 'database') {
+                    databaseQuestionsRef.current = electiveRef;
                 }
-                setSpecialization(selectedSubject.charAt(0).toUpperCase() + selectedSubject.slice(1));
-            } else if (!skipSpecialization) {
-                // Fallback: if no exam config, populate both for old flow
-                javaQuestionsRef.current = electiveQs.filter(q => q.subsection === 'java').slice(0, 7);
-                pythonQuestionsRef.current = electiveQs.filter(q => q.subsection === 'python').slice(0, 7);
+            } else {
+                // Pre-filter ALL available specialized subjects into refs for the selection screen
+                javaQuestionsRef.current = selectRandom(electiveQs.filter(q => q.subsection === 'java'), moduleCounts.elective);
+                pythonQuestionsRef.current = selectRandom(electiveQs.filter(q => q.subsection === 'python'), moduleCounts.elective);
+                databaseQuestionsRef.current = selectRandom(electiveQs.filter(q => q.subsection === 'database'), moduleCounts.elective);
             }
 
-            // Calculate EXPECTED total questions
-            // If skipping specialization, total is just general count. Otherwise general + 7.
+            let initialQs = [...orderedGeneralQs];
+            let addedElectives = [];
+
+            if (selectedSubject && !skipSpecialization) {
+                // If a subject was already selected before, append its questions now
+                addedElectives = selectRandom(selectedElectiveQs, moduleCounts.elective);
+                initialQs = [...initialQs, ...addedElectives];
+            } else if (!skipSpecialization) {
+                // Add placeholder questions so the map shows 30 questions from the start.
+                let placeholders = javaQuestionsRef.current || [];
+                if (placeholders.length < moduleCounts.elective && (pythonQuestionsRef.current || []).length > placeholders.length) {
+                    placeholders = pythonQuestionsRef.current;
+                }
+                if (placeholders.length < moduleCounts.elective && (databaseQuestionsRef.current || []).length > placeholders.length) {
+                    placeholders = databaseQuestionsRef.current;
+                }
+                addedElectives = placeholders;
+                initialQs = [...initialQs, ...addedElectives];
+            }
+            
+            setQuestions(initialQs);
+            
+            // Set the dynamic total questions target
+            // If a subject was already selected, use the actual length of initialQs (in case of missing questions)
+            // Otherwise, we anticipate the moduleCounts.elective to be added later
             const expectedTotal = skipSpecialization
                 ? generalQuestionsRef.current.length
-                : generalQuestionsRef.current.length + 7;
+                : (selectedSubject ? initialQs.length : generalQuestionsRef.current.length + moduleCounts.elective);
             setTotalExamQuestions(expectedTotal);
 
             // If we skip specialization, we mark it as "General" immediately
@@ -682,27 +740,7 @@ export default function QuizInterface() {
                 currentSpecialization = selectedSubject.charAt(0).toUpperCase() + selectedSubject.slice(1);
             }
 
-            // NEW: Load questions upfront
-            let electiveQuestionsToShow = [];
-            if (!skipSpecialization) {
-                if (selectedSubject) {
-                    electiveQuestionsToShow = selectedSubject === 'java'
-                        ? (javaQuestionsRef.current || [])
-                        : (pythonQuestionsRef.current || []);
-                } else {
-                    electiveQuestionsToShow = javaQuestionsRef.current || [];
-                }
-            }
-
-            // Safety check: ensure we have valid arrays
-            if (!Array.isArray(electiveQuestionsToShow)) {
-                console.error('[FETCH ERROR] Elective questions is not an array:', electiveQuestionsToShow);
-                electiveQuestionsToShow = [];
-            }
-
-            const rawAllQuestions = [...generalQuestionsRef.current, ...electiveQuestionsToShow];
-
-            // NEW: Fetch site settings directly to ensure we have the latest shuffle preference
+            // Fetch site settings directly to ensure we have the latest shuffle preference
             const { data: siteSettings } = await supabase
                 .from('site_settings')
                 .select('shuffle_questions')
@@ -714,17 +752,19 @@ export default function QuizInterface() {
             setShuffleQuestions(isShuffleEnabled);
 
             // Apply randomization based on site settings
-            const finalQuestions = isShuffleEnabled ? shuffleArray(rawAllQuestions) : rawAllQuestions;
+            let finalQuestions;
+            if (isShuffleEnabled) {
+                // Shuffle general and elective separately so placeholders/electives stay at the end
+                const shuffledGeneral = shuffleArray([...orderedGeneralQs]);
+                const shuffledElective = shuffleArray([...addedElectives]);
+                finalQuestions = [...shuffledGeneral, ...shuffledElective];
+            } else {
+                finalQuestions = initialQs;
+            }
 
             setQuestions(finalQuestions);
 
             console.log(`[FETCH] Loaded ${finalQuestions.length} questions upfront (${isShuffleEnabled ? 'SHUFFLED' : 'ORIGINAL ORDER'})`);
-
-            console.log('[FETCH] Loaded all questions upfront (Original Order):', finalQuestions.length);
-            console.log('[FETCH] General questions:', generalQuestionsRef.current.length);
-            console.log('[FETCH] Elective questions:', electiveQuestionsToShow.length);
-
-            // Note: Questions are already loaded upfront, no need to append elective questions later
 
             // If total general < 1, we have an issue
             if (generalQuestionsRef.current.length < 1) {
@@ -900,7 +940,7 @@ export default function QuizInterface() {
         }
     };
 
-    const handleSpecializationSelect = (type) => { // 'Java' or 'Python'
+    const handleSpecializationSelect = (type) => { // 'Java', 'Python', or 'Database'
         setPendingSpecialization(type);
         setShowConfirmSpecialization(true);
     };
@@ -916,15 +956,20 @@ export default function QuizInterface() {
         setShowSpecialization(false); // Hide selection UI
 
         // SWAP elective questions instead of appending
-        // Since we loaded 30 questions upfront (defaulting to Java), we need to replace the last 7
-        // if the user selected a different language (or just re-confirm if same)
-        const newElectiveQuestions = type === 'Java' ? javaQuestionsRef.current : pythonQuestionsRef.current;
+        // Since we loaded questions upfront, we need to replace the last elective portion
+        const newElectiveQuestions = type === 'Java' ? javaQuestionsRef.current : type === 'Python' ? pythonQuestionsRef.current : databaseQuestionsRef.current;
+
+        // When submitting specialization, we add the actual retrieved questions, so we also update totalExamQuestions
+        // just in case we didn't have enough questions to fulfill the count
+        const expectedTotal = generalQuestionsRef.current.length + (newElectiveQuestions?.length || 0);
+        setTotalExamQuestions(expectedTotal);
 
         setQuestions(prevQuestions => {
             // Keep general questions (first 23) and append the selected elective questions
             // precise slice based on generalQuestionsRef length to be safe
             const generalQs = prevQuestions.slice(0, generalQuestionsRef.current.length);
-            return [...generalQs, ...newElectiveQuestions];
+            const finalElectives = shuffleQuestions ? shuffleArray([...newElectiveQuestions]) : newElectiveQuestions;
+            return [...generalQs, ...finalElectives];
         });
 
         // Resume intercepted navigation or move to next sequentially
@@ -1206,7 +1251,7 @@ export default function QuizInterface() {
                         </p>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+                    <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
                         {/* Java Option */}
                         <button
                             onClick={() => handleSpecializationSelect('Java')}
@@ -1265,6 +1310,31 @@ export default function QuizInterface() {
                                 </div>
                             </div>
                         </button>
+                        {/* Database Option */}
+                        <button
+                            onClick={() => handleSpecializationSelect('Database')}
+                            className="group relative p-1 rounded-[2rem] transition-all duration-500 hover:scale-[1.02]"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 opacity-20 group-hover:opacity-40 rounded-[2rem] blur-xl transition-opacity"></div>
+                            <div className="relative h-full bg-[#080c14]/80 backdrop-blur-xl border border-white/10 rounded-[1.9rem] p-10 flex flex-col items-center justify-center gap-6 overflow-hidden hover:border-green-500/50 transition-colors">
+                                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 flex items-center justify-center shadow-lg shadow-green-500/10 group-hover:scale-110 transition-transform duration-500 border border-white/5">
+                                    <div className="w-16 h-16">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 className="text-3xl font-bold text-white mb-2">Database</h3>
+                                    <p className="text-slate-400 text-sm">SQL & Data Modeling</p>
+                                </div>
+                                <div className="mt-4 px-6 py-2 rounded-full border border-green-500/30 text-green-400 text-sm font-bold tracking-widest uppercase group-hover:bg-green-500 group-hover:text-white transition-all">
+                                    Select Database
+                                </div>
+                            </div>
+                        </button>
                     </div>
                 </div>
 
@@ -1309,7 +1379,7 @@ export default function QuizInterface() {
     const getSectionInfo = (question) => {
         if (question.section === 'elective') {
             return {
-                name: question.subsection === 'java' ? 'Java' : 'Python',
+                name: question.subsection === 'java' ? 'Java' : question.subsection === 'python' ? 'Python' : 'Database',
                 color: 'purple',
                 bgClass: 'bg-purple-500/10',
                 borderClass: 'border-purple-500/20',
@@ -1427,196 +1497,164 @@ export default function QuizInterface() {
 
             {/* Active Background Animation */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="orb orb-1 opacity-20"></div>
-                <div className="orb orb-2 opacity-20"></div>
-                <div className="orb orb-3 opacity-20"></div>
-                <div className="grid-texture opacity-30"></div>
+                <div className="orb orb-1 opacity-20" />
+                <div className="orb orb-2 opacity-20" />
+                <div className="orb orb-3 opacity-20" />
+                <div className="grid-texture opacity-30" />
             </div>
 
 
-            {/* Top Left - SDET Logo - Shifted to avoid truncation */}
-            <div className="fixed top-4 left-6 z-50 animate-hero hidden md:block">
-                <div className="bg-white/10 backdrop-blur-md border border-white/20 p-2.5 rounded-lg shadow-xl hover:border-brand-blue/50 transition-all duration-300 hover:scale-105 group">
-                    <img src="/sdet-logo.png" alt="SDET Logo" className="h-11 w-auto object-contain" />
-                </div>
-            </div>
+            {/* ===== INTEGRATED HEADER BAR ===== */}
+            <header className="flex-shrink-0 relative z-40 bg-[#080c14]/85 backdrop-blur-xl border-b border-white/[0.06] shadow-lg">
+                <div className="flex items-center justify-between px-3 sm:px-5 h-13 sm:h-14 gap-2 sm:gap-4">
 
-            {/* Bottom Right - GPTW Badge - Moderate Size */}
-            <div className="fixed bottom-4 right-4 z-50 animate-hero-delay-1 hidden md:block">
-                <div className="hover:scale-105 transition-transform duration-300 drop-shadow-xl">
-                    <GPTWBadge size="lg" />
-                </div>
-            </div>
+                    {/* LEFT: Logo + Badges */}
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-shrink-0">
+                        <img src="/sdet-logo.png" alt="SDET" className="h-7 sm:h-8 w-auto object-contain flex-shrink-0" />
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                            {criteriaType && (
+                                <span className={`hidden xs:inline-flex items-center px-2 py-0.5 rounded-md border text-[10px] font-black uppercase tracking-wider whitespace-nowrap
+                                    ${criteriaType === 'Fresher'
+                                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                        : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                    }`}>
+                                    {criteriaType}
+                                </span>
+                            )}
+                            {currentSectionInfo && (
+                                <span className={`hidden sm:inline-flex items-center px-2 py-0.5 rounded-md border text-[10px] font-black uppercase tracking-wider whitespace-nowrap ${currentSectionInfo.bgClass} ${currentSectionInfo.borderClass} ${currentSectionInfo.textClass}`}>
+                                    {currentSectionInfo.name}
+                                </span>
+                            )}
+                        </div>
+                    </div>
 
-
-            {/* Header Bar - Floating Glass Pill (Top Right) */}
-            <div className="fixed top-4 right-4 z-40 flex justify-end pointer-events-none">
-                <div className="bg-[#0b101b]/90 backdrop-blur-xl border border-white/10 rounded-full px-5 py-2 shadow-2xl flex items-center gap-5 pointer-events-auto hover:border-brand-blue/30 transition-colors">
-
-                    {/* Current Section Badge - NEW */}
-                    {currentSectionInfo && (
-                        <>
-                            <div className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider ${currentSectionInfo.bgClass} ${currentSectionInfo.textClass} border ${currentSectionInfo.borderClass} transition-colors duration-300`}>
-                                <span className="opacity-70">SECTION:</span>
-                                <span>{currentSectionInfo.name}</span>
-                            </div>
-
-                            {/* Divider */}
-                            <div className="hidden sm:block h-6 w-[1px] bg-white/10"></div>
-                        </>
-                    )}
-
-                    {/* Progress Section */}
-                    <div className="flex flex-col gap-1 min-w-[140px] sm:min-w-[200px]">
-                        <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    {/* CENTER: Progress */}
+                    <div className="flex-1 max-w-xs hidden md:block">
+                        <div className="flex justify-between text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                             <span>Progress</span>
                             <span className="text-brand-blue">{Math.round(progress)}%</span>
                         </div>
-                        <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden relative">
-                            <div className="absolute inset-0 bg-brand-blue/10"></div>
+                        <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
                             <div
-                                className="h-full bg-gradient-to-r from-cyan-400 via-brand-blue to-purple-500 transition-all duration-700 ease-out shadow-[0_0_12px_rgba(34,211,238,0.6)] relative"
+                                className="h-full bg-gradient-to-r from-cyan-400 via-brand-blue to-purple-500 transition-all duration-700 ease-out rounded-full shadow-[0_0_8px_rgba(34,211,238,0.4)]"
                                 style={{ width: `${Math.min(progress, 100)}%` }}
-                            >
-                                <div className="absolute right-0 top-0 bottom-0 w-1 bg-white/50 blur-[1px]"></div>
-                            </div>
+                            />
                         </div>
                     </div>
 
-                    {/* Divider */}
-                    <div className="h-6 w-[1px] bg-white/10"></div>
-
-                    {/* Stats Pills - Integrated */}
-                    <div className="flex items-center gap-3">
-                        {/* Timer - Always Visible */}
+                    {/* RIGHT: Timer + Answered + Badge */}
+                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                         <div className={`flex items-center gap-1.5 ${(!timeRemaining || timeRemaining < 60) ? 'text-red-400 animate-pulse' : 'text-slate-300'}`}>
                             <Clock className="w-3.5 h-3.5" />
                             <span className="font-mono font-bold text-sm tabular-nums">
-                                {timeRemaining !== null ? (
-                                    `${Math.floor(timeRemaining / 60)}:${String(timeRemaining % 60).padStart(2, '0')}`
-                                ) : (
-                                    '--:--'
-                                )}
+                                {timeRemaining !== null
+                                    ? `${Math.floor(timeRemaining / 60)}:${String(timeRemaining % 60).padStart(2, '0')}`
+                                    : '--:--'}
                             </span>
                         </div>
-
+                        <div className="hidden sm:block h-4 w-px bg-white/10" />
                         <div className="hidden sm:flex items-center gap-1.5 text-slate-300">
                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                             <span className="font-bold text-sm">{answeredCount}</span>
+                            <span className="text-slate-500 text-xs">/ {questions.length}</span>
+                        </div>
+                        <div className="hidden lg:block">
+                            <GPTWBadge size="sm" />
                         </div>
                     </div>
                 </div>
-            </div>
+                {/* Mobile progress bar */}
+                <div className="md:hidden h-0.5 bg-white/5">
+                    <div
+                        className="h-full bg-gradient-to-r from-cyan-400 to-brand-blue transition-all duration-700"
+                        style={{ width: `${Math.min(progress, 100)}%` }}
+                    />
+                </div>
+            </header>
 
-            {/* Main Content Area - Question Card at Top, Map at Bottom - Precision "Perfect Fit" Centering */}
-            <div className="flex-1 w-full flex flex-col items-center justify-center overflow-hidden p-2 sm:p-4 lg:p-6 pt-20 pb-10 relative z-10">
-                <div className={`w-[98%] max-w-7xl flex flex-col gap-10 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            {/* ===== SCROLLABLE QUESTION CONTENT ===== */}
+            <div className="flex-1 min-h-0 overflow-y-auto relative z-10">
+                <div className="flex flex-col px-3 sm:px-5 lg:px-8 py-3 sm:py-4 gap-3 max-w-4xl w-full mx-auto min-h-full">
 
-                    {/* Question Card - Now the primary top element */}
-                    <div 
-                        className="flex-shrink-0 flex flex-col bg-[#0b101b]/90 backdrop-blur-3xl border border-white/10 rounded-2xl p-4 sm:p-6 shadow-2xl relative overflow-hidden group hover:border-white/20 transition-all duration-500 select-none shadow-brand-blue/5"
+                    {/* Question Card */}
+                    <div
+                        className="flex-1 bg-[#0b101b]/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl relative overflow-hidden select-none"
                         onCopy={(e) => e.preventDefault()}
                         onPaste={(e) => e.preventDefault()}
                         onCut={(e) => e.preventDefault()}
                         onContextMenu={(e) => e.preventDefault()}
                     >
+                        <div className="absolute top-0 right-0 w-72 h-72 bg-brand-blue/8 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                        <div className="absolute bottom-0 left-0 w-48 h-48 bg-brand-orange/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+                        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-brand-blue/40 to-transparent" />
 
-                        {/* Ambient Background Glow */}
-                        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-blue/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-orange/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
+                        <div className="relative z-10 p-4 sm:p-6">
 
-                        {/* Top Accent Line */}
-                        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-blue/50 to-transparent opacity-50"></div>
-
-                        {/* Inner Scrollable Area for Card Content */}
-                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 relative z-10 space-y-4 sm:space-y-6">
-
-                            {/* Question Text Area */}
-                            <div>
-                                <div className="flex items-start gap-4">
-                                    {/* Question Number Box */}
-                                    <div className="hidden sm:flex flex-shrink-0 w-10 h-10 rounded-xl bg-white/5 border border-white/10 items-center justify-center text-white font-bold text-base shadow-lg">
-                                        <span className="bg-gradient-to-br from-cyan-400 to-brand-blue bg-clip-text text-transparent">
-                                            {String(currentIndex + 1).padStart(2, '0')}
+                            {/* Question header */}
+                            <div className="flex items-start gap-3 mb-4">
+                                <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                                    <span className="text-sm font-bold bg-gradient-to-br from-cyan-400 to-brand-blue bg-clip-text text-transparent">
+                                        {String(currentIndex + 1).padStart(2, '0')}
+                                    </span>
+                                </div>
+                                <div className="flex flex-wrap gap-1.5 items-center pt-1.5">
+                                    {currentQuestion.category && (
+                                        <span className="px-2 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold tracking-wider text-blue-400 uppercase">
+                                            {currentQuestion.category}
                                         </span>
-                                    </div>
-
-                                    <div className="space-y-3 w-full">
-                                        {/* Badges & Metadata */}
-                                        <div className="flex flex-wrap gap-2 items-center">
-                                            {/* Category Chip */}
-                                            {currentQuestion.category && (
-                                                <div className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold tracking-wider text-blue-400 uppercase">
-                                                    {currentQuestion.category}
-                                                </div>
-                                            )}
-
-                                            {/* Set Type Chip (Fresher/Experience) */}
-                                            {criteriaType && (
-                                                <div className={`
-                                                flex items-center gap-1.5 px-3 py-1 rounded-md border text-[10px] font-bold tracking-wider uppercase
-                                                ${criteriaType === 'Fresher'
-                                                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                                        : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}
-                                            `}>
-                                                    <Sparkles className="w-3 h-3" />
-                                                    {criteriaType} Set
-                                                </div>
-                                            )}
-
-                                            {/* Section Name Chip - NEW */}
-                                            {currentSectionInfo && (
-                                                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-md border text-[10px] font-bold tracking-wider uppercase ${currentSectionInfo.bgClass} ${currentSectionInfo.borderClass} ${currentSectionInfo.textClass}`}>
-                                                    <Code className="w-3 h-3" />
-                                                    {currentSectionInfo.name}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="text-xl sm:text-2xl font-bold text-white leading-relaxed tracking-tight drop-shadow-sm">
-                                            <FormattedQuestionText text={currentQuestion.question_text} />
-                                        </div>
-                                    </div>
+                                    )}
+                                    {criteriaType && (
+                                        <span className={`sm:hidden px-2 py-0.5 rounded-md border text-[10px] font-bold uppercase tracking-wider
+                                            ${criteriaType === 'Fresher'
+                                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                                : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                            }`}>
+                                            {criteriaType}
+                                        </span>
+                                    )}
+                                    {currentSectionInfo && (
+                                        <span className={`sm:hidden px-2 py-0.5 rounded-md border text-[10px] font-bold uppercase tracking-wider ${currentSectionInfo.bgClass} ${currentSectionInfo.borderClass} ${currentSectionInfo.textClass}`}>
+                                            {currentSectionInfo.name}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Answer Options - Animated List */}
-                            <div className="space-y-1 sm:space-y-1.5 relative z-10">
+                            {/* Question Text */}
+                            <div className="text-lg sm:text-xl font-bold text-white leading-relaxed mb-5 pl-0 sm:pl-12">
+                                <FormattedQuestionText text={currentQuestion.question_text} />
+                            </div>
+
+                            {/* Options */}
+                            <div className="space-y-2 sm:pl-12">
                                 {currentQuestion.options?.map((option, idx) => {
                                     const isSelected = answers[currentQuestion.id] === option;
-
                                     return (
                                         <button
                                             key={idx}
                                             onClick={() => handleAnswerSelect(currentQuestion.id, option)}
                                             disabled={submitting || timeRemaining === 0}
                                             className={`
-                                            w-full text-left p-2 sm:p-2.5 rounded-xl border transition-all duration-300 group/option relative overflow-hidden
-                                            ${isSelected
-                                                    ? 'bg-brand-blue/10 border-brand-blue shadow-[0_0_15px_rgba(0,119,255,0.2)] translate-x-1'
-                                                    : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20 hover:translate-x-1'
-                                                }
-                                            ${(submitting || timeRemaining === 0) ? 'cursor-not-allowed' : ''}
-                                        `}
-                                        >
-                                            {/* Selection Gradient Background */}
-                                            <div className={`absolute inset-0 bg-gradient-to-r from-brand-blue/10 to-transparent transition-opacity duration-300 ${isSelected ? 'opacity-100' : 'opacity-0'}`}></div>
-
-                                            <div className="flex items-center gap-4 relative z-10">
-                                                {/* Custom Radio Indicator */}
-                                                <div className={`
-                                                w-5 h-5 rounded-full border-[1.5px] flex items-center justify-center flex-shrink-0 transition-all duration-300
+                                                w-full text-left p-3 rounded-xl border transition-all duration-200 group/option relative overflow-hidden
                                                 ${isSelected
-                                                        ? 'border-brand-blue bg-brand-blue scale-110 shadow-lg shadow-brand-blue/40'
-                                                        : 'border-slate-600 group-hover/option:border-slate-400 bg-transparent'
-                                                    }
-                                            `}>
-                                                    <div className={`w-2 h-2 rounded-full bg-white transition-transform duration-300 ${isSelected ? 'scale-100' : 'scale-0'}`} />
+                                                    ? 'bg-brand-blue/12 border-brand-blue shadow-[0_0_12px_rgba(0,119,255,0.12)]'
+                                                    : 'bg-white/[0.03] border-white/[0.06] hover:bg-white/[0.07] hover:border-white/20'
+                                                }
+                                                ${(submitting || timeRemaining === 0) ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
+                                            `}
+                                        >
+                                            <div className={`absolute inset-0 bg-gradient-to-r from-brand-blue/8 to-transparent transition-opacity duration-200 rounded-xl ${isSelected ? 'opacity-100' : 'opacity-0'}`} />
+                                            <div className="flex items-center gap-3 relative z-10">
+                                                <div className={`w-5 h-5 rounded-full border-[1.5px] flex items-center justify-center flex-shrink-0 transition-all duration-200
+                                                    ${isSelected
+                                                        ? 'border-brand-blue bg-brand-blue shadow-md shadow-brand-blue/30 scale-110'
+                                                        : 'border-slate-600 group-hover/option:border-slate-400'
+                                                    }`}
+                                                >
+                                                    <div className={`w-2 h-2 rounded-full bg-white transition-transform duration-200 ${isSelected ? 'scale-100' : 'scale-0'}`} />
                                                 </div>
-
-                                                {/* Option Text */}
-                                                <span className={`text-sm sm:text-base font-medium transition-colors duration-300 ${isSelected ? 'text-white' : 'text-slate-300 group-hover/option:text-white'
-                                                    }`}>
+                                                <span className={`text-sm sm:text-base font-medium transition-colors duration-200 ${isSelected ? 'text-white' : 'text-slate-300 group-hover/option:text-white'}`}>
                                                     {option}
                                                 </span>
                                             </div>
@@ -1624,32 +1662,29 @@ export default function QuizInterface() {
                                     );
                                 })}
                             </div>
-
-                        </div> {/* End Inner Scrollable Area */}
+                        </div>
                     </div>
 
-                    {/* Navigation Actions - Premium */}
-                    <div className={`flex-shrink-0 flex items-center relative z-20 ${isFirstQuestion ? 'justify-end' : 'justify-between'}`}>
+                    {/* Navigation */}
+                    <div className={`flex-shrink-0 flex items-center pb-2 ${isFirstQuestion ? 'justify-end' : 'justify-between'}`}>
                         {!isFirstQuestion && (
                             <button
                                 onClick={handlePrevious}
-                                className="flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all text-sm group text-slate-400 hover:text-white hover:bg-white/5"
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all text-sm text-slate-400 hover:text-white hover:bg-white/5"
                             >
-                                <div className="p-1.5 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors border border-white/5 group-hover:border-white/20">
+                                <div className="p-1.5 rounded-full bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 transition-colors">
                                     <ArrowLeft className="w-4 h-4" />
                                 </div>
-                                <span className="hidden sm:inline">
-                                    Previous Question
-                                </span>
+                                <span className="hidden sm:inline">Previous</span>
                             </button>
                         )}
 
                         {!isLastQuestion ? (
                             <button
                                 onClick={handleNext}
-                                className="group relative overflow-hidden rounded-xl py-2.5 px-8 bg-white text-slate-900 font-bold shadow-lg shadow-white/5 hover:shadow-cyan-400/20 transition-all transform hover:-translate-y-0.5 text-sm"
+                                className="group relative overflow-hidden rounded-xl py-2.5 px-7 bg-white text-slate-900 font-bold shadow-lg transition-all transform hover:-translate-y-0.5 text-sm"
                             >
-                                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/0 via-cyan-400/30 to-cyan-400/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/0 via-cyan-400/30 to-cyan-400/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                                 <span className="relative z-10 flex items-center gap-2">
                                     Next Question
                                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -1659,48 +1694,36 @@ export default function QuizInterface() {
                             <button
                                 onClick={() => handleSubmit(false)}
                                 disabled={submitting}
-                                className={`
-                                    group relative overflow-hidden rounded-xl py-2.5 px-10 font-bold text-white shadow-lg transition-all transform hover:-translate-y-0.5 text-sm
+                                className={`group relative overflow-hidden rounded-xl py-2.5 px-8 font-bold text-white shadow-lg transition-all transform hover:-translate-y-0.5 text-sm
                                     ${submitting
                                         ? 'bg-slate-700 cursor-wait'
                                         : 'bg-gradient-to-r from-brand-orange to-red-500 shadow-brand-orange/20 hover:shadow-brand-orange/40'
-                                    }
-                                `}
+                                    }`}
                             >
-                                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                 <span className="relative z-10 flex items-center gap-2">
                                     {submitting ? (
-                                        <>
-                                            <Loader2 className="w-4 h-4 animate-spin" />
-                                            Submitting...
-                                        </>
+                                        <><Loader2 className="w-4 h-4 animate-spin" />Submitting...</>
                                     ) : (
-                                        <>
-                                            Finish Assessment
-                                            <CheckCircle2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                        </>
+                                        <>Finish Assessment<CheckCircle2 className="w-4 h-4" /></>
                                     )}
                                 </span>
                             </button>
                         )}
                     </div>
+                </div>
+            </div>
 
-                    {/* Question Map - Optimized for "Perfect Fit" 2-Row Layout */}
-                    <div className="flex-shrink-0 px-2 sm:px-6 w-full max-w-5xl mx-auto">
-                        <div className="bg-[#0b101b]/40 backdrop-blur-md rounded-2xl border border-white/5 p-4 sm:p-6 shadow-xl relative overflow-hidden group/map-container">
-                             {/* Accent Glow */}
-                             <div className="absolute bottom-0 left-1/4 w-1/2 h-px bg-gradient-to-r from-transparent via-brand-blue/30 to-transparent"></div>
-                             
-                             <QuestionStatusMap
-                                questions={questions}
-                                answers={answers}
-                                currentIndex={currentIndex}
-                                onQuestionSelect={handleMapQuestionSelect}
-                                visitedQuestions={visitedQuestions}
-                            />
-                        </div>
-                    </div>
-
+            {/* ===== PINNED BOTTOM: ASSESSMENT MAP ===== */}
+            <div className="flex-shrink-0 relative z-20 bg-[#080c14]/90 backdrop-blur-xl border-t border-white/[0.06] px-3 sm:px-5 py-3 pb-8">
+                <div className="max-w-4xl mx-auto">
+                    <QuestionStatusMap
+                        questions={questions}
+                        answers={answers}
+                        currentIndex={currentIndex}
+                        onQuestionSelect={handleMapQuestionSelect}
+                        visitedQuestions={visitedQuestions}
+                    />
                 </div>
             </div>
 

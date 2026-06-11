@@ -4,6 +4,7 @@ import SimpleLayout from '@/components/admin/SimpleLayout';
 import { supabase } from '@/lib/supabase';
 import { Search, Download, CheckCircle2, XCircle, Calendar, Filter, Trash2, AlertTriangle, Eye, X, RotateCcw, Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { cleanQuestionText } from '@/utils/questionHelpers';
 
 export default function AdminResults() {
     const navigate = useNavigate();
@@ -572,8 +573,8 @@ export default function AdminResults() {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold text-white mb-2">Interview Results</h1>
-                        <p className="text-slate-400">View candidate performance and scores</p>
+                        <h1 className="text-2xl font-black text-white tracking-tight">Interview Results</h1>
+                        <p className="text-slate-500 text-sm mt-1">View candidate scores and performance analytics</p>
                     </div>
                     <div className="flex gap-3">
                         <button
@@ -709,16 +710,15 @@ export default function AdminResults() {
                                                     <table className="w-full">
                                                         <thead className="bg-[#0f172a]/50 border-b border-white/5">
                                                             <tr>
-                                                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Candidate</th>
-                                                                <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Identity</th>
-                                                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Phone</th>
-                                                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Criteria</th>
-                                                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Set</th>
-                                                                <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Score</th>
-                                                                <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Percentage</th>
-                                                                <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
-                                                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Date</th>
-                                                                <th className="px-6 py-4 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">Actions</th>
+                                                                <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Candidate</th>
+                                                                <th className="px-6 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Identity</th>
+                                                                <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Phone</th>
+                                                                <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Criteria</th>
+                                                                <th className="px-6 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Score</th>
+                                                                <th className="px-6 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Percentage</th>
+                                                                <th className="px-6 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Status</th>
+                                                                <th className="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Date</th>
+                                                                <th className="px-6 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Actions</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody className="divide-y divide-white/5">
@@ -766,8 +766,11 @@ export default function AdminResults() {
                                                                             })()}
                                                                         </td>
                                                                         <td className="px-6 py-4 text-sm text-slate-300 font-mono">{result.candidates?.phone || 'N/A'}</td>
-                                                                        <td className="px-6 py-4 text-sm text-slate-300">{result.criteria?.name || 'N/A'}</td>
-                                                                        <td className="px-6 py-4 text-sm font-bold text-cyan-400">{result.question_set || 'N/A'}</td>
+                                                                        <td className="px-6 py-4">
+                                                                            <span className="inline-flex px-2 py-1 bg-slate-500/10 border border-slate-500/20 text-slate-300 text-[11px] font-bold rounded-md">
+                                                                                {result.criteria?.name || 'N/A'}
+                                                                            </span>
+                                                                        </td>
                                                                         <td className="px-6 py-4 text-center">
                                                                             {editingScoreId === result.id ? (
                                                                                 <div className="flex items-center justify-center gap-2" onClick={e => e.stopPropagation()}>
@@ -787,7 +790,7 @@ export default function AdminResults() {
                                                                                 </div>
                                                                             ) : (
                                                                                 <div className="flex items-center justify-center gap-2 group">
-                                                                                    <span className="font-mono font-bold text-white">{result.score || 0}/{result.total_questions || 0}</span>
+                                                                                    <span className="font-mono font-bold text-white text-lg">{result.score || 0}<span className="text-slate-500 text-sm">/{result.total_questions || 0}</span></span>
                                                                                     <button onClick={() => startEditingScore(result)} className="p-1 text-slate-500 hover:text-brand-blue opacity-0 group-hover:opacity-100 transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button>
                                                                                 </div>
                                                                             )}
@@ -1037,7 +1040,7 @@ export default function AdminResults() {
                                                         {idx + 1}
                                                     </span>
                                                     <p className="text-sm font-medium text-white leading-relaxed">
-                                                        {answer.questions?.question_text || 'Question text unavailable'}
+                                                        {cleanQuestionText(answer.questions?.question_text) || 'Question text unavailable'}
                                                     </p>
                                                 </div>
                                                 {answer.is_correct ? (

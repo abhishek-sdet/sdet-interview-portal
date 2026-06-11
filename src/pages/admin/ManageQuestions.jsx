@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import SimpleLayout from '@/components/admin/SimpleLayout';
 import ConfirmModal from '@/components/ConfirmModal';
 import { supabase } from '@/lib/supabase';
-import { Search, Trash2, Edit2, Save, X, Filter, AlertCircle, CheckCircle, ChevronDown, ChevronRight, PlusCircle } from 'lucide-react';
+import { Search, Trash2, Edit2, Save, X, Filter, AlertCircle, CheckCircle, ChevronDown, ChevronRight, PlusCircle, FolderOpen, Code, Brain, ListTodo, BookOpen, Download } from 'lucide-react';
+import FormattedQuestionText from '@/components/FormattedQuestionText';
 
 export default function ManageQuestions() {
     const navigate = useNavigate();
@@ -23,6 +24,8 @@ export default function ManageQuestions() {
     // Track expanded sets - default to all collapsed (empty object)
     // Keys will be `${criteriaId}-${setName}`
     const [expandedSets, setExpandedSets] = useState({});
+    // Track active tab per set key: { [setKey]: sectionId }
+    const [activeSetTab, setActiveSetTab] = useState({});
 
     // Add Question Modal State
     const [showAddModal, setShowAddModal] = useState(false);
@@ -68,24 +71,39 @@ export default function ManageQuestions() {
     const fetchQuestions = async (showLoader = true) => {
         if (showLoader) setLoading(true);
         try {
-            let query = supabase
-                .from('questions')
-                .select(`
-                    *,
-                    criteria(name)
-                `)
-                .order('created_at', { ascending: true });
+            let allFetchedData = [];
+            let currentOffset = 0;
+            const PAGE_SIZE = 1000;
+            
+            while (true) {
+                let query = supabase
+                    .from('questions')
+                    .select(`
+                        *,
+                        criteria(name)
+                    `)
+                    .order('created_at', { ascending: true })
+                    .range(currentOffset, currentOffset + PAGE_SIZE - 1);
 
-            if (selectedCriteria !== 'all') {
-                query = query.eq('criteria_id', selectedCriteria);
+                if (selectedCriteria !== 'all') {
+                    query = query.eq('criteria_id', selectedCriteria);
+                }
+
+                const { data, error } = await query;
+                if (error) throw error;
+                
+                if (data && data.length > 0) {
+                    allFetchedData = [...allFetchedData, ...data];
+                }
+                
+                if (!data || data.length < PAGE_SIZE) {
+                    break;
+                }
+                currentOffset += PAGE_SIZE;
             }
 
-            const { data, error } = await query;
-
-            if (error) throw error;
-
             // Normalize options - use JSONB array if available, otherwise build from individual columns
-            const normalizedData = (data || []).map(q => {
+            const normalizedData = allFetchedData.map(q => {
                 let options = q.options;
 
                 // If options is not an array or is empty, build from individual columns
@@ -201,6 +219,48 @@ export default function ManageQuestions() {
             });
         } catch (err) {
             console.error('Error deleting question:', err);
+        }
+    };
+
+    const handleDownloadSet = (set) => {
+        try {
+            let content = `Questions for: ${set.criteriaName}\n=================================\n\n`;
+            
+            const sections = [
+                { id: 'computer_science', name: 'Computer Science' },
+                { id: 'logical_reasoning', name: 'Logical Reasoning' },
+                { id: 'miscellaneous', name: 'Miscellaneous' },
+                { id: 'grammar', name: 'Grammar' },
+                { id: 'java', name: 'Java' },
+                { id: 'python', name: 'Python' },
+                { id: 'database', name: 'Database' }
+            ];
+
+            sections.forEach(section => {
+                const qList = set.sections[section.id];
+                if (qList && qList.length > 0) {
+                    content += `[Section: ${section.name}]\n\n`;
+                    qList.forEach((q, idx) => {
+                        content += `${idx + 1}. ${q.question_text}\n`;
+                        const letters = ['A', 'B', 'C', 'D'];
+                        (q.options || []).forEach((opt, optIdx) => {
+                            if (opt) content += `${letters[optIdx]}) ${opt}\n`;
+                        });
+                        content += `Answer: ${q.correct_option || 'A'}\n\n`;
+                    });
+                }
+            });
+
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${set.criteriaName}_Questions.txt`.replace(/\s+/g, '_');
+            a.click();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('Download error:', err);
+            alert('Failed to download questions');
         }
     };
 
@@ -320,14 +380,6 @@ export default function ManageQuestions() {
                 .delete({ count: 'exact' })
                 .eq('criteria_id', criteriaId);
 
-            // Handle "Uncategorized" which might be NULL in DB
-            if (setName === 'Uncategorized') {
-                // Delete rows where category IS NULL OR category IS 'Uncategorized'
-                query = query.or(`category.is.null,category.eq.Uncategorized`);
-            } else {
-                query = query.eq('category', setName);
-            }
-
             const { count, error } = await query;
 
             if (error) throw error;
@@ -359,35 +411,37 @@ export default function ManageQuestions() {
         }
     };
 
-    // Group questions by set and subsection (5 subsections)
+    // Group questions by criteria and subsection
     const questionSets = React.useMemo(() => {
         return filteredQuestions.reduce((acc, q) => {
-            // If criteria_id is missing, use a fallback
             const criteriaId = q.criteria_id || 'unknown';
-            const category = q.category || 'Uncategorized';
-            const key = `${criteriaId}-${category}`;
+            const key = criteriaId;
 
             if (!acc[key]) {
                 acc[key] = {
                     key,
                     criteriaId: q.criteria_id,
                     criteriaName: q.criteria?.name || 'Unknown',
-                    setName: category,
                     sections: {
                         computer_science: [],
                         logical_reasoning: [],
                         miscellaneous: [],
                         grammar: [],
-                        elective: [] // Java and Python together
+                        java: [],
+                        python: [],
+                        database: []
                     }
                 };
             }
 
-            // Categorize by subsection
-            const subsection = q.subsection || 'computer_science'; // Default fallback
+            const subsection = q.subsection || 'computer_science';
 
-            if (q.section === 'elective') {
-                acc[key].sections.elective.push(q);
+            if (subsection === 'java') {
+                acc[key].sections.java.push(q);
+            } else if (subsection === 'python') {
+                acc[key].sections.python.push(q);
+            } else if (subsection === 'database') {
+                acc[key].sections.database.push(q);
             } else if (subsection === 'computer_science') {
                 acc[key].sections.computer_science.push(q);
             } else if (subsection === 'logical_reasoning') {
@@ -397,7 +451,6 @@ export default function ManageQuestions() {
             } else if (subsection === 'grammar') {
                 acc[key].sections.grammar.push(q);
             } else {
-                // Fallback for any unknown subsection
                 acc[key].sections.computer_science.push(q);
             }
 
@@ -405,11 +458,15 @@ export default function ManageQuestions() {
         }, {});
     }, [filteredQuestions]);
 
-    const toggleSet = (key) => {
+    const toggleSet = (key, firstAvailableSection) => {
         setExpandedSets(prev => ({
             ...prev,
             [key]: !prev[key]
         }));
+        // Auto-select the first available tab when expanding
+        if (!expandedSets[key] && firstAvailableSection) {
+            setActiveSetTab(prev => ({ ...prev, [key]: prev[key] || firstAvailableSection }));
+        }
     };
 
     const renderQuestion = (q, qIdx) => {
@@ -436,7 +493,9 @@ export default function ManageQuestions() {
                                     rows={3}
                                 />
                             ) : (
-                                <p className="text-white font-medium text-lg leading-relaxed">{q.question_text}</p>
+                                <div className="text-white font-medium text-lg leading-relaxed">
+                                    <FormattedQuestionText text={q.question_text} />
+                                </div>
                             )}
 
                             {/* Options - All 4 options displayed */}
@@ -509,6 +568,7 @@ export default function ManageQuestions() {
                                             <option value="grammar" className="bg-[#0b101b]">Grammar</option>
                                             <option value="java" className="bg-[#0b101b]">Java</option>
                                             <option value="python" className="bg-[#0b101b]">Python</option>
+                                            <option value="database" className="bg-[#0b101b]">Database</option>
                                         </select>
                                         <select
                                             value={editingQuestion.section || 'general'}
@@ -683,6 +743,7 @@ export default function ManageQuestions() {
                                         <option value="grammar" className="bg-[#0b101b]">Grammar / English</option>
                                         <option value="java" className="bg-[#0b101b]">Java (Elective)</option>
                                         <option value="python" className="bg-[#0b101b]">Python (Elective)</option>
+                                        <option value="database" className="bg-[#0b101b]">Database (Elective)</option>
                                     </select>
                                 </div>
                                 <div className="flex-1">
@@ -732,8 +793,8 @@ export default function ManageQuestions() {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold text-white mb-2">Manage Questions</h1>
-                        <p className="text-slate-400">View, edit, and delete uploaded questions</p>
+                        <h1 className="text-2xl font-black text-white tracking-tight">Manage Questions</h1>
+                        <p className="text-slate-500 text-sm mt-1">View, edit, and delete uploaded questions</p>
                     </div>
                     <button
                         onClick={() => setShowAddModal(true)}
@@ -787,123 +848,149 @@ export default function ManageQuestions() {
                         <p className="text-slate-400">No questions found</p>
                     </div>
                 ) : (
-                    <div className="space-y-8">
+                    <div className="space-y-4">
                         {Object.values(questionSets).map((set) => {
                             const totalQuestions =
                                 set.sections.computer_science.length +
                                 set.sections.logical_reasoning.length +
                                 set.sections.miscellaneous.length +
                                 set.sections.grammar.length +
-                                set.sections.elective.length;
+                                set.sections.java.length +
+                                set.sections.python.length +
+                                set.sections.database.length;
                             const isExpanded = !!expandedSets[set.key];
 
+                            const allSections = [
+                                { id: 'computer_science', label: 'Computer Science', shortLabel: 'CS', count: set.sections.computer_science.length, questions: set.sections.computer_science, icon: <Code size={14} />, color: 'blue' },
+                                { id: 'logical_reasoning', label: 'Logical Reasoning', shortLabel: 'Logic', count: set.sections.logical_reasoning.length, questions: set.sections.logical_reasoning, icon: <Brain size={14} />, color: 'green' },
+                                { id: 'miscellaneous', label: 'Miscellaneous', shortLabel: 'Misc', count: set.sections.miscellaneous.length, questions: set.sections.miscellaneous, icon: <ListTodo size={14} />, color: 'yellow' },
+                                { id: 'grammar', label: 'Grammar', shortLabel: 'Grammar', count: set.sections.grammar.length, questions: set.sections.grammar, icon: <BookOpen size={14} />, color: 'pink' },
+                                { id: 'java', label: 'Java', shortLabel: 'Java', count: set.sections.java.length, questions: set.sections.java, icon: <Code size={14} />, color: 'orange' },
+                                { id: 'python', label: 'Python', shortLabel: 'Python', count: set.sections.python.length, questions: set.sections.python, icon: <Code size={14} />, color: 'cyan' },
+                                { id: 'database', label: 'Database', shortLabel: 'DB', count: set.sections.database.length, questions: set.sections.database, icon: <Code size={14} />, color: 'emerald' },
+                            ].filter(s => s.count > 0);
+
+                            const firstSection = allSections[0]?.id;
+                            const currentTab = activeSetTab[set.key] || firstSection;
+                            const activeSection = allSections.find(s => s.id === currentTab) || allSections[0];
+
+                            const colorMap = {
+                                blue: 'text-blue-400 border-blue-500 bg-blue-500/10',
+                                green: 'text-green-400 border-green-500 bg-green-500/10',
+                                yellow: 'text-yellow-400 border-yellow-500 bg-yellow-500/10',
+                                pink: 'text-pink-400 border-pink-500 bg-pink-500/10',
+                                orange: 'text-orange-400 border-orange-500 bg-orange-500/10',
+                                cyan: 'text-cyan-400 border-cyan-500 bg-cyan-500/10',
+                                emerald: 'text-emerald-400 border-emerald-500 bg-emerald-500/10',
+                            };
+
                             return (
-                                <div key={set.key} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden transition-all">
+                                <div key={set.key} className="bg-[#0b101b]/60 backdrop-blur border border-white/10 rounded-2xl overflow-hidden shadow-xl transition-all">
                                     {/* Set Header - Clickable to Toggle */}
                                     <div
-                                        onClick={() => toggleSet(set.key)}
-                                        className="bg-gradient-to-r from-brand-blue/10 to-purple-500/10 border-b border-white/10 p-6 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors"
+                                        onClick={() => toggleSet(set.key, firstSection)}
+                                        className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-white/[0.03] transition-colors group"
                                     >
-                                        <div className="flex items-center gap-4">
-                                            {/* Toggle Icon */}
-                                            <div className={`p-2 rounded-lg bg-white/5 transition-transform duration-300 ${isExpanded ? 'rotate-180' : 'rotate-0'}`}>
-                                                <ChevronDown className="w-5 h-5 text-brand-blue" />
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div className={`p-2 rounded-lg bg-brand-blue/10 transition-all duration-300 ${isExpanded ? 'bg-brand-blue/20' : ''}`}>
+                                                <FolderOpen className={`w-5 h-5 transition-colors ${isExpanded ? 'text-brand-blue' : 'text-slate-400 group-hover:text-brand-blue'}`} />
                                             </div>
-
-                                            <div>
-                                                <h2 className="text-2xl font-bold text-white mb-1 flex items-center gap-3">
-                                                    {set.setName}
-                                                    {!isExpanded && (
-                                                        <span className="text-sm font-normal px-3 py-1 bg-white/10 rounded-full text-slate-300">
-                                                            {totalQuestions} Qs
-                                                        </span>
-                                                    )}
-                                                </h2>
-                                                <p className="text-slate-400">{set.criteriaName} • {totalQuestions} total questions</p>
+                                            <div className="min-w-0">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <h2 className="text-base font-bold text-white truncate">{set.criteriaName}</h2>
+                                                    <span className="text-xs px-2 py-0.5 bg-white/5 border border-white/10 rounded-full text-slate-400 whitespace-nowrap flex-shrink-0">
+                                                        {totalQuestions} questions
+                                                    </span>
+                                                </div>
+                                                {/* Section pills preview - only when collapsed */}
+                                                {!isExpanded && (
+                                                    <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                                                        {allSections.map(s => (
+                                                            <span key={s.id} className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${colorMap[s.color]} whitespace-nowrap`}>
+                                                                {s.shortLabel} · {s.count}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-2 flex-shrink-0">
                                             <button
                                                 onClick={(e) => {
-                                                    e.stopPropagation(); // Prevent toggling when clicking delete
-                                                    handleDeleteSetClick(set.criteriaId, set.setName);
+                                                    e.stopPropagation();
+                                                    handleDownloadSet(set);
                                                 }}
-                                                className="flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400 rounded-lg transition-all flex-shrink-0 z-10"
+                                                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/40 text-blue-400 rounded-lg transition-all text-xs font-semibold"
+                                                title="Download Questions"
                                             >
-                                                <Trash2 size={18} />
-                                                Delete Set
+                                                <Download size={13} />
+                                                Download
                                             </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteSetClick(set.criteriaId, set.criteriaName);
+                                                }}
+                                                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400 rounded-lg transition-all text-xs font-semibold"
+                                            >
+                                                <Trash2 size={13} />
+                                                Delete
+                                            </button>
+                                            <div className={`p-1.5 rounded-lg transition-all duration-300 ${isExpanded ? 'bg-brand-blue/20 rotate-180' : 'bg-white/5'}`}>
+                                                <ChevronDown className={`w-4 h-4 ${isExpanded ? 'text-brand-blue' : 'text-slate-400'}`} />
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {/* Set Content - Collapsible */}
+                                    {/* Expanded: Tab navigation + questions */}
                                     {isExpanded && (
-                                        <div className="p-6 space-y-8 animate-in slide-in-from-top-4 duration-300">
-                                            {/* Section 1: Computer Science */}
-                                            {set.sections.computer_science.length > 0 && (
-                                                <div>
-                                                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                                        <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-lg">Section 1</span>
-                                                        Computer Science ({set.sections.computer_science.length})
-                                                    </h3>
-                                                    <div className="space-y-4">
-                                                        {set.sections.computer_science.map((q, qIdx) => renderQuestion(q, qIdx))}
-                                                    </div>
-                                                </div>
-                                            )}
+                                        <div className="border-t border-white/[0.06]">
+                                            {/* Tab Bar */}
+                                            <div className="flex items-center gap-0 overflow-x-auto scrollbar-none border-b border-white/[0.06] bg-black/20 px-2">
+                                                {allSections.map(section => {
+                                                    const isActive = currentTab === section.id;
+                                                    return (
+                                                        <button
+                                                            key={section.id}
+                                                            onClick={() => setActiveSetTab(prev => ({ ...prev, [set.key]: section.id }))}
+                                                            className={`flex items-center gap-1.5 px-3 py-3 text-xs font-bold whitespace-nowrap border-b-2 transition-all flex-shrink-0
+                                                                ${isActive
+                                                                    ? `${colorMap[section.color]} border-current`
+                                                                    : 'text-slate-500 border-transparent hover:text-slate-300 hover:bg-white/5'
+                                                                }`}
+                                                        >
+                                                            {section.icon}
+                                                            {section.label}
+                                                            <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[9px] font-black
+                                                                ${isActive ? 'bg-current/20 text-current' : 'bg-white/5 text-slate-500'}`}>
+                                                                {section.count}
+                                                            </span>
+                                                        </button>
+                                                    );
+                                                })}
 
-                                            {/* Section 2: Logical Reasoning */}
-                                            {set.sections.logical_reasoning.length > 0 && (
-                                                <div>
-                                                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                                        <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-lg">Section 2</span>
-                                                        Logical Reasoning ({set.sections.logical_reasoning.length})
-                                                    </h3>
-                                                    <div className="space-y-4">
-                                                        {set.sections.logical_reasoning.map((q, qIdx) => renderQuestion(q, qIdx))}
-                                                    </div>
+                                                {/* Mobile delete (right side of tab bar) */}
+                                                <div className="ml-auto flex-shrink-0 flex items-center pr-1">
+                                                    <button
+                                                        onClick={() => handleDeleteSetClick(set.criteriaId, set.setName)}
+                                                        className="sm:hidden flex items-center gap-1 px-2 py-1.5 text-red-400 hover:text-red-300 text-[10px] font-bold transition-colors"
+                                                    >
+                                                        <Trash2 size={11} /> Delete
+                                                    </button>
                                                 </div>
-                                            )}
+                                            </div>
 
-                                            {/* Section 3: Miscellaneous Logic */}
-                                            {set.sections.miscellaneous.length > 0 && (
-                                                <div>
-                                                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                                        <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-lg">Section 3</span>
-                                                        Miscellaneous Logic ({set.sections.miscellaneous.length})
-                                                    </h3>
-                                                    <div className="space-y-4">
-                                                        {set.sections.miscellaneous.map((q, qIdx) => renderQuestion(q, qIdx))}
+                                            {/* Active Tab Questions */}
+                                            {activeSection && (
+                                                <div className="p-4 sm:p-6 space-y-4">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                                            {activeSection.label} — {activeSection.count} questions
+                                                        </p>
                                                     </div>
-                                                </div>
-                                            )}
-
-                                            {/* Section 4: Grammar */}
-                                            {set.sections.grammar.length > 0 && (
-                                                <div>
-                                                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                                        <span className="px-3 py-1 bg-pink-500/20 text-pink-400 rounded-lg">Section 4</span>
-                                                        Grammar ({set.sections.grammar.length})
-                                                    </h3>
                                                     <div className="space-y-4">
-                                                        {set.sections.grammar.map((q, qIdx) => renderQuestion(q, qIdx))}
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Section 5: Elective Questions (Java & Python) */}
-                                            {set.sections.elective.length > 0 && (
-                                                <div>
-                                                    <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
-                                                        <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-lg">Section 5</span>
-                                                        Java/Python ({set.sections.elective.length})
-                                                    </h3>
-                                                    <p className="text-sm text-slate-400 mb-4">
-                                                        Aspirants will choose between Java or Python during the interview
-                                                    </p>
-                                                    <div className="space-y-4">
-                                                        {set.sections.elective.map((q, qIdx) => renderQuestion(q, qIdx))}
+                                                        {activeSection.questions.map((q, qIdx) => renderQuestion(q, qIdx))}
                                                     </div>
                                                 </div>
                                             )}
