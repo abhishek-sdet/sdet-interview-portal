@@ -643,6 +643,21 @@ export default function QuizInterface() {
                 new Map(data.map(q => [(q.question_text || '').trim().toLowerCase(), q])).values()
             );
 
+            // FLEXIBLE MAPPING FOR LEGACY UPLOADS
+            uniqueData = uniqueData.map(q => {
+                let mappedSub = q.subsection ? q.subsection.toLowerCase() : 'testing';
+                if (mappedSub.includes('agile')) mappedSub = 'agile';
+                else if (mappedSub.includes('api')) mappedSub = 'api';
+                else if (mappedSub.includes('logical')) mappedSub = 'logical';
+                else if (mappedSub.includes('grammar') || mappedSub.includes('communication')) mappedSub = 'grammar';
+                else if (mappedSub.includes('cs') || mappedSub.includes('computer')) mappedSub = 'cs_basics';
+                else if (mappedSub.includes('java')) mappedSub = 'java';
+                else if (mappedSub.includes('python')) mappedSub = 'python';
+                else if (mappedSub.includes('database') || mappedSub.includes('sql')) mappedSub = 'database';
+                else mappedSub = 'testing';
+                return { ...q, subsection: mappedSub };
+            });
+
             // FETCH PREVIOUSLY ANSWERED QUESTIONS FOR THIS CANDIDATE
             const candidateId = localStorage.getItem('candidateId');
             if (candidateId) {
