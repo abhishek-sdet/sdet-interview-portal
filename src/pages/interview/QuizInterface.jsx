@@ -86,6 +86,46 @@ export default function QuizInterface() {
         });
     }, [currentIndex]);
 
+    // Anti-Cheating: Screenshot, Copy/Paste, and Context Menu Protection
+    useEffect(() => {
+        const handleKeyUp = async (e) => {
+            if (e.key === 'PrintScreen' || e.key === 'Meta') { // Catch PrintScreen or Win/Cmd key patterns
+                try {
+                    await navigator.clipboard.writeText("Screenshots are strictly prohibited during the assessment.");
+                    toast.error("Screenshots are not allowed! This action has been flagged.");
+                } catch (err) {
+                    console.error("Failed to clear clipboard", err);
+                }
+            }
+        };
+
+        const disableCopyPaste = async (e) => {
+            e.preventDefault();
+            toast.error("Copy/Paste is disabled during the assessment.");
+            try {
+                await navigator.clipboard.writeText("Copy/Paste is strictly prohibited during the assessment.");
+            } catch (err) {}
+        };
+
+        const disableContextMenu = (e) => {
+            e.preventDefault();
+        };
+
+        window.addEventListener('keyup', handleKeyUp);
+        document.addEventListener('copy', disableCopyPaste);
+        document.addEventListener('cut', disableCopyPaste);
+        document.addEventListener('paste', disableCopyPaste);
+        document.addEventListener('contextmenu', disableContextMenu);
+
+        return () => {
+            window.removeEventListener('keyup', handleKeyUp);
+            document.removeEventListener('copy', disableCopyPaste);
+            document.removeEventListener('cut', disableCopyPaste);
+            document.removeEventListener('paste', disableCopyPaste);
+            document.removeEventListener('contextmenu', disableContextMenu);
+        };
+    }, []);
+
     useEffect(() => {
         setMounted(true);
 
@@ -607,7 +647,8 @@ export default function QuizInterface() {
                 .eq('id', criteriaId)
                 .maybeSingle();
 
-            const moduleCounts = criteriaMetaData?.metadata?.module_counts || {
+            let rawModuleCounts = criteriaMetaData?.metadata?.module_counts;
+            let normalizedCounts = {
                 testing: 10,
                 api: 4,
                 logical: 3,
@@ -617,6 +658,19 @@ export default function QuizInterface() {
                 javascript: 2,
                 elective: 7
             };
+
+            if (rawModuleCounts) {
+                if (Array.isArray(rawModuleCounts)) {
+                    normalizedCounts = {};
+                    rawModuleCounts.forEach(mod => {
+                        normalizedCounts[mod.id] = mod.count || 0;
+                    });
+                } else {
+                    normalizedCounts = rawModuleCounts;
+                }
+            }
+
+            const moduleCounts = normalizedCounts;
 
             const expectedGeneralTotal = moduleCounts.testing + moduleCounts.api + moduleCounts.logical + moduleCounts.agile + moduleCounts.cs_basics + moduleCounts.grammar + (moduleCounts.javascript || 0);
 

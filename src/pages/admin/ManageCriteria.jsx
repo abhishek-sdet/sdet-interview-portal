@@ -225,6 +225,18 @@ export default function ManageCriteria() {
         }
     };
 
+    const normalizeModuleCounts = (counts) => {
+        if (!counts) return { testing: 10, api: 4, logical: 3, agile: 2, cs_basics: 2, grammar: 2, javascript: 2, elective: 7 };
+        if (Array.isArray(counts)) {
+            const obj = {};
+            counts.forEach(mod => {
+                obj[mod.id] = mod.count || 0;
+            });
+            return obj;
+        }
+        return counts;
+    };
+
     const handleEdit = (c) => {
         setIsAdding(false);
         setEditingId(c.id);
@@ -235,16 +247,7 @@ export default function ManageCriteria() {
             timer_duration: c.timer_duration || 45,
             passing_percentage: c.passing_percentage || 70,
             allow_multiple_attempts: c.allow_multiple_attempts || false,
-            module_counts: c.metadata?.module_counts || {
-                testing: 10,
-                api: 4,
-                logical: 3,
-                agile: 2,
-                cs_basics: 2,
-                grammar: 2,
-                javascript: 2,
-                elective: 7
-            }
+            module_counts: normalizeModuleCounts(c.metadata?.module_counts)
         });
     };
 
@@ -281,16 +284,7 @@ export default function ManageCriteria() {
             timer_duration: '',
             passing_percentage: '',
             allow_multiple_attempts: false,
-            module_counts: criteria.metadata?.module_counts || {
-                testing: 10,
-                api: 4,
-                logical: 3,
-                agile: 2,
-                cs_basics: 2,
-                grammar: 2,
-                javascript: 2,
-                elective: 7
-            }
+            module_counts: normalizeModuleCounts(criteria.metadata?.module_counts)
         });
     };
 
@@ -821,7 +815,7 @@ export default function ManageCriteria() {
                                             {c.metadata?.module_counts && (
                                                 <div className="flex items-center gap-2 text-slate-300 bg-brand-blue/10 rounded-lg px-3 py-2 w-fit">
                                                     <span className="text-sm font-medium text-brand-blue">
-                                                        Total Qs: {Object.values(c.metadata.module_counts).reduce((a,b) => a+b, 0)}
+                                                        Total Qs: {Object.values(normalizeModuleCounts(c.metadata.module_counts)).reduce((a,b) => a+b, 0)}
                                                     </span>
                                                 </div>
                                             )}

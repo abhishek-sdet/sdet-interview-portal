@@ -230,6 +230,14 @@ export default function LandingPage() {
                 .eq('scheduled_date', startOfTodayString);
                 
             const activeCriteriaIds = activeDrives?.map(d => d.criteria_id).filter(Boolean) || [];
+
+            if (!activeDrives || activeDrives.length === 0 || activeCriteriaIds.length === 0) {
+                console.warn('[REGISTRATION] No active drives or criteria found for today.');
+                setError('No active interview drive is scheduled for today. Please wait for an administrator to start the drive.');
+                setLoading(false);
+                return;
+            }
+
             const { data: activeCriteria } = await supabase
                 .from('criteria')
                 .select('id, allow_multiple_attempts')
