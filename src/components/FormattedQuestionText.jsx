@@ -148,6 +148,9 @@ export default function FormattedQuestionText({ text, subsection }) {
             const trimmed = line.trim();
             if (!trimmed) return false;
 
+            // If a line ends with a question mark, it's almost certainly a question, not code.
+            if (trimmed.endsWith('?')) return false;
+
             const codePatterns = [
                 /^public\s+class\s+/,
                 /^public\s+static\s+/,
@@ -158,17 +161,16 @@ export default function FormattedQuestionText({ text, subsection }) {
                 /^String\s+\w+\s*=/,
                 /^int\s+\w+\s*=/,
                 /^System\.out\.print/,
+                /^console\.log\s*\(/,
                 /^print\s*\(/,
-                /[{};]$/, // common line endings for Java/C/JS
+                /[{}]$/, // lines ending with { or }
                 /^try\s*:/,
                 /^except(\s+\w+)?\s*:/,
                 /^finally\s*:/,
-                /^if\s+/,
-                /^for\s+/,
-                /^while\s+/,
-                /^elif\s+/,
-                /^\s*\w+\s*=\s*.*$/, // assignments like x = y or items = [10, 20]
-                /\.\w+\(.*\)/ // method calls like items.append(...) or System.out.println(...)
+                /^if\s*\(/,
+                /^for\s*\(/,
+                /^while\s*\(/,
+                /^elif\s+/
             ];
 
             return codePatterns.some(pattern => pattern.test(trimmed));
