@@ -427,29 +427,37 @@ body {
  *  PREMIUM CUSTOM SCROLLBARS (GLOBAL OVERRIDES)
  * ==========================================
  */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-::-webkit-scrollbar-track {
-  background: #020617; /* Matches universe background */
+::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track {
+  background: transparent; 
 }
 
-::-webkit-scrollbar-thumb {
-  background: rgba(14, 165, 233, 0.2); /* Soft brand blue */
-  border-radius: 4px;
-  border: 2px solid #020617;
+::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-thumb {
+  background-color: var(--neon-blue);
+  border-radius: 10px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(14, 165, 233, 0.5); /* Vivid brand blue on hover */
+::-webkit-scrollbar-thumb:hover,
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--brand-blue); 
+}
+
+::-webkit-scrollbar-button,
+*::-webkit-scrollbar-button {
+  display: none; /* This hides the default Windows scrollbar arrows */
 }
 
 /* Firefox Support */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(14, 165, 233, 0.25) #020617;
+  scrollbar-color: var(--neon-blue) transparent;
 }
 
 /* 
