@@ -163,7 +163,7 @@ export default function FormattedQuestionText({ text, subsection }) {
                 /^System\.out\.print/,
                 /^console\.log\s*\(/,
                 /^print\s*\(/,
-                /[{}]$/, // lines ending with { or }
+                /[{};]$/, // lines ending with {, }, or ;
                 /^try\s*:/,
                 /^except(\s+\w+)?\s*:/,
                 /^finally\s*:/,
