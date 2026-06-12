@@ -700,12 +700,14 @@ export default function QuizInterface() {
             // Categorize Questions by NEW structure: section + subsection
             // General/Aptitude
             let generalQs = uniqueData.filter(q => {
-                const isGeneral = q.section === 'general' || !q.section;
+                const isJS = q.subsection === 'javascript';
+                const isGeneral = q.section === 'general' || !q.section || isJS;
                 return isGeneral;
             });
 
             let electiveQs = uniqueData.filter(q => {
-                const isElective = q.section === 'elective';
+                const isJS = q.subsection === 'javascript';
+                const isElective = q.section === 'elective' && !isJS;
                 return isElective;
             });
 
