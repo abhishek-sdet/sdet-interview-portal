@@ -235,12 +235,13 @@ export default function UploadQuestions() {
                 
             if (fetchError) throw fetchError;
             
-            const existingQSet = new Set(existingQData.map(q => q.question_text.trim().toLowerCase()));
+            const existingQSet = new Set(existingQData.map(q => (q.question_text || '').trim().toLowerCase()));
 
             // Filter out existing questions and duplicates within the file itself
             const seenInFile = new Set();
             const uniqueNewQuestions = allQuestions.filter(q => {
-                const text = q.question.trim().toLowerCase();
+                const text = (q.question_text || '').trim().toLowerCase();
+                if (!text) return false;
                 if (existingQSet.has(text) || seenInFile.has(text)) {
                     return false;
                 }
