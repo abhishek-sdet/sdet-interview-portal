@@ -201,8 +201,12 @@ export default function AdminDashboard() {
                                         return (
                                             <div key={activity.id} className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors">
                                                 {/* Avatar */}
-                                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${activity.passed ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'}`}>
-                                                    {initials}
+                                                <div className={`flex-shrink-0 w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-xs font-black ${activity.passed ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'}`}>
+                                                    {activity.metadata?.initial_photo ? (
+                                                        <img src={activity.metadata.initial_photo} alt={name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        initials
+                                                    )}
                                                 </div>
                                                 {/* Name + Criteria */}
                                                 <div className="flex-1 min-w-0">

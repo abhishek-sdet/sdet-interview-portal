@@ -466,9 +466,20 @@ export default function HRDashboard() {
                                                     })()}
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <div className="flex flex-col">
-                                                        <span className="font-bold text-sm tracking-tight">{item.candidates?.full_name}</span>
-                                                        <span className="text-[10px] font-mono text-slate-500">Score: {item.score}/{item.total_questions}</span>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-800 flex-shrink-0">
+                                                            {item.metadata?.initial_photo ? (
+                                                                <img src={item.metadata.initial_photo} alt={item.candidates?.full_name} className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <div className="w-full h-full flex items-center justify-center text-xs font-bold text-white bg-slate-700">
+                                                                    {item.candidates?.full_name?.substring(0, 2).toUpperCase() || 'U'}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className="font-bold text-sm tracking-tight">{item.candidates?.full_name}</span>
+                                                            <span className="text-[10px] font-mono text-slate-500">Score: {item.score}/{item.total_questions}</span>
+                                                        </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-xs font-semibold text-slate-500">{item.candidates?.email}</td>
