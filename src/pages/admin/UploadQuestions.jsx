@@ -145,7 +145,7 @@ export default function UploadQuestions() {
                             continue;
                         }
 
-                        const categoryRaw = row.Category || row['Topic'] || row['Sub-Topic'] || sheetName || 'General';
+                        const categoryRaw = row.Category || row['Section'] || row['Topic'] || row['Sub-Topic'] || sheetName || 'General';
                         const answerRaw = row.Answer || row['Correct Answer'] || 'A';
                         const explanationRaw = row.Explanation || row['Reason'] || '';
                         const difficultyRaw = row.Difficulty ? row.Difficulty.toString().toLowerCase() : 'medium';
