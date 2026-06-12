@@ -150,7 +150,16 @@ export default function FormattedQuestionText({ text }) {
                 /^int\s+\w+\s*=/,
                 /^System\.out\.print/,
                 /^print\s*\(/,
-                /[{};]$/ // common line endings for Java/C/JS
+                /[{};]$/, // common line endings for Java/C/JS
+                /^try\s*:/,
+                /^except(\s+\w+)?\s*:/,
+                /^finally\s*:/,
+                /^if\s+/,
+                /^for\s+/,
+                /^while\s+/,
+                /^elif\s+/,
+                /^\s*\w+\s*=\s*.*$/, // assignments like x = y or items = [10, 20]
+                /\.\w+\(.*\)/ // method calls like items.append(...) or System.out.println(...)
             ];
 
             return codePatterns.some(pattern => pattern.test(trimmed));
