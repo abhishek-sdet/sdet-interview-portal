@@ -44,7 +44,7 @@ export function detectSections(text) {
         // - "JAVA Based Questions (Optional - Choose 3 out of 6)"
         // - "Python Based Questions"
         // - Standalone markers: "JAVA", "Python", "Java", "PYTHON"
-        const sectionMatch = line.match(/^(?:\[.+\]|Section\s+[\w\s:\-–—]+|[A-Z][A-Za-z\s]+(?:Questions?|Based|MCQ|Answer)|(?:JAVA|Python|Java|PYTHON)|\W*(?:MISCELLANEOUS|General|Aptitude|Technical|Logical|Grammar|Computer|Verbal)\b.*)/i);
+        const sectionMatch = line.match(/^(?:\[.+\]|Section\s+[\w\s:\-–—]+|[A-Z][A-Za-z\s]+(?:Questions?|Based|MCQ|Type)|\W*(?:JAVA|Python|Java|PYTHON|MISCELLANEOUS|General|Aptitude|Technical|Logical|Grammar|Computer|Verbal)\b.*)/i);
 
         // Additional check: line should be relatively short (section headers) and not start with a number
         const looksLikeSection = sectionMatch && line.length < 150 && !line.match(/^\d+[\.)]/)

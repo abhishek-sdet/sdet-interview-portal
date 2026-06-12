@@ -220,16 +220,8 @@ export default function UploadQuestions() {
 
             console.log(`✅ Parsed ${allQuestions.length} questions`);
 
-            // Delete existing questions with same criteria_id and category
-            const { error: deleteError } = await supabase
-                .from('questions')
-                .delete()
-                .eq('criteria_id', currentCriteriaId)
-                .eq('category', 'Common');
-
-            if (deleteError) {
-                console.error('Error deleting old questions:', deleteError);
-            }
+            // Delete existing questions step removed to allow appending new questions
+            // New questions will now be added alongside existing ones
 
             // Insert new questions in batches to speed up the process
             let successCount = 0;
