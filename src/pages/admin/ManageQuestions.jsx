@@ -566,7 +566,7 @@ export default function ManageQuestions() {
                                 />
                             ) : (
                                 <div className="text-white font-medium text-lg leading-relaxed">
-                                    <FormattedQuestionText text={q.question_text} />
+                                    <FormattedQuestionText text={q.question_text} subsection={q.subsection} />
                                 </div>
                             )}
 

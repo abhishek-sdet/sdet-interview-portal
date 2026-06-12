@@ -89,7 +89,7 @@ import { cleanQuestionText } from '@/utils/questionHelpers';
  * using the HoverCodeBlock component to save space.
  * Includes a Smart Auto-Detector for unformatted code.
  */
-export default function FormattedQuestionText({ text }) {
+export default function FormattedQuestionText({ text, subsection }) {
     if (!text) return null;
     const cleanedText = cleanQuestionText(text);
     if (!cleanedText) return null;
@@ -114,6 +114,15 @@ export default function FormattedQuestionText({ text }) {
         );
     };
 
+    let defaultLang = 'javascript';
+    if (subsection) {
+        const subLower = subsection.toLowerCase();
+        if (subLower === 'java') defaultLang = 'java';
+        else if (subLower === 'python') defaultLang = 'python';
+        else if (subLower === 'database' || subLower === 'sql') defaultLang = 'sql';
+        else if (subLower === 'javascript' || subLower === 'js') defaultLang = 'javascript';
+    }
+
     // 1. Check for standard Markdown Backticks
     if (cleanedText.includes('```')) {
         const regex = /```(\w+)?\n?([\s\S]*?)```/g;
@@ -122,7 +131,7 @@ export default function FormattedQuestionText({ text }) {
 
         while ((match = regex.exec(cleanedText)) !== null) {
             pushText(cleanedText.slice(lastIndex, match.index));
-            pushCode(match[1] || 'javascript', match[2]);
+            pushCode(match[1] || defaultLang, match[2]);
             lastIndex = regex.lastIndex;
         }
         pushText(cleanedText.slice(lastIndex));
@@ -133,7 +142,7 @@ export default function FormattedQuestionText({ text }) {
         let currentText = [];
         let currentCode = [];
         let inCodeBlock = false;
-        let detectedLanguage = 'javascript';
+        let detectedLanguage = defaultLang;
 
         const isCodeLine = (line) => {
             const trimmed = line.trim();

@@ -1834,7 +1834,7 @@ export default function QuizInterface() {
 
                             {/* Question Text */}
                             <div className="text-lg sm:text-xl font-bold text-white leading-relaxed mb-5 pl-0 sm:pl-12">
-                                <FormattedQuestionText text={currentQuestion.question_text} />
+                                <FormattedQuestionText text={currentQuestion.question_text} subsection={currentQuestion.subsection} />
                             </div>
 
                             {/* Options */}
