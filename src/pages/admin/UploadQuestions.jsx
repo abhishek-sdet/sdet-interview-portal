@@ -135,10 +135,10 @@ export default function UploadQuestions() {
                         if (!questionText) continue;
 
                         let options = [];
-                        if (row['Option A']) options.push(row['Option A'].toString().trim());
-                        if (row['Option B']) options.push(row['Option B'].toString().trim());
-                        if (row['Option C']) options.push(row['Option C'].toString().trim());
-                        if (row['Option D']) options.push(row['Option D'].toString().trim());
+                        if (row['Option A'] !== undefined && row['Option A'] !== null && row['Option A'] !== '') options.push(row['Option A'].toString().trim());
+                        if (row['Option B'] !== undefined && row['Option B'] !== null && row['Option B'] !== '') options.push(row['Option B'].toString().trim());
+                        if (row['Option C'] !== undefined && row['Option C'] !== null && row['Option C'] !== '') options.push(row['Option C'].toString().trim());
+                        if (row['Option D'] !== undefined && row['Option D'] !== null && row['Option D'] !== '') options.push(row['Option D'].toString().trim());
 
                         if (options.length < 2) {
                             console.warn(`Row ${i + 2} in sheet ${sheetName} skipped: Not enough options`);
