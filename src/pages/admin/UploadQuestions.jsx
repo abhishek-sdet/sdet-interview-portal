@@ -242,16 +242,11 @@ export default function UploadQuestions() {
                     else if (sectionLower.includes('logical')) dbSubsection = 'logical';
                     else if (sectionLower.includes('agile')) dbSubsection = 'agile';
                     else if (sectionLower.includes('computer') || sectionLower.includes('cs') || sectionLower.includes('basics')) dbSubsection = 'cs_basics';
-                    else if (sectionLower.includes('grammar')) dbSubsection = 'grammar';
+                    else if (sectionLower.includes('grammar') || sectionLower.includes('communication') || sectionLower.includes('verbal')) dbSubsection = 'grammar';
                     else if (sectionLower.includes('aptitude')) dbSubsection = 'aptitude';
                 }
 
-                if (q.subsection) {
-                    dbSubsection = q.subsection;
-                    if (q.subsection === 'java' || q.subsection === 'python' || q.subsection === 'database') {
-                        dbSection = 'elective';
-                    }
-                }
+
 
                 return {
                     criteria_id: q.criteria_id,
