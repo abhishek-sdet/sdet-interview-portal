@@ -563,6 +563,9 @@ export default function LandingPage() {
                                         </span>
                                     </button>
                                 </form>
+                                <div className="mt-4 text-center text-[9px] text-slate-500 font-black tracking-widest uppercase opacity-60">
+                                    Portal Version: 1.0.9 (Latest)
+                                </div>
                             </div>
                         </div>
                     </div>

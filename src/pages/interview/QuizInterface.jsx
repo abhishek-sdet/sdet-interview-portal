@@ -1722,6 +1722,7 @@ export default function QuizInterface() {
                     {/* LEFT: Logo + Badges */}
                     <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-shrink-0">
                         <img src="/sdet-logo.png" alt="SDET" className="h-7 sm:h-8 w-auto object-contain flex-shrink-0" />
+                        <span className="text-[8px] text-slate-500 font-bold -ml-1 flex-shrink-0 self-end mb-1">v1.0.9</span>
                         <div className="flex items-center gap-1.5 flex-wrap">
                             {criteriaType && (
                                 <span className={`hidden xs:inline-flex items-center px-2 py-0.5 rounded-md border text-[10px] font-black uppercase tracking-wider whitespace-nowrap

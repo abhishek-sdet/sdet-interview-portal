@@ -8,7 +8,7 @@ const supabase = createClient(
 );
 
 async function run() {
-    const interviewId = 'e32b5a63-222c-4b2f-852e-b05d6155e42b';
+    const interviewId = '938f4061-49ef-4340-a652-a268dd939aae';
 
     const { data: answers, error } = await supabase
         .from('answers')
