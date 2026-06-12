@@ -103,7 +103,10 @@ export default function LandingPage() {
 
     const handleChange = (field) => (e) => {
         let value = e.target.value;
-        if (field === 'phone') {
+        if (field === 'fullName') {
+            // Strip non-alphabet and non-space characters
+            value = value.replace(/[^a-zA-Z\s]/g, '');
+        } else if (field === 'phone') {
             // Strip non-numeric characters
             value = value.replace(/[^0-9]/g, '');
         } else if (field === 'email') {
@@ -135,6 +138,11 @@ export default function LandingPage() {
 
         if (!formData.fullName.trim()) {
             newErrors.push('Full name is required');
+        } else {
+            const nameRegex = /^[a-zA-Z\s]{2,}$/;
+            if (!nameRegex.test(formData.fullName.trim())) {
+                newErrors.push('Name must be at least 2 characters (alphabets & spaces only)');
+            }
         }
 
         if (!formData.email.trim()) {
