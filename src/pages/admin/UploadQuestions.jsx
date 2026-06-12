@@ -227,7 +227,30 @@ export default function UploadQuestions() {
             let successCount = 0;
             let failedCount = 0;
             
-            const processedQuestions = allQuestions.map(q => {
+            // Fetch existing questions to prevent duplicates
+            const { data: existingQData, error: fetchError } = await supabase
+                .from('questions')
+                .select('question_text')
+                .eq('criteria_id', currentCriteriaId);
+                
+            if (fetchError) throw fetchError;
+            
+            const existingQSet = new Set(existingQData.map(q => q.question_text.trim().toLowerCase()));
+
+            // Filter out existing questions and duplicates within the file itself
+            const seenInFile = new Set();
+            const uniqueNewQuestions = allQuestions.filter(q => {
+                const text = q.question.trim().toLowerCase();
+                if (existingQSet.has(text) || seenInFile.has(text)) {
+                    return false;
+                }
+                seenInFile.add(text);
+                return true;
+            });
+
+            let skippedCount = allQuestions.length - uniqueNewQuestions.length;
+
+            const processedQuestions = uniqueNewQuestions.map(q => {
                 let dbSection = 'general';
                 let dbSubsection = q.subsection || (q.section ? q.section.toLowerCase() : 'aptitude');
 
@@ -294,7 +317,8 @@ export default function UploadQuestions() {
             setUploadStats({
                 total: allQuestions.length,
                 success: successCount,
-                failed: failedCount
+                failed: failedCount,
+                skipped: skippedCount
             });
             setUploadProgress(null);
 
@@ -356,7 +380,7 @@ export default function UploadQuestions() {
                             </div>
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="bg-white/5 border border-white/5 rounded-xl p-4 flex flex-col items-center justify-center text-center">
                                 <div className="text-3xl font-black text-brand-blue mb-1">{uploadStats.total}</div>
                                 <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Parsed</div>
@@ -364,6 +388,10 @@ export default function UploadQuestions() {
                             <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 flex flex-col items-center justify-center text-center">
                                 <div className="text-3xl font-black text-green-400 mb-1">{uploadStats.success}</div>
                                 <div className="text-xs font-medium text-green-400/80 uppercase tracking-wider">Saved</div>
+                            </div>
+                            <div className={`border rounded-xl p-4 flex flex-col items-center justify-center text-center ${uploadStats.skipped > 0 ? 'bg-amber-500/10 border-amber-500/20' : 'bg-white/5 border-white/5'}`}>
+                                <div className={`text-3xl font-black mb-1 ${uploadStats.skipped > 0 ? 'text-amber-400' : 'text-slate-400'}`}>{uploadStats.skipped || 0}</div>
+                                <div className={`text-xs font-medium uppercase tracking-wider ${uploadStats.skipped > 0 ? 'text-amber-400/80' : 'text-slate-500'}`}>Skipped</div>
                             </div>
                             <div className={`border rounded-xl p-4 flex flex-col items-center justify-center text-center ${uploadStats.failed > 0 ? 'bg-red-500/10 border-red-500/20' : 'bg-white/5 border-white/5'}`}>
                                 <div className={`text-3xl font-black mb-1 ${uploadStats.failed > 0 ? 'text-red-400' : 'text-slate-400'}`}>{uploadStats.failed}</div>
