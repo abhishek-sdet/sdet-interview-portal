@@ -658,7 +658,12 @@ export default function QuizInterface() {
                 else if (mappedSub.includes('python')) mappedSub = 'python';
                 else if (mappedSub.includes('database') || mappedSub.includes('sql')) mappedSub = 'database';
                 else mappedSub = 'testing';
-                return { ...q, subsection: mappedSub };
+
+                // Force general categories to be 'general' section
+                const isGeneralSub = ['testing', 'api', 'logical', 'agile', 'cs_basics', 'grammar', 'javascript'].includes(mappedSub);
+                const section = isGeneralSub ? 'general' : (q.section || 'elective');
+
+                return { ...q, subsection: mappedSub, section };
             });
 
             // FETCH PREVIOUSLY ANSWERED QUESTIONS FOR THIS CANDIDATE
