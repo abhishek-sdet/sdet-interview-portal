@@ -21,6 +21,7 @@ export default function HRDashboard() {
     const driveFilterRef = useRef(''); // Use ref to solve stale closure in background polling
     const [drives, setDrives] = useState([]);
     const [activeTab, setActiveTab] = useState('fresher');
+    const [selectedImage, setSelectedImage] = useState(null);
 
     // Keep ref in sync with state
     useEffect(() => {
@@ -467,7 +468,10 @@ export default function HRDashboard() {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-800 flex-shrink-0">
+                                                        <div 
+                                                            className="w-8 h-8 rounded-full overflow-hidden bg-slate-800 flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
+                                                            onClick={() => item.metadata?.initial_photo && setSelectedImage(item.metadata.initial_photo)}
+                                                        >
                                                             {item.metadata?.initial_photo ? (
                                                                 <img src={item.metadata.initial_photo} alt={item.candidates?.full_name} className="w-full h-full object-cover" />
                                                             ) : (
@@ -615,6 +619,28 @@ export default function HRDashboard() {
                         )}
                     </div>
                 </div>
+
+                {/* Image View Modal */}
+                {selectedImage && (
+                    <div 
+                        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+                        onClick={() => setSelectedImage(null)}
+                    >
+                        <div className="relative max-w-4xl max-h-[90vh] w-full flex items-center justify-center" onClick={e => e.stopPropagation()}>
+                            <button 
+                                onClick={() => setSelectedImage(null)}
+                                className="absolute -top-12 right-0 text-white hover:text-red-400 bg-white/10 hover:bg-white/20 p-2 rounded-full transition-all"
+                            >
+                                <XCircle size={24} />
+                            </button>
+                            <img 
+                                src={selectedImage} 
+                                alt="Candidate Identity" 
+                                className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl border border-white/20"
+                            />
+                        </div>
+                    </div>
+                )}
 
                 {/* Footer Signature */}
                 <AppSignature />

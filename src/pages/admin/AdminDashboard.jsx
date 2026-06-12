@@ -4,7 +4,7 @@ import SimpleLayout from '@/components/admin/SimpleLayout';
 import { supabase } from '@/lib/supabase';
 import {
     Users, CheckCircle2, TrendingUp, Upload, FileText,
-    Calendar, ArrowRight, Activity, Clock, Award, BarChart3
+    Calendar, ArrowRight, Activity, Clock, Award, BarChart3, XCircle
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -17,6 +17,7 @@ export default function AdminDashboard() {
         recentActivity: []
     });
     const [loading, setLoading] = useState(true);
+    const [selectedImage, setSelectedImage] = useState(null);
 
     useEffect(() => { fetchTodayStats(); }, []);
 
@@ -201,7 +202,10 @@ export default function AdminDashboard() {
                                         return (
                                             <div key={activity.id} className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors">
                                                 {/* Avatar */}
-                                                <div className={`flex-shrink-0 w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-xs font-black ${activity.passed ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'}`}>
+                                                <div 
+                                                    className={`flex-shrink-0 w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-xs font-black cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all ${activity.passed ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'}`}
+                                                    onClick={() => activity.metadata?.initial_photo && setSelectedImage(activity.metadata.initial_photo)}
+                                                >
                                                     {activity.metadata?.initial_photo ? (
                                                         <img src={activity.metadata.initial_photo} alt={name} className="w-full h-full object-cover" />
                                                     ) : (
@@ -237,6 +241,28 @@ export default function AdminDashboard() {
                     </div>
                 </div>
             </div>
+
+            {/* Image View Modal */}
+            {selectedImage && (
+                <div 
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+                    onClick={() => setSelectedImage(null)}
+                >
+                    <div className="relative max-w-4xl max-h-[90vh] w-full flex items-center justify-center" onClick={e => e.stopPropagation()}>
+                        <button 
+                            onClick={() => setSelectedImage(null)}
+                            className="absolute -top-12 right-0 text-white hover:text-red-400 bg-white/10 hover:bg-white/20 p-2 rounded-full transition-all"
+                        >
+                            <XCircle size={24} />
+                        </button>
+                        <img 
+                            src={selectedImage} 
+                            alt="Candidate Identity" 
+                            className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl border border-white/20"
+                        />
+                    </div>
+                </div>
+            )}
         </SimpleLayout>
     );
 }
