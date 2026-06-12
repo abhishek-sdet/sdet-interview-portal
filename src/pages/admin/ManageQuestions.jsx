@@ -19,6 +19,7 @@ export default function ManageQuestions() {
     // Modal States
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
     const [showDeleteSetConfirm, setShowDeleteSetConfirm] = useState(null); // { criteriaId, setName }
+    const [showDeleteTabConfirm, setShowDeleteTabConfirm] = useState(null); // { criteriaId, tabId, tabLabel }
     const [successModal, setSuccessModal] = useState(null); // { title, message }
 
     // Track expanded sets - default to all collapsed (empty object)
@@ -273,6 +274,11 @@ export default function ManageQuestions() {
         setShowDeleteSetConfirm({ criteriaId, setName });
     };
 
+    const handleDeleteTabClick = (criteriaId, tabId, tabLabel) => {
+        if (!criteriaId) return;
+        setShowDeleteTabConfirm({ criteriaId, tabId, tabLabel });
+    };
+
     const handleAddQuestion = async () => {
         if (!newQuestion.criteria_id || !newQuestion.category || !newQuestion.question_text) {
             alert('Please fill in Criteria, Set Name, and Question Text.');
@@ -408,6 +414,48 @@ export default function ManageQuestions() {
             setSuccessModal({
                 title: 'Error',
                 message: `Failed to delete question set: ${err.message}`,
+                type: 'danger'
+            });
+        }
+    };
+
+    const confirmDeleteTab = async () => {
+        if (!showDeleteTabConfirm) return;
+
+        const { criteriaId, tabId, tabLabel } = showDeleteTabConfirm;
+        setShowDeleteTabConfirm(null);
+
+        try {
+            const set = Object.values(questionSets).find(s => s.criteriaId === criteriaId);
+            const questionsToDelete = set?.sections[tabId] || [];
+            const questionIds = questionsToDelete.map(q => q.id);
+
+            if (questionIds.length === 0) {
+                setSuccessModal({
+                    title: 'No Questions Found',
+                    message: 'No questions found in this tab to delete.',
+                    type: 'info'
+                });
+                return;
+            }
+
+            const { count, error } = await supabase
+                .from('questions')
+                .delete({ count: 'exact' })
+                .in('id', questionIds);
+
+            if (error) throw error;
+
+            fetchQuestions(false);
+            setSuccessModal({
+                title: 'Success',
+                message: `Successfully deleted ${count || questionIds.length} questions in "${tabLabel}" tab.`
+            });
+        } catch (err) {
+            console.error('Error deleting tab questions:', err);
+            setSuccessModal({
+                title: 'Error',
+                message: `Failed to delete tab questions: ${err.message}`,
                 type: 'danger'
             });
         }
@@ -1015,6 +1063,13 @@ export default function ManageQuestions() {
                                                         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                                                             {activeSection.label} — {activeSection.count} questions
                                                         </p>
+                                                        <button
+                                                            onClick={() => handleDeleteTabClick(set.criteriaId, activeSection.id, activeSection.label)}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400 rounded-lg transition-all text-xs font-semibold"
+                                                        >
+                                                            <Trash2 size={13} />
+                                                            Delete {activeSection.label}
+                                                        </button>
                                                     </div>
                                                     <div className="space-y-4">
                                                         {activeSection.questions.map((q, qIdx) => renderQuestion(q, qIdx))}
@@ -1036,6 +1091,17 @@ export default function ManageQuestions() {
                     title="Delete Entire Set?"
                     message={showDeleteSetConfirm ? `Are you sure you want to delete all questions in "${showDeleteSetConfirm.setName}"? This action cannot be undone.` : ''}
                     confirmText="Delete Set"
+                    cancelText="Cancel"
+                    type="danger"
+                />
+
+                <ConfirmModal
+                    isOpen={!!showDeleteTabConfirm}
+                    onClose={() => setShowDeleteTabConfirm(null)}
+                    onConfirm={confirmDeleteTab}
+                    title={`Delete ${showDeleteTabConfirm?.tabLabel} Questions?`}
+                    message={showDeleteTabConfirm ? `Are you sure you want to delete all ${showDeleteTabConfirm.tabLabel} questions? This action cannot be undone.` : ''}
+                    confirmText="Delete Questions"
                     cancelText="Cancel"
                     type="danger"
                 />
