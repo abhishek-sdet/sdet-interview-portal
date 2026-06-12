@@ -326,33 +326,35 @@ export function parseQuestionsInSection(section, importData) {
             let detectedSection = detectSectionType(section.name);
             let detectedSubsection = detectSubsection(section.name);
 
-            // ALWAYS analyze question content for language-specific keywords
-            // This overrides section header detection if keywords are found
-            const questionLower = currentQuestion.toLowerCase();
+            // ALWAYS analyze question content for language-specific keywords ONLY IF section is generic
+            // This prevents overriding explicitly defined sections like "Section 1: Testing"
+            if (!detectedSubsection) {
+                const questionLower = currentQuestion.toLowerCase();
 
-            // Check for Java-specific keywords
-            if (questionLower.includes('java') || questionLower.includes('jvm') ||
-                questionLower.includes('spring') || questionLower.includes('hibernate') ||
-                questionLower.includes('servlet') || questionLower.includes('jsp')) {
-                detectedSection = 'elective';
-                detectedSubsection = 'java';
-                console.log(`      🔵 JAVA detected in Q${questionNumber + 1}`);
-            }
-            // Check for Python-specific keywords
-            else if (questionLower.includes('python') || questionLower.includes('django') ||
-                questionLower.includes('flask') || questionLower.includes('pandas') ||
-                questionLower.includes('numpy') || questionLower.includes('pip')) {
-                detectedSection = 'elective';
-                detectedSubsection = 'python';
-                console.log(`      🟡 PYTHON detected in Q${questionNumber + 1}`);
-            }
-            // Check for Database-specific keywords
-            else if (questionLower.includes('sql') || questionLower.includes('database') ||
-                questionLower.includes('rdbms') || questionLower.includes('query') ||
-                questionLower.includes('dbms')) {
-                detectedSection = 'elective';
-                detectedSubsection = 'database';
-                console.log(`      🟠 DATABASE detected in Q${questionNumber + 1}`);
+                // Check for Java-specific keywords
+                if (questionLower.includes('java') || questionLower.includes('jvm') ||
+                    questionLower.includes('spring') || questionLower.includes('hibernate') ||
+                    questionLower.includes('servlet') || questionLower.includes('jsp')) {
+                    detectedSection = 'elective';
+                    detectedSubsection = 'java';
+                    console.log(`      🔵 JAVA detected in Q${questionNumber + 1}`);
+                }
+                // Check for Python-specific keywords
+                else if (questionLower.includes('python') || questionLower.includes('django') ||
+                    questionLower.includes('flask') || questionLower.includes('pandas') ||
+                    questionLower.includes('numpy') || questionLower.includes('pip')) {
+                    detectedSection = 'elective';
+                    detectedSubsection = 'python';
+                    console.log(`      🟡 PYTHON detected in Q${questionNumber + 1}`);
+                }
+                // Check for Database-specific keywords
+                else if (questionLower.includes('sql') || questionLower.includes('database') ||
+                    questionLower.includes('rdbms') || questionLower.includes('query') ||
+                    questionLower.includes('dbms')) {
+                    detectedSection = 'elective';
+                    detectedSubsection = 'database';
+                    console.log(`      🟠 DATABASE detected in Q${questionNumber + 1}`);
+                }
             }
 
             // Strip the (Variant \d+) suffix from the question text so candidates don't see it
