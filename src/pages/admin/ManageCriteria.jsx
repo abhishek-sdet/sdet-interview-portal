@@ -709,6 +709,10 @@ export default function ManageCriteria() {
                                                     <input type="number" value={editForm.module_counts.grammar} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, grammar: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
                                                 </div>
                                                 <div>
+                                                    <label className="text-[10px] text-slate-400 mb-1 block">JavaScript (JS)</label>
+                                                    <input type="number" value={editForm.module_counts.javascript || 0} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, javascript: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
+                                                </div>
+                                                <div>
                                                     <label className="text-[10px] text-slate-400 mb-1 block">Elective</label>
                                                     <input type="number" value={editForm.module_counts.elective} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, elective: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
                                                 </div>

@@ -256,12 +256,13 @@ export default function UploadQuestions() {
                 let dbSubsection = q.subsection || (q.section ? q.section.toLowerCase() : 'aptitude');
 
                 const sectionLower = (q.section || '').toLowerCase();
-                if (sectionLower.includes('java') || sectionLower.includes('python') || sectionLower.includes('database') || sectionLower.includes('javascript') || sectionLower.includes('js')) {
+                if (sectionLower.includes('java') || sectionLower.includes('python') || sectionLower.includes('database')) {
                     dbSection = 'elective';
-                    dbSubsection = sectionLower.includes('javascript') || sectionLower.includes('js') ? 'javascript' : sectionLower.includes('java') ? 'java' : (sectionLower.includes('python') ? 'python' : 'database');
+                    dbSubsection = sectionLower.includes('java') ? 'java' : (sectionLower.includes('python') ? 'python' : 'database');
                 } else {
                     dbSection = 'general';
-                    if (sectionLower.includes('testing') || sectionLower.includes('qa')) dbSubsection = 'testing';
+                    if (sectionLower.includes('javascript') || sectionLower.includes('js')) dbSubsection = 'javascript';
+                    else if (sectionLower.includes('testing') || sectionLower.includes('qa')) dbSubsection = 'testing';
                     else if (sectionLower.includes('api')) dbSubsection = 'api';
                     else if (sectionLower.includes('logical')) dbSubsection = 'logical';
                     else if (sectionLower.includes('agile')) dbSubsection = 'agile';

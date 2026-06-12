@@ -614,10 +614,11 @@ export default function QuizInterface() {
                 agile: 2,
                 cs_basics: 2,
                 grammar: 2,
+                javascript: 2,
                 elective: 7
             };
 
-            const expectedGeneralTotal = moduleCounts.testing + moduleCounts.api + moduleCounts.logical + moduleCounts.agile + moduleCounts.cs_basics + moduleCounts.grammar;
+            const expectedGeneralTotal = moduleCounts.testing + moduleCounts.api + moduleCounts.logical + moduleCounts.agile + moduleCounts.cs_basics + moduleCounts.grammar + (moduleCounts.javascript || 0);
 
             let query = supabase
                 .from('questions')
@@ -776,7 +777,7 @@ export default function QuizInterface() {
             };
 
             let orderedGeneralQs = [];
-            const knownSubsections = ['testing', 'api', 'logical', 'agile', 'cs_basics', 'grammar'];
+            const knownSubsections = ['testing', 'api', 'logical', 'agile', 'cs_basics', 'grammar', 'javascript'];
             const hasSectionedQuestions = generalQs.some(q => knownSubsections.includes(q.subsection));
 
             if (hasSectionedQuestions) {
@@ -786,9 +787,10 @@ export default function QuizInterface() {
                 let agileQs = selectQuestions(generalQs.filter(q => q.subsection === 'agile'), moduleCounts.agile);
                 let csBasicsQs = selectQuestions(generalQs.filter(q => q.subsection === 'cs_basics'), moduleCounts.cs_basics);
                 let grammarQs = selectQuestions(generalQs.filter(q => q.subsection === 'grammar'), moduleCounts.grammar);
+                let javascriptQs = selectQuestions(generalQs.filter(q => q.subsection === 'javascript'), moduleCounts.javascript || 0);
 
                 // Pad missing questions if any category is short
-                let currentTotal = testingQs.length + apiQs.length + logicalQs.length + agileQs.length + csBasicsQs.length + grammarQs.length;
+                let currentTotal = testingQs.length + apiQs.length + logicalQs.length + agileQs.length + csBasicsQs.length + grammarQs.length + javascriptQs.length;
                 if (currentTotal < expectedGeneralTotal) {
                     const missing = expectedGeneralTotal - currentTotal;
                     // Try to pad from testing first
@@ -797,7 +799,7 @@ export default function QuizInterface() {
                     testingQs = [...testingQs, ...pad];
                     
                     // If still missing, pad from logical
-                    currentTotal = testingQs.length + apiQs.length + logicalQs.length + agileQs.length + csBasicsQs.length + grammarQs.length;
+                    currentTotal = testingQs.length + apiQs.length + logicalQs.length + agileQs.length + csBasicsQs.length + grammarQs.length + javascriptQs.length;
                     if (currentTotal < expectedGeneralTotal) {
                         const missingMore = expectedGeneralTotal - currentTotal;
                         const logicalAvailable = generalQs.filter(q => q.subsection === 'logical' && !logicalQs.includes(q));
@@ -812,7 +814,8 @@ export default function QuizInterface() {
                     ...logicalQs,
                     ...agileQs,
                     ...csBasicsQs,
-                    ...grammarQs
+                    ...grammarQs,
+                    ...javascriptQs
                 ];
 
                 console.log('[FETCH] Testing questions:', testingQs.length);
