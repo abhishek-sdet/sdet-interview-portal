@@ -1810,9 +1810,9 @@ export default function QuizInterface() {
                                     </span>
                                 </div>
                                 <div className="flex flex-wrap gap-1.5 items-center pt-1.5">
-                                    {currentQuestion.category && (
-                                        <span className="px-2 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold tracking-wider text-blue-400 uppercase">
-                                            {currentQuestion.category}
+                                    {currentSectionInfo && (
+                                        <span className={`px-2 py-0.5 rounded-md border text-[10px] font-bold tracking-wider uppercase ${currentSectionInfo.bgClass} ${currentSectionInfo.borderClass} ${currentSectionInfo.textClass}`}>
+                                            {currentSectionInfo.name}
                                         </span>
                                     )}
                                     {criteriaType && (
@@ -1822,11 +1822,6 @@ export default function QuizInterface() {
                                                 : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                                             }`}>
                                             {criteriaType}
-                                        </span>
-                                    )}
-                                    {currentSectionInfo && (
-                                        <span className={`sm:hidden px-2 py-0.5 rounded-md border text-[10px] font-bold uppercase tracking-wider ${currentSectionInfo.bgClass} ${currentSectionInfo.borderClass} ${currentSectionInfo.textClass}`}>
-                                            {currentSectionInfo.name}
                                         </span>
                                     )}
                                 </div>
