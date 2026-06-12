@@ -653,9 +653,9 @@ export default function QuizInterface() {
                 else if (mappedSub.includes('logical')) mappedSub = 'logical';
                 else if (mappedSub.includes('grammar') || mappedSub.includes('communication')) mappedSub = 'grammar';
                 else if (mappedSub.includes('cs') || mappedSub.includes('computer')) mappedSub = 'cs_basics';
+                else if (mappedSub.includes('javascript') || mappedSub.includes('js')) mappedSub = 'javascript';
                 else if (mappedSub.includes('java')) mappedSub = 'java';
                 else if (mappedSub.includes('python')) mappedSub = 'python';
-                else if (mappedSub.includes('javascript') || mappedSub.includes('js')) mappedSub = 'javascript';
                 else if (mappedSub.includes('database') || mappedSub.includes('sql')) mappedSub = 'database';
                 else mappedSub = 'testing';
                 return { ...q, subsection: mappedSub };
