@@ -120,48 +120,52 @@ export default function UploadQuestions() {
                 console.log('📄 Parsing Excel file...');
                 const arrayBuffer = await file.arrayBuffer();
                 const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                const data = XLSX.utils.sheet_to_json(worksheet);
+                
+                for (const sheetName of workbook.SheetNames) {
+                    const worksheet = workbook.Sheets[sheetName];
+                    const data = XLSX.utils.sheet_to_json(worksheet);
 
-                if (!data || data.length === 0) {
-                    throw new Error('No valid questions found in Excel document');
+                    if (!data || data.length === 0) continue;
+
+                    // Map Excel rows to internal question format
+                    for (let i = 0; i < data.length; i++) {
+                        const row = data[i];
+                        
+                        const questionText = row.Question || row['Question Text / Code Snippet'] || row['Question Text'];
+                        if (!questionText) continue;
+
+                        let options = [];
+                        if (row['Option A']) options.push(row['Option A'].toString().trim());
+                        if (row['Option B']) options.push(row['Option B'].toString().trim());
+                        if (row['Option C']) options.push(row['Option C'].toString().trim());
+                        if (row['Option D']) options.push(row['Option D'].toString().trim());
+
+                        if (options.length < 2) {
+                            console.warn(`Row ${i + 2} in sheet ${sheetName} skipped: Not enough options`);
+                            continue;
+                        }
+
+                        const categoryRaw = row.Category || row['Topic'] || row['Sub-Topic'] || sheetName || 'General';
+                        const answerRaw = row.Answer || row['Correct Answer'] || 'A';
+                        const explanationRaw = row.Explanation || row['Reason'] || '';
+                        const difficultyRaw = row.Difficulty ? row.Difficulty.toString().toLowerCase() : 'medium';
+
+                        allQuestions.push({
+                            criteria_id: currentCriteriaId,
+                            category: 'Common',
+                            section: categoryRaw.toString().trim(),
+                            subsection: categoryRaw.toString().trim(),
+                            question_text: questionText.toString().trim(),
+                            options: options,
+                            correct_option: answerRaw.toString().trim().toUpperCase(),
+                            explanation: explanationRaw ? explanationRaw.toString().trim() : null,
+                            difficulty: ['easy', 'medium', 'hard'].includes(difficultyRaw) ? difficultyRaw : 'medium'
+                        });
+                    }
                 }
 
-                // Map Excel rows to internal question format
-                for (let i = 0; i < data.length; i++) {
-                    const row = data[i];
-                    
-                    const questionText = row.Question || row['Question Text / Code Snippet'] || row['Question Text'];
-                    if (!questionText) continue;
-
-                    let options = [];
-                    if (row['Option A']) options.push(row['Option A'].toString().trim());
-                    if (row['Option B']) options.push(row['Option B'].toString().trim());
-                    if (row['Option C']) options.push(row['Option C'].toString().trim());
-                    if (row['Option D']) options.push(row['Option D'].toString().trim());
-
-                    if (options.length < 2) {
-                        console.warn(`Row ${i + 2} skipped: Not enough options`);
-                        continue;
-                    }
-
-                    const categoryRaw = row.Category || row['Topic'] || row['Sub-Topic'] || 'General';
-                    const answerRaw = row.Answer || row['Correct Answer'] || 'A';
-                    const explanationRaw = row.Explanation || row['Reason'] || '';
-                    const difficultyRaw = row.Difficulty ? row.Difficulty.toString().toLowerCase() : 'medium';
-
-                    allQuestions.push({
-                        criteria_id: currentCriteriaId,
-                        category: 'Common',
-                        section: categoryRaw.toString().trim(),
-                        subsection: categoryRaw.toString().trim(),
-                        question_text: questionText.toString().trim(),
-                        options: options,
-                        correct_option: answerRaw.toString().trim().toUpperCase(),
-                        explanation: explanationRaw ? explanationRaw.toString().trim() : null,
-                        difficulty: ['easy', 'medium', 'hard'].includes(difficultyRaw) ? difficultyRaw : 'medium'
-                    });
+                if (allQuestions.length === 0) {
+                    throw new Error('No valid questions found in Excel document');
                 }
             } else {
                 console.log(`📄 Parsing ${file.name}...`);
