@@ -433,7 +433,7 @@ export default function HRDashboard() {
                                 <thead className="sticky top-0 z-10" style={{ backgroundColor: current.bgBody }}>
                                     <tr style={{ borderBottom: `1px solid ${current.glassBorder}` }}>
                                         <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Criteria</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Set</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Elective</th>
                                         <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Status</th>
                                         <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Candidate</th>
                                         <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Email Address</th>
@@ -451,7 +451,7 @@ export default function HRDashboard() {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className="text-[10px] font-black text-cyan-500 uppercase tracking-tighter">
-                                                        {item.question_set || 'N/A'}
+                                                        {item.metadata?.selectedSubject || item.question_set?.match(/\((.*?)\)/)?.[1] || 'N/A'}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4">
