@@ -13,7 +13,8 @@ export default function ExamSetup() {
     const electives = [
         { id: 'java', name: 'Java Programming', icon: Code2 },
         { id: 'python', name: 'Python Programming', icon: Code2 },
-        { id: 'database', name: 'SQL & Database', icon: Layers }
+        { id: 'database', name: 'SQL & Database', icon: Layers },
+        { id: 'javascript', name: 'JavaScript', icon: Code2 }
     ];
 
     const candidateData = location.state?.candidateData;

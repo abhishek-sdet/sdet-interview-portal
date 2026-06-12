@@ -256,9 +256,9 @@ export default function UploadQuestions() {
                 let dbSubsection = q.subsection || (q.section ? q.section.toLowerCase() : 'aptitude');
 
                 const sectionLower = (q.section || '').toLowerCase();
-                if (sectionLower.includes('java') || sectionLower.includes('python') || sectionLower.includes('database')) {
+                if (sectionLower.includes('java') || sectionLower.includes('python') || sectionLower.includes('database') || sectionLower.includes('javascript') || sectionLower.includes('js')) {
                     dbSection = 'elective';
-                    dbSubsection = sectionLower.includes('java') ? 'java' : (sectionLower.includes('python') ? 'python' : 'database');
+                    dbSubsection = sectionLower.includes('javascript') || sectionLower.includes('js') ? 'javascript' : sectionLower.includes('java') ? 'java' : (sectionLower.includes('python') ? 'python' : 'database');
                 } else {
                     dbSection = 'general';
                     if (sectionLower.includes('testing') || sectionLower.includes('qa')) dbSubsection = 'testing';

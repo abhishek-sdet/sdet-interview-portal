@@ -132,7 +132,7 @@ export default function ExamRules() {
         { icon: Clock, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', title: 'Timed Assessment', description: 'The exam has a fixed time limit. The timer auto-submits when time expires.' },
         { icon: ShieldAlert, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', title: 'Strict Proctoring', description: 'Tab switching and Copy/Paste are disabled. Violations lead to disqualification.' },
         { icon: Camera, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20', title: 'Identity Verification', description: 'A snapshot of your identity will be captured for proctoring logs.' },
-        { icon: BookOpen, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', title: 'Two Sections', description: 'General Questions followed by your chosen elective (Java/Python).' },
+        { icon: BookOpen, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', title: 'Two Sections', description: 'General Questions followed by your chosen elective (Java/Python/JS).' },
         { icon: FileEdit, color: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/20', title: 'Review Answers', description: 'You can navigate back and modify your answers until final submission.' },
         { icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', title: 'No Negative Marking', description: 'No negative marking. Attempt all questions for the best possible score.' }
     ];

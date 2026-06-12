@@ -236,7 +236,8 @@ export default function ManageQuestions() {
                 { id: 'grammar', name: 'Grammar' },
                 { id: 'java', name: 'Java' },
                 { id: 'python', name: 'Python' },
-                { id: 'database', name: 'Database' }
+                { id: 'database', name: 'Database' },
+                { id: 'javascript', name: 'JavaScript' }
             ];
 
             sections.forEach(section => {
@@ -481,7 +482,8 @@ export default function ManageQuestions() {
                         grammar: [],
                         java: [],
                         python: [],
-                        database: []
+                        database: [],
+                        javascript: []
                     }
                 };
             }
@@ -494,7 +496,8 @@ export default function ManageQuestions() {
             else if (subsection.includes('grammar') || subsection.includes('communication')) subsection = 'grammar';
             else if (subsection.includes('computer') || subsection.includes('cs ')) subsection = 'cs_basics';
             else if (subsection.includes('database') || subsection.includes('sql')) subsection = 'database';
-            else if (subsection.includes('java')) subsection = 'java';
+            else if (subsection.includes('java') && !subsection.includes('javascript')) subsection = 'java';
+            else if (subsection.includes('javascript') || subsection.includes('js')) subsection = 'javascript';
             else if (subsection.includes('python')) subsection = 'python';
             else if (subsection.includes('logical') || subsection.includes('reasoning') || subsection.includes('aptitude')) subsection = 'logical';
             else if (subsection.includes('testing') || subsection.includes('qa') || subsection === 'general' || subsection.includes('miscellaneous')) subsection = 'testing';
@@ -517,6 +520,8 @@ export default function ManageQuestions() {
                 acc[key].sections.python.push(q);
             } else if (subsection === 'database') {
                 acc[key].sections.database.push(q);
+            } else if (subsection === 'javascript') {
+                acc[key].sections.javascript.push(q);
             } else {
                 acc[key].sections.testing.push(q);
             }
@@ -638,6 +643,7 @@ export default function ManageQuestions() {
                                             <option value="java" className="bg-[#0b101b]">Java</option>
                                             <option value="python" className="bg-[#0b101b]">Python</option>
                                             <option value="database" className="bg-[#0b101b]">Database</option>
+                                            <option value="javascript" className="bg-[#0b101b]">JavaScript</option>
                                         </select>
                                         <select
                                             value={editingQuestion.section || 'general'}
@@ -815,6 +821,7 @@ export default function ManageQuestions() {
                                         <option value="java" className="bg-[#0b101b]">Java (Elective)</option>
                                         <option value="python" className="bg-[#0b101b]">Python (Elective)</option>
                                         <option value="database" className="bg-[#0b101b]">Database (Elective)</option>
+                                        <option value="javascript" className="bg-[#0b101b]">JavaScript (Elective)</option>
                                     </select>
                                 </div>
                                 <div className="flex-1">
@@ -930,7 +937,8 @@ export default function ManageQuestions() {
                                 set.sections.grammar.length +
                                 set.sections.java.length +
                                 set.sections.python.length +
-                                set.sections.database.length;
+                                set.sections.database.length +
+                                set.sections.javascript.length;
                             const isExpanded = !!expandedSets[set.key];
 
                             const allSections = [
@@ -943,6 +951,7 @@ export default function ManageQuestions() {
                                 { id: 'java', label: 'Java', shortLabel: 'Java', count: set.sections.java?.length || 0, questions: set.sections.java, icon: <Code size={14} />, color: 'orange' },
                                 { id: 'python', label: 'Python', shortLabel: 'Python', count: set.sections.python?.length || 0, questions: set.sections.python, icon: <Code size={14} />, color: 'cyan' },
                                 { id: 'database', label: 'Database', shortLabel: 'DB', count: set.sections.database?.length || 0, questions: set.sections.database, icon: <Code size={14} />, color: 'emerald' },
+                                { id: 'javascript', label: 'JavaScript', shortLabel: 'JS', count: set.sections.javascript?.length || 0, questions: set.sections.javascript, icon: <Code size={14} />, color: 'yellow' },
                             ].filter(s => s.count > 0);
 
                             const firstSection = allSections[0]?.id;

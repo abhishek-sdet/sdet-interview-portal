@@ -95,7 +95,8 @@ function detectSectionType(sectionName) {
         return 'general';
     }
     if (lower.includes('elective') || lower.includes('section b') || lower.includes('optional') ||
-        lower.includes('java') || lower.includes('python') || lower.includes('database') || lower.includes('aptitude')) {
+        lower.includes('java') || lower.includes('python') || lower.includes('database') || lower.includes('javascript') || 
+lower.includes('aptitude')) {
         return 'elective';
     }
     return 'general'; // default
@@ -106,6 +107,7 @@ function detectSectionType(sectionName) {
  */
 function detectSubsection(sectionName) {
     const lower = sectionName.toLowerCase();
+    if (lower.includes('javascript') || lower.includes('js')) return 'javascript';
     if (lower.includes('java')) return 'java';
     if (lower.includes('python')) return 'python';
     if (lower.includes('aptitude')) return 'aptitude';
@@ -331,8 +333,16 @@ export function parseQuestionsInSection(section, importData) {
             if (!detectedSubsection) {
                 const questionLower = currentQuestion.toLowerCase();
 
+                // Check for JavaScript-specific keywords
+                if (questionLower.includes('javascript') || questionLower.includes('ecmascript') ||
+                    questionLower.includes('nodejs') || questionLower.includes('react') ||
+                    questionLower.includes('angular') || questionLower.includes('vue')) {
+                    detectedSection = 'elective';
+                    detectedSubsection = 'javascript';
+                    console.log(`      🟡 JAVASCRIPT detected in Q${questionNumber + 1}`);
+                }
                 // Check for Java-specific keywords
-                if (questionLower.includes('java') || questionLower.includes('jvm') ||
+                else if (questionLower.includes('java') || questionLower.includes('jvm') ||
                     questionLower.includes('spring') || questionLower.includes('hibernate') ||
                     questionLower.includes('servlet') || questionLower.includes('jsp')) {
                     detectedSection = 'elective';
@@ -422,24 +432,25 @@ export function parseQuestionsInSection(section, importData) {
         // \s*            -> Optional space after separator
         // (.*)           -> Capture Rest of Line (Group 2)
 
-        const numberedMatch = line.match(/^(?:Q\.?|#)?\s*(\d+)(?:[\.)]|\s)\s*(.*)/);
+        const numberedMatch = line.match(/^(?:Q\.?|#)?\s*(\d+)(?:[\.)]|\s|$)\s*(.*)/i);
+        const questionPrefixMatch = line.match(/^Question\s*:\s*(.*)/i);
 
-        // Validation:
-        // We assume ANY line starting with "Number + Separator" is a question
-        // UNLESS it was already caught as an Option using specific Option Regex above.
-        // The only risk is "100 apples". But usually numbers at start of line in these files imply lists.
-
-        if (numberedMatch && !finalOptionMatch && !answerMatch) {
+        if ((numberedMatch || questionPrefixMatch) && !finalOptionMatch && !answerMatch) {
             saveCurrentQuestion();
             // If text exists, use it. If empty, initialize empty string
-            const text = numberedMatch[2] ? numberedMatch[2].trim() : '';
+            let text = '';
+            if (numberedMatch) {
+                text = numberedMatch[2] ? numberedMatch[2].trim() : '';
+            } else if (questionPrefixMatch) {
+                text = questionPrefixMatch[1] ? questionPrefixMatch[1].trim() : '';
+            }
             currentQuestion = text;
             lastLine = line;
             continue;
         }
 
         // 2.5 Detect Unnumbered Question Start (if previous question is done)
-        const isQuestionText = line.includes('?') || /^(What|Who|Where|When|Why|How|Which|Define|Explain)\s/i.test(line);
+        const isQuestionText = line.includes('?') || /^(What|Who|Where|When|Why|How|Which|Define|Explain|Question:)\s/i.test(line);
         if (isQuestionText && currentOptions.length > 0 && !finalOptionMatch && !answerMatch) {
             saveCurrentQuestion();
             currentQuestion = line;
@@ -494,7 +505,7 @@ export function parseQuestionsInSection(section, importData) {
 
         // 6. Generic Text Catch (if no question started yet)
         if (currentQuestion === null && currentOptions.length === 0) {
-            const isQuestionText = line.includes('?') || /^(What|Who|Where|When|Why|How|Which|Define|Explain)\s/.test(line);
+            const isQuestionText = line.includes('?') || /^(What|Who|Where|When|Why|How|Which|Define|Explain|Question:)\s/i.test(line);
             if (isQuestionText) {
                 saveCurrentQuestion();
                 currentQuestion = line;
