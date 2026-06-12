@@ -131,7 +131,9 @@ export default function UploadQuestions() {
                 // Map Excel rows to internal question format
                 for (let i = 0; i < data.length; i++) {
                     const row = data[i];
-                    if (!row.Question) continue;
+                    
+                    const questionText = row.Question || row['Question Text / Code Snippet'] || row['Question Text'];
+                    if (!questionText) continue;
 
                     let options = [];
                     if (row['Option A']) options.push(row['Option A'].toString().trim());
@@ -144,14 +146,21 @@ export default function UploadQuestions() {
                         continue;
                     }
 
+                    const categoryRaw = row.Category || row['Topic'] || row['Sub-Topic'] || 'General';
+                    const answerRaw = row.Answer || row['Correct Answer'] || 'A';
+                    const explanationRaw = row.Explanation || row['Reason'] || '';
+                    const difficultyRaw = row.Difficulty ? row.Difficulty.toString().toLowerCase() : 'medium';
+
                     allQuestions.push({
                         criteria_id: currentCriteriaId,
                         category: 'Common',
-                        section: row.Category ? row.Category.toString().trim() : 'General',
-                        subsection: row.Category ? row.Category.toString().trim() : 'aptitude',
-                        question_text: row.Question.toString().trim(),
+                        section: categoryRaw.toString().trim(),
+                        subsection: categoryRaw.toString().trim(),
+                        question_text: questionText.toString().trim(),
                         options: options,
-                        correct_option: row.Answer ? row.Answer.toString().trim().toUpperCase() : 'A'
+                        correct_option: answerRaw.toString().trim().toUpperCase(),
+                        explanation: explanationRaw ? explanationRaw.toString().trim() : null,
+                        difficulty: ['easy', 'medium', 'hard'].includes(difficultyRaw) ? difficultyRaw : 'medium'
                     });
                 }
             } else {
@@ -259,7 +268,7 @@ export default function UploadQuestions() {
                     correct_answer: (q.correct_option
                         ? (q.options[q.correct_option.charCodeAt(0) - 65] || q.options[0])
                         : (q.options[0] || '')).trim(),
-                    difficulty: 'medium',
+                    difficulty: q.difficulty || 'medium',
                     is_active: true,
                     points: 1
                 };
