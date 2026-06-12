@@ -1575,22 +1575,70 @@ export default function QuizInterface() {
         // General questions - determine by subsection
         switch (question.subsection) {
             case 'testing':
-                // Show "Software Testing" for Experienced, "Computer Science" for Fresher
                 return {
-                    name: criteriaType === 'Experienced' ? 'Software Testing' : 'Computer Science',
+                    name: 'Testing',
                     color: 'blue',
                     bgClass: 'bg-blue-500/10',
                     borderClass: 'border-blue-500/20',
                     textClass: 'text-blue-400'
                 };
+            case 'api':
+                return {
+                    name: 'API',
+                    color: 'cyan',
+                    bgClass: 'bg-cyan-500/10',
+                    borderClass: 'border-cyan-500/20',
+                    textClass: 'text-cyan-400'
+                };
+            case 'logical':
             case 'logical_reasoning':
-                return { name: 'Logical Reasoning', color: 'green', bgClass: 'bg-green-500/10', borderClass: 'border-green-500/20', textClass: 'text-green-400' };
-            case 'miscellaneous':
-                return { name: 'Miscellaneous Logic', color: 'yellow', bgClass: 'bg-yellow-500/10', borderClass: 'border-yellow-500/20', textClass: 'text-yellow-400' };
+                return { 
+                    name: 'Logical Reasoning', 
+                    color: 'green', 
+                    bgClass: 'bg-green-500/10', 
+                    borderClass: 'border-green-500/20', 
+                    textClass: 'text-green-400' 
+                };
+            case 'agile':
+                return {
+                    name: 'Agile',
+                    color: 'teal',
+                    bgClass: 'bg-teal-500/10',
+                    borderClass: 'border-teal-500/20',
+                    textClass: 'text-teal-400'
+                };
+            case 'cs_basics':
+                return {
+                    name: 'CS Basics',
+                    color: 'indigo',
+                    bgClass: 'bg-indigo-500/10',
+                    borderClass: 'border-indigo-500/20',
+                    textClass: 'text-indigo-400'
+                };
             case 'grammar':
-                return { name: 'Grammar', color: 'pink', bgClass: 'bg-pink-500/10', borderClass: 'border-pink-500/20', textClass: 'text-pink-400' };
+                return { 
+                    name: 'Grammar', 
+                    color: 'pink', 
+                    bgClass: 'bg-pink-500/10', 
+                    borderClass: 'border-pink-500/20', 
+                    textClass: 'text-pink-400' 
+                };
+            case 'javascript':
+                return { 
+                    name: 'JavaScript', 
+                    color: 'yellow', 
+                    bgClass: 'bg-yellow-500/10', 
+                    borderClass: 'border-yellow-500/20', 
+                    textClass: 'text-yellow-400' 
+                };
             default:
-                return { name: 'General', color: 'slate', bgClass: 'bg-slate-500/10', borderClass: 'border-slate-500/20', textClass: 'text-slate-400' };
+                return { 
+                    name: 'General', 
+                    color: 'slate', 
+                    bgClass: 'bg-slate-500/10', 
+                    borderClass: 'border-slate-500/20', 
+                    textClass: 'text-slate-400' 
+                };
         }
     };
 
