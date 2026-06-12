@@ -1496,30 +1496,6 @@ export default function QuizInterface() {
                                 </div>
                             </div>
                         </button>
-                        {/* JavaScript Option */}
-                        <button
-                            onClick={() => handleSpecializationSelect('JavaScript')}
-                            className="group relative p-1 rounded-[2rem] transition-all duration-500 hover:scale-[1.02]"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-500 opacity-20 group-hover:opacity-40 rounded-[2rem] blur-xl transition-opacity"></div>
-                            <div className="relative h-full bg-[#080c14]/80 backdrop-blur-xl border border-white/10 rounded-[1.9rem] p-10 flex flex-col items-center justify-center gap-6 overflow-hidden hover:border-yellow-500/50 transition-colors">
-                                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-yellow-500/10 to-amber-500/10 flex items-center justify-center shadow-lg shadow-yellow-500/10 group-hover:scale-110 transition-transform duration-500 border border-white/5">
-                                    <div className="w-16 h-16 flex items-center justify-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#eab308" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <polyline points="16 18 22 12 16 6"></polyline>
-                                            <polyline points="8 6 2 12 8 18"></polyline>
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h3 className="text-3xl font-bold text-white mb-2">JavaScript</h3>
-                                    <p className="text-slate-400 text-sm">Web & Logic Development</p>
-                                </div>
-                                <div className="mt-4 px-6 py-2 rounded-full border border-yellow-500/30 text-yellow-400 text-sm font-bold tracking-widest uppercase group-hover:bg-yellow-500 group-hover:text-white transition-all">
-                                    Select JavaScript
-                                </div>
-                            </div>
-                        </button>
                     </div>
                 </div>
 
