@@ -1395,6 +1395,12 @@ export default function QuizInterface() {
 
             const storageKey = `quiz_state_${interviewId}`;
             localStorage.removeItem(storageKey);
+            
+            // Instantly deactivate the session for this user so they cannot go back
+            localStorage.removeItem('interviewId');
+            localStorage.removeItem('criteriaId');
+            localStorage.removeItem('examConfig');
+            localStorage.removeItem('selectedSet');
 
             navigate('/thank-you');
         } catch (err) {
