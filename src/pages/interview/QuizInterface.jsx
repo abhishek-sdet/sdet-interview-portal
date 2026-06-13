@@ -676,7 +676,7 @@ export default function QuizInterface() {
 
             let query = supabase
                 .from('questions')
-                .select('id, criteria_id, question_text, options, difficulty, points, is_active, created_at, updated_at, category, set_name, marks, module')
+                .select('id, criteria_id, question_text, options, difficulty, points, is_active, created_at, updated_at, category, set_name, marks, section, subsection, option_a, option_b, option_c, option_d, correct_option, order_index, type, language, test_cases')
                 .eq('criteria_id', criteriaId)
                 .eq('is_active', true);
 
