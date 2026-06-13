@@ -26,6 +26,13 @@ export default function ThankYou() {
             passed,
             candidateName
         });
+
+        // Deactivate session immediately upon reaching Thank You page
+        // This ensures the user cannot press Back to return to the exam
+        localStorage.removeItem('interviewId');
+        localStorage.removeItem('criteriaId');
+        localStorage.removeItem('examConfig');
+        localStorage.removeItem('selectedSet');
     }, [navigate]);
 
     const handleFinish = () => {
