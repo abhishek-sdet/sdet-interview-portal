@@ -188,12 +188,10 @@ export default function LandingPage() {
         try {
             console.log('[REGISTRATION] Initiating Security Checks...');
 
-            // 1. HARDWARE FINGERPRINT CHECK (Run for Every Submission)
-            let deviceId = await getHardwareId();
-            if (!deviceId) {
-                console.warn('[REGISTRATION] Falling back to legacy device ID generation');
-                deviceId = accessControl.getDeviceId();
-            }
+            // 1. DEVICE ID CHECK (Run for Every Submission)
+            // Use UUID-based device ID instead of hardware fingerprint to avoid false positives 
+            // in computer labs with identical machines.
+            let deviceId = accessControl.getDeviceId();
 
             // Store it globally right away so that it is available to CriteriaSelection
             localStorage.setItem('sdet_admin_device_id', deviceId);
