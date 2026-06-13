@@ -100,9 +100,11 @@ export default function ExamRules() {
             return;
         }
 
+        // Don't block if photo is not captured, as requested
+        // Let's just ask for confirmation, but don't block.
         if (!capturedImage) {
-            alert('Please capture your identity photo to proceed.');
-            return;
+            const proceed = window.confirm('Your camera seems to be off or no photo was captured. Do you want to proceed anyway?');
+            if (!proceed) return;
         }
 
         // If resuming an existing interview, go straight to quiz
@@ -266,15 +268,12 @@ export default function ExamRules() {
                             <div className="flex justify-center">
                                 <button
                                     onClick={handleContinue}
-                                    disabled={!capturedImage}
-                                    className={`w-full py-5 rounded-3xl font-bold text-xl transition-all flex items-center justify-center gap-2 shadow-2xl relative overflow-hidden group ${
-                                        !capturedImage ? 'bg-slate-800 text-slate-500 opacity-50 cursor-not-allowed' : 'bg-gradient-to-r from-brand-blue via-blue-600 to-cyan-500 text-white shadow-brand-blue/30'
-                                    }`}
+                                    className={`w-full py-5 rounded-3xl font-bold text-xl transition-all flex items-center justify-center gap-2 shadow-2xl relative overflow-hidden group bg-gradient-to-r from-brand-blue via-blue-600 to-cyan-500 text-white shadow-brand-blue/30`}
                                 >
-                                    <Zap className={`w-6 h-6 ${capturedImage ? 'text-amber-400' : ''}`} />
-                                    Start Full Assessment
+                                    <Zap className={`w-6 h-6 ${capturedImage ? 'text-amber-400' : 'text-slate-300'}`} />
+                                    {capturedImage ? 'Start Full Assessment' : 'Proceed Without Camera'}
                                     <ArrowRight className="w-6 h-6" />
-                                    {capturedImage && <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>}
+                                    <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
                                 </button>
                             </div>
                             
