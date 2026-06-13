@@ -676,7 +676,7 @@ export default function QuizInterface() {
 
             let query = supabase
                 .from('questions')
-                .select('*')
+                .select('id, criteria_id, question_text, options, difficulty, points, is_active, created_at, updated_at, category, set_name, marks, module')
                 .eq('criteria_id', criteriaId)
                 .eq('is_active', true);
 
@@ -1274,6 +1274,22 @@ export default function QuizInterface() {
             let correctCount = 0;
             const answerRecords = [];
 
+            // Fetch correct answers securely at submission time
+            const questionIds = questions.map(q => q.id);
+            const { data: correctAnswersData, error: answersFetchError } = await supabase
+                .from('questions')
+                .select('id, correct_answer')
+                .in('id', questionIds);
+
+            if (answersFetchError) throw answersFetchError;
+
+            const correctAnswersMap = {};
+            if (correctAnswersData) {
+                correctAnswersData.forEach(q => {
+                    correctAnswersMap[q.id] = q.correct_answer;
+                });
+            }
+
             questions.forEach((question) => {
                 const selectedAnswer = currentAnswers[question.id];
                 const normalize = (str) => {
@@ -1282,7 +1298,7 @@ export default function QuizInterface() {
                 };
 
                 const safeSelected = normalize(selectedAnswer);
-                const safeCorrect = normalize(question.correct_answer);
+                const safeCorrect = normalize(correctAnswersMap[question.id]);
                 const isCorrect = safeSelected !== '' && safeSelected === safeCorrect;
 
                 if (isCorrect) correctCount++;
