@@ -20,6 +20,7 @@ export default function LandingPage() {
     const [checkingStatus, setCheckingStatus] = useState(true);
     const [offlineMessage, setOfflineMessage] = useState('The interview portal is currently disabled by the administrator. Please try again during your scheduled interview slot.');
     const [error, setError] = useState('');
+    const [fieldErrors, setFieldErrors] = useState({});
     const [mounted, setMounted] = useState(false);
     useEffect(() => {
         setMounted(true);
@@ -114,6 +115,7 @@ export default function LandingPage() {
             value = value.replace(/\s/g, '');
         }
         setFormData({ ...formData, [field]: value });
+        setFieldErrors({ ...fieldErrors, [field]: '' });
         setError('');
     };
 
@@ -133,40 +135,49 @@ export default function LandingPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setFieldErrors({});
 
         const newErrors = [];
+        const newFieldErrors = {};
 
         if (!formData.fullName.trim()) {
             newErrors.push('Full name is required');
+            newFieldErrors.fullName = 'Required';
         } else {
             const nameRegex = /^[a-zA-Z\s]{2,}$/;
             if (!nameRegex.test(formData.fullName.trim())) {
                 newErrors.push('Name must be at least 2 characters (alphabets & spaces only)');
+                newFieldErrors.fullName = 'Invalid name';
             }
         }
 
         if (!formData.email.trim()) {
             newErrors.push('Email is required');
+            newFieldErrors.email = 'Required';
         } else {
             // Basic email validation
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(formData.email.trim())) {
                 newErrors.push('Valid email is required');
+                newFieldErrors.email = 'Invalid email format';
             }
         }
 
         if (!formData.phone.trim()) {
             newErrors.push('Phone is required');
+            newFieldErrors.phone = 'Required';
         } else {
             // Basic phone validation (10 digits)
             const phoneRegex = /^[0-9]{10}$/;
             if (!phoneRegex.test(formData.phone.trim())) {
                 newErrors.push('Valid 10-digit phone is required');
+                newFieldErrors.phone = 'Must be 10 digits';
             }
         }
 
         if (newErrors.length > 0) {
-            setError(newErrors.join(' • '));
+            setError('Please correct the highlighted fields.');
+            setFieldErrors(newFieldErrors);
             return;
         }
 
@@ -510,49 +521,64 @@ export default function LandingPage() {
 
                                     <div className="space-y-3">
                                         <div className="space-y-1.5">
-                                            <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider ml-1">Full Name</label>
+                                            <label className={`text-[10px] font-bold uppercase tracking-wider ml-1 ${fieldErrors.fullName ? 'text-red-400' : 'text-slate-300'}`}>Full Name</label>
                                             <div className="relative group/input">
-                                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/input:text-brand-blue transition-colors" />
+                                                <User className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${fieldErrors.fullName ? 'text-red-400' : 'text-slate-500 group-focus-within/input:text-brand-blue'}`} />
                                                 <input
                                                     type="text"
                                                     value={formData.fullName}
                                                     onChange={handleChange('fullName')}
-                                                    className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-10 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue/50 transition-all font-medium text-sm"
+                                                    className={`w-full bg-slate-950/50 border rounded-xl px-10 py-3 text-white placeholder-slate-600 focus:outline-none transition-all font-medium text-sm ${
+                                                        fieldErrors.fullName 
+                                                        ? 'border-red-500/50 focus:border-red-500 focus:ring-1 focus:ring-red-500/50 bg-red-500/5' 
+                                                        : 'border-slate-700 focus:border-brand-blue focus:ring-1 focus:ring-brand-blue/50'
+                                                    }`}
                                                     placeholder="Enter full name"
                                                 />
                                             </div>
+                                            {fieldErrors.fullName && <p className="text-[10px] text-red-400 font-bold ml-1 animate-fade-in">{fieldErrors.fullName}</p>}
                                         </div>
 
                                         <div className="space-y-1.5">
-                                            <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider ml-1">Email</label>
+                                            <label className={`text-[10px] font-bold uppercase tracking-wider ml-1 ${fieldErrors.email ? 'text-red-400' : 'text-slate-300'}`}>Email</label>
                                             <div className="relative group/input">
-                                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/input:text-brand-blue transition-colors" />
+                                                <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${fieldErrors.email ? 'text-red-400' : 'text-slate-500 group-focus-within/input:text-brand-blue'}`} />
                                                 <input
                                                     type="email"
                                                     value={formData.email}
                                                     onChange={handleChange('email')}
-                                                    className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-10 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue/50 transition-all font-medium text-sm"
+                                                    className={`w-full bg-slate-950/50 border rounded-xl px-10 py-3 text-white placeholder-slate-600 focus:outline-none transition-all font-medium text-sm ${
+                                                        fieldErrors.email 
+                                                        ? 'border-red-500/50 focus:border-red-500 focus:ring-1 focus:ring-red-500/50 bg-red-500/5' 
+                                                        : 'border-slate-700 focus:border-brand-blue focus:ring-1 focus:ring-brand-blue/50'
+                                                    }`}
                                                     placeholder="name@example.com"
                                                     required
                                                 />
                                             </div>
+                                            {fieldErrors.email && <p className="text-[10px] text-red-400 font-bold ml-1 animate-fade-in">{fieldErrors.email}</p>}
                                         </div>
 
                                         <div className="space-y-1.5">
-                                            <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider ml-1">Phone</label>
+                                            <label className={`text-[10px] font-bold uppercase tracking-wider ml-1 ${fieldErrors.phone ? 'text-red-400' : 'text-slate-300'}`}>Phone</label>
                                             <div className="relative group/input">
-                                                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/input:text-brand-blue transition-colors" />
+                                                <Phone className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${fieldErrors.phone ? 'text-red-400' : 'text-slate-500 group-focus-within/input:text-brand-blue'}`} />
                                                 <input
                                                     type="tel"
                                                     value={formData.phone}
                                                     onChange={handleChange('phone')}
-                                                    className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-10 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue/50 transition-all font-medium text-sm"
+                                                    className={`w-full bg-slate-950/50 border rounded-xl px-10 py-3 text-white placeholder-slate-600 focus:outline-none transition-all font-medium text-sm ${
+                                                        fieldErrors.phone 
+                                                        ? 'border-red-500/50 focus:border-red-500 focus:ring-1 focus:ring-red-500/50 bg-red-500/5' 
+                                                        : 'border-slate-700 focus:border-brand-blue focus:ring-1 focus:ring-brand-blue/50'
+                                                    }`}
                                                     placeholder="10-digit phone number"
                                                     required
                                                     maxLength="10"
                                                     pattern="[0-9]{10}"
                                                 />
                                             </div>
+                                            {fieldErrors.phone && <p className="text-[10px] text-red-400 font-bold ml-1 animate-fade-in">{fieldErrors.phone}</p>}
                                         </div>
                                     </div>
 

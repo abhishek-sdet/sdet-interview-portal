@@ -10,7 +10,8 @@ export default function QuestionStatusMap({
     answers = {}, 
     currentIndex = null, 
     onQuestionSelect = null, 
-    visitedQuestions = new Set() 
+    visitedQuestions = new Set(),
+    flaggedQuestions = new Set()
 }) {
     if (!questions || questions.length === 0) return null;
 
@@ -25,6 +26,7 @@ export default function QuestionStatusMap({
         const isAnswered = !!answers[q.id];
         const isCurrent = currentIndex === idx;
         const isVisited = visitedQuestions.has(idx);
+        const isFlagged = flaggedQuestions.has(idx);
         const isElective = hasElective && idx >= electiveStartIndex;
 
         return (
@@ -37,13 +39,15 @@ export default function QuestionStatusMap({
                     transition-all duration-200 border flex-shrink-0
                     ${isCurrent
                         ? 'bg-brand-blue border-brand-blue text-white shadow-[0_0_12px_rgba(0,119,255,0.5)] scale-110 z-10 ring-1 ring-white/20'
-                        : isAnswered
-                            ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/40'
-                            : isVisited
-                                ? 'bg-red-500/10 border-red-500/20 text-red-400/90 hover:bg-red-500/30'
-                                : isElective
-                                    ? 'bg-purple-500/10 border-purple-500/20 text-purple-400/70 hover:bg-purple-500/30'
-                                    : 'bg-white/5 border-white/10 text-slate-500 hover:bg-white/20 hover:border-white/30'
+                        : isFlagged
+                            ? 'bg-yellow-500/20 border-yellow-500/40 text-yellow-400 shadow-[0_0_8px_rgba(234,179,8,0.3)] hover:bg-yellow-500/30'
+                            : isAnswered
+                                ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/40'
+                                : isVisited
+                                    ? 'bg-red-500/10 border-red-500/20 text-red-400/90 hover:bg-red-500/30'
+                                    : isElective
+                                        ? 'bg-purple-500/10 border-purple-500/20 text-purple-400/70 hover:bg-purple-500/30'
+                                        : 'bg-white/5 border-white/10 text-slate-500 hover:bg-white/20 hover:border-white/30'
                     }
                 `}
                 title={`Question ${idx + 1}${isElective ? ' (Technical)' : ''}`}
@@ -65,6 +69,10 @@ export default function QuestionStatusMap({
                     <div className="flex items-center gap-1.5">
                         <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]" />
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Answered</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_6px_rgba(250,204,21,0.5)]" />
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Flagged</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                         <div className="w-2 h-2 rounded-full bg-red-400" />

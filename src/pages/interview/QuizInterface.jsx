@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { showToast } from '@/components/Toast';
 import GPTWBadge from '@/components/GPTWBadge';
-import { Loader2, ArrowRight, ArrowLeft, Clock, CheckCircle2, Circle, AlertCircle, Code, Sparkles, ShieldAlert, Lock, ShieldCheck, Zap } from 'lucide-react';
+import { Loader2, ArrowRight, ArrowLeft, Clock, CheckCircle2, Circle, AlertCircle, Code, Sparkles, ShieldAlert, Lock, ShieldCheck, Zap, Flag } from 'lucide-react';
 import { accessControl } from '@/lib/accessControl';
 import QuizSubmissionModal from '@/components/QuizSubmissionModal';
 import QuestionStatusMap from '@/components/QuestionStatusMap';
@@ -52,6 +52,10 @@ export default function QuizInterface() {
     const [specialization, setSpecialization] = useState(null); // 'Java' or 'Python'
     const [totalExamQuestions, setTotalExamQuestions] = useState(0); // Total expected questions
 
+    // UX Features State
+    const [flaggedQuestions, setFlaggedQuestions] = useState(new Set());
+    const [showTimeWarning, setShowTimeWarning] = useState(false);
+
     // Specialization Confirmation State
     const [showConfirmSpecialization, setShowConfirmSpecialization] = useState(false);
     const [pendingSpecialization, setPendingSpecialization] = useState(null);
@@ -65,6 +69,7 @@ export default function QuizInterface() {
     const [proctoringStrict, setProctoringStrict] = useState(true); // Default to strict
     const [enforceFullScreen, setEnforceFullScreen] = useState(false); // Add full screen enforcement state
     const [shuffleQuestions, setShuffleQuestions] = useState(false); // Add shuffle state
+    const [allowInspect, setAllowInspect] = useState(false); // Developer Mode
     const MAX_WARNINGS = 3;
 
     // Refs to hold cached questions needed for the second phase
@@ -108,7 +113,7 @@ export default function QuizInterface() {
         };
 
         const disableContextMenu = (e) => {
-            e.preventDefault();
+            if (!allowInspect) e.preventDefault();
         };
 
         window.addEventListener('keyup', handleKeyUp);
@@ -124,7 +129,7 @@ export default function QuizInterface() {
             document.removeEventListener('paste', disableCopyPaste);
             document.removeEventListener('contextmenu', disableContextMenu);
         };
-    }, []);
+    }, [allowInspect]);
 
     useEffect(() => {
         setMounted(true);
@@ -218,7 +223,7 @@ export default function QuizInterface() {
             try {
                 const { data: siteSettings, error } = await supabase
                     .from('site_settings')
-                    .select('allow_screenshots, proctoring_auto_submit, enforce_full_screen, shuffle_questions')
+                    .select('allow_screenshots, proctoring_auto_submit, enforce_full_screen, shuffle_questions, allow_inspect')
                     .single();
 
                 if (error) {
@@ -240,6 +245,7 @@ export default function QuizInterface() {
                     setProctoringStrict(siteSettings.proctoring_auto_submit !== false);
                     setEnforceFullScreen(siteSettings.enforce_full_screen || false);
                     setShuffleQuestions(siteSettings.shuffle_questions || false);
+                    setAllowInspect(siteSettings.allow_inspect || false);
                 } else {
                     console.warn('[PROCTOR] Site settings table is empty.');
                 }
@@ -452,10 +458,10 @@ export default function QuizInterface() {
 
     // 2.b DevTools Honeypot Detection (Time-based debugger trap)
     useEffect(() => {
-        if (submitting || showSpecialization || !proctoringStrict) return;
+        if (submitting || showSpecialization || !proctoringStrict || allowInspect) return;
 
         const devToolsCheck = setInterval(() => {
-            if (!proctoringStrict) return;
+            if (!proctoringStrict || allowInspect) return;
  
             const start = performance.now();
             debugger;
@@ -484,7 +490,7 @@ export default function QuizInterface() {
             clearInterval(devToolsCheck);
             if (clipboardHeartbeat) clearInterval(clipboardHeartbeat);
         };
-    }, [submitting, showSpecialization, showProctorWarning, tabSwitchWarnings, proctoringStrict, allowScreenshots, loading]);
+    }, [submitting, showSpecialization, showProctorWarning, tabSwitchWarnings, proctoringStrict, allowScreenshots, loading, allowInspect]);
 
     // 3. Content Protection (Disable Right-click, Copy, Paste, Keyboard)
     useEffect(() => {
@@ -493,7 +499,7 @@ export default function QuizInterface() {
 
         const preventAction = (e) => {
             // Block context menu, copy, paste, cut if either strict mode is on OR screenshotting is locked
-            if (proctoringStrict || !allowScreenshots) {
+            if ((proctoringStrict || !allowScreenshots) && !allowInspect) {
                 e.preventDefault();
             }
         };
@@ -1135,6 +1141,18 @@ export default function QuizInterface() {
         setAnsweredQuestions(prev => {
             const newSet = new Set(prev);
             newSet.add(questionId);
+            return newSet;
+        });
+    };
+
+    const toggleFlag = (index) => {
+        setFlaggedQuestions(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(index)) {
+                newSet.delete(index);
+            } else {
+                newSet.add(index);
+            }
             return newSet;
         });
     };
@@ -1832,9 +1850,13 @@ export default function QuizInterface() {
 
                     {/* RIGHT: Timer + Answered + Badge */}
                     <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                        <div className={`flex items-center gap-1.5 ${(!timeRemaining || timeRemaining < 60) ? 'text-red-400 animate-pulse' : 'text-slate-300'}`}>
-                            <Clock className="w-3.5 h-3.5" />
-                            <span className="font-mono font-bold text-sm tabular-nums">
+                        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all ${
+                            (!timeRemaining || timeRemaining < 300) 
+                                ? 'bg-red-500/20 border-red-500/50 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.4)] animate-[pulse_2s_ease-in-out_infinite]' 
+                                : 'bg-white/5 border-white/10 text-slate-300'
+                        }`}>
+                            <Clock className={`w-4 h-4 ${(!timeRemaining || timeRemaining < 300) ? 'animate-bounce' : ''}`} />
+                            <span className="font-mono font-black text-sm tabular-nums tracking-wider">
                                 {timeRemaining !== null
                                     ? `${Math.floor(timeRemaining / 60)}:${String(timeRemaining % 60).padStart(2, '0')}`
                                     : '--:--'}
@@ -1879,28 +1901,41 @@ export default function QuizInterface() {
                         <div className="relative z-10 p-4 sm:p-6">
 
                             {/* Question header */}
-                            <div className="flex items-start gap-3 mb-4">
-                                <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-                                    <span className="text-sm font-bold bg-gradient-to-br from-cyan-400 to-brand-blue bg-clip-text text-transparent">
-                                        {String(currentIndex + 1).padStart(2, '0')}
-                                    </span>
-                                </div>
-                                <div className="flex flex-wrap gap-1.5 items-center pt-1.5">
-                                    {currentSectionInfo && (
-                                        <span className={`px-2 py-0.5 rounded-md border text-[10px] font-bold tracking-wider uppercase ${currentSectionInfo.bgClass} ${currentSectionInfo.borderClass} ${currentSectionInfo.textClass}`}>
-                                            {currentSectionInfo.name}
+                            <div className="flex items-start justify-between mb-4">
+                                <div className="flex items-start gap-3">
+                                    <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                                        <span className="text-sm font-bold bg-gradient-to-br from-cyan-400 to-brand-blue bg-clip-text text-transparent">
+                                            {String(currentIndex + 1).padStart(2, '0')}
                                         </span>
-                                    )}
-                                    {criteriaType && (
-                                        <span className={`sm:hidden px-2 py-0.5 rounded-md border text-[10px] font-bold uppercase tracking-wider
-                                            ${criteriaType === 'Fresher'
-                                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                                : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                                            }`}>
-                                            {criteriaType}
-                                        </span>
-                                    )}
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5 items-center pt-1.5">
+                                        {currentSectionInfo && (
+                                            <span className={`px-2 py-0.5 rounded-md border text-[10px] font-bold tracking-wider uppercase ${currentSectionInfo.bgClass} ${currentSectionInfo.borderClass} ${currentSectionInfo.textClass}`}>
+                                                {currentSectionInfo.name}
+                                            </span>
+                                        )}
+                                        {criteriaType && (
+                                            <span className={`sm:hidden px-2 py-0.5 rounded-md border text-[10px] font-bold uppercase tracking-wider
+                                                ${criteriaType === 'Fresher'
+                                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                                    : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                                }`}>
+                                                {criteriaType}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
+                                <button
+                                    onClick={() => toggleFlag(currentIndex)}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ${
+                                        flaggedQuestions.has(currentIndex)
+                                            ? 'bg-yellow-500/20 border-yellow-500/40 text-yellow-400 shadow-[0_0_10px_rgba(234,179,8,0.2)]'
+                                            : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-white'
+                                    }`}
+                                >
+                                    <Flag className={`w-3.5 h-3.5 ${flaggedQuestions.has(currentIndex) ? 'fill-yellow-400' : ''}`} />
+                                    <span className="hidden sm:inline">{flaggedQuestions.has(currentIndex) ? 'Flagged' : 'Flag for Review'}</span>
+                                </button>
                             </div>
 
                             {/* Question Text */}
@@ -2005,6 +2040,7 @@ export default function QuizInterface() {
                         currentIndex={currentIndex}
                         onQuestionSelect={handleMapQuestionSelect}
                         visitedQuestions={visitedQuestions}
+                        flaggedQuestions={flaggedQuestions}
                     />
                 </div>
             </div>

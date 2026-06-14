@@ -20,6 +20,8 @@ export default function ManageCriteria() {
     const [updatingFullScreen, setUpdatingFullScreen] = useState(false);
     const [shuffleQuestions, setShuffleQuestions] = useState(false);
     const [updatingShuffle, setUpdatingShuffle] = useState(false);
+    const [allowInspect, setAllowInspect] = useState(false);
+    const [updatingInspect, setUpdatingInspect] = useState(false);
     const [siteSettingsId, setSiteSettingsId] = useState(null);
     const [isAdding, setIsAdding] = useState(false);
     const [editingId, setEditingId] = useState(null);
@@ -53,7 +55,7 @@ export default function ManageCriteria() {
         try {
             const { data, error } = await supabase
                 .from('site_settings')
-                .select('id, is_site_active, allow_screenshots, proctoring_auto_submit, enforce_full_screen, shuffle_questions')
+                .select('id, is_site_active, allow_screenshots, proctoring_auto_submit, enforce_full_screen, shuffle_questions, allow_inspect')
                 .maybeSingle();
 
             if (error) {
@@ -69,6 +71,7 @@ export default function ManageCriteria() {
                 setProctoringAutoSubmit(data.proctoring_auto_submit !== false);
                 setEnforceFullScreen(data.enforce_full_screen || false);
                 setShuffleQuestions(data.shuffle_questions || false);
+                setAllowInspect(data.allow_inspect || false);
             } else {
                 // No row exists - create one
                 console.log('No site settings found. Creating default row...');
@@ -183,6 +186,26 @@ export default function ManageCriteria() {
             }
         } finally {
             setUpdatingShuffle(false);
+        }
+    };
+
+    const toggleInspectStatus = async () => {
+        setUpdatingInspect(true);
+        try {
+            const newStatus = !allowInspect;
+            const { error } = await supabase
+                .from('site_settings')
+                .update({ allow_inspect: newStatus })
+                .eq('id', siteSettingsId);
+
+            if (error) throw error;
+            setAllowInspect(newStatus);
+            toast.success(`Developer Tools ${newStatus ? 'Allowed' : 'Blocked'}`);
+        } catch (error) {
+            console.error('Error updating inspect status:', error);
+            toast.error('Failed to update developer tools status.');
+        } finally {
+            setUpdatingInspect(false);
         }
     };
 
@@ -383,7 +406,7 @@ export default function ManageCriteria() {
                         <p className="text-slate-500 text-sm mt-1">Manage exam formats, cutoffs, and time limits</p>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-4 mt-4">
                         {/* Screenshots Toggle */}
                         <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-5 flex flex-col justify-between shadow-xl group hover:bg-white/[0.08] transition-all min-h-[110px]">
                             <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Exam Screenshots</div>
@@ -452,7 +475,22 @@ export default function ManageCriteria() {
                             </div>
                         </div>
 
-                        {/* Site Status Toggle */}
+                        {/* Developer Mode Toggle */}
+                        <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-5 flex flex-col justify-between shadow-xl group hover:bg-white/[0.08] transition-all min-h-[110px]">
+                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Developer Mode</div>
+                            <div className="flex items-center justify-between mt-auto gap-2">
+                                <div className={`text-[11px] font-bold ${allowInspect ? 'text-pink-400' : 'text-slate-400'}`}>
+                                    {allowInspect ? 'ALLOWED (TESTING)' : 'BLOCKED (SECURE)'}
+                                </div>
+                                <button
+                                    onClick={toggleInspectStatus}
+                                    disabled={updatingInspect}
+                                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${allowInspect ? 'bg-pink-500' : 'bg-slate-700'}`}
+                                >
+                                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${allowInspect ? 'translate-x-4' : 'translate-x-0'}`} />
+                                </button>
+                            </div>
+                        </div>
                         <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-5 flex flex-col justify-between shadow-xl group hover:bg-white/[0.08] transition-all min-h-[110px]">
                             <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Aspirant Site Status</div>
                             <div className="flex items-center justify-between mt-auto gap-2">
