@@ -63,22 +63,39 @@ export default function ManageDrives() {
 
             if (drivesError) throw drivesError;
 
-            // 2. Fetch ALL interviews to calculate stats
-            // Fallback for old data where scheduled_interview_id might be null
-            const { data: interviewsData, error: interviewsError } = await supabase
-                .from('interviews')
-                .select(`
-                    id,
-                    scheduled_interview_id,
-                    started_at,
-                    status,
-                    score,
-                    total_questions,
-                    criteria_id,
-                    criteria(name, passing_percentage)
-                `);
+            // 2. Fetch ALL interviews to calculate stats in batches to bypass 1000 limit
+            let allInterviewsData = [];
+            let hasMore = true;
+            let start = 0;
+            const limit = 1000;
 
-            if (interviewsError) throw interviewsError;
+            while (hasMore) {
+                const { data: chunk, error: chunkError } = await supabase
+                    .from('interviews')
+                    .select(`
+                        id,
+                        scheduled_interview_id,
+                        started_at,
+                        status,
+                        score,
+                        total_questions,
+                        criteria_id,
+                        criteria(name, passing_percentage)
+                    `)
+                    .range(start, start + limit - 1);
+
+                if (chunkError) throw chunkError;
+
+                if (chunk && chunk.length > 0) {
+                    allInterviewsData = [...allInterviewsData, ...chunk];
+                    start += limit;
+                }
+
+                if (!chunk || chunk.length < limit) {
+                    hasMore = false;
+                }
+            }
+            const interviewsData = allInterviewsData;
 
             // 3. Aggregate stats per drive
             const drivesWithStats = drivesData.map(drive => {

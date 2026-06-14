@@ -153,11 +153,29 @@ export default function AdminResults() {
                 }
             }
 
-            const { data, error } = await query;
+            // Execute query in batches to bypass 1000 limit
+            let allData = [];
+            let hasMore = true;
+            let start = 0;
+            const limit = 1000;
 
-            if (error) throw error;
-            setResults(data || []);
-            setFilteredResults(data || []);
+            while (hasMore) {
+                const { data: chunk, error } = await query.range(start, start + limit - 1);
+
+                if (error) throw error;
+
+                if (chunk && chunk.length > 0) {
+                    allData = [...allData, ...chunk];
+                    start += limit;
+                }
+
+                if (!chunk || chunk.length < limit) {
+                    hasMore = false;
+                }
+            }
+
+            setResults(allData || []);
+            setFilteredResults(allData || []);
         } catch (err) {
             console.error('Error fetching results:', err);
         } finally {
