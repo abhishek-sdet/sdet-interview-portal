@@ -446,24 +446,34 @@ export default function AdminResults() {
     };
 
     const handleResetAll = async () => {
+        if (filteredResults.length === 0) return;
+        
         try {
-            // Delete all interviews
+            const idsToDelete = filteredResults.map(r => r.id);
+            const candidateIdsToDelete = filteredResults.map(r => r.candidate_id).filter(Boolean);
+
+            // Deleting candidates will cascade and delete the interviews
+            // However, to be safe, we explicitly delete interviews first if cascading is disabled,
+            // but cascading is usually enabled. We'll just delete candidates, which should wipe the interviews.
+            // Let's delete both explicitly to be 100% sure.
+            
             const { error: interviewError } = await supabase
                 .from('interviews')
                 .delete()
-                .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
+                .in('id', idsToDelete);
 
             if (interviewError) throw interviewError;
 
-            // Optionally delete all candidates too
-            const { error: candidateError } = await supabase
-                .from('candidates')
-                .delete()
-                .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
+            if (candidateIdsToDelete.length > 0) {
+                const { error: candidateError } = await supabase
+                    .from('candidates')
+                    .delete()
+                    .in('id', candidateIdsToDelete);
 
-            if (candidateError) throw candidateError;
+                if (candidateError) throw candidateError;
+            }
 
-            toast.success('All interview records reset successfully!');
+            toast.success(`Successfully reset ${filteredResults.length} records!`);
             setShowResetConfirm(false);
             fetchResults();
         } catch (err) {
@@ -898,29 +908,23 @@ export default function AdminResults() {
                 {/* Reset Confirmation Modal */}
                 {showResetConfirm && (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-[#0f172a] border border-red-500/30 rounded-xl p-6 max-w-md w-full shadow-2xl">
-                            <div className="flex items-center gap-3 mb-4">
-
-                                <div className="p-3 bg-red-500/10 rounded-lg">
-                                    <AlertTriangle className="w-6 h-6 text-red-400" />
-                                </div>
-                                <h3 className="text-xl font-bold text-white">Reset All Data?</h3>
-                            </div>
-                            <p className="text-slate-300 mb-6">
-                                This will permanently delete <strong>all interview records and candidates</strong> from the database. This action cannot be undone.
+                        <div className="bg-[#1a1b2e] rounded-xl p-6 w-full max-w-md border border-white/10 shadow-2xl">
+                            <h3 className="text-xl font-bold text-white mb-4">Reset Filtered Records</h3>
+                            <p className="text-gray-400 mb-6">
+                                Are you sure you want to permanently delete the <span className="text-white font-bold">{filteredResults.length}</span> currently filtered records? This action cannot be undone.
                             </p>
-                            <div className="flex gap-3 justify-end">
+                            <div className="flex justify-end gap-3">
                                 <button
                                     onClick={() => setShowResetConfirm(false)}
-                                    className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 rounded-lg transition-all"
+                                    className="px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleResetAll}
-                                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all font-medium"
+                                    className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors border border-red-500/20"
                                 >
-                                    Yes, Reset All
+                                    Yes, Delete {filteredResults.length} Records
                                 </button>
                             </div>
                         </div>
