@@ -409,100 +409,100 @@ export default function ManageCriteria() {
                     <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 lg:grid-cols-3 gap-3 mt-4">
                         {/* Screenshots Toggle */}
                         <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-4 flex flex-col justify-between shadow-xl group hover:bg-white/[0.08] transition-all min-h-[110px]">
-                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Exam Screenshots</div>
-                            <div className="flex items-center justify-between mt-auto gap-2">
-                                <div className={`text-[11px] font-bold ${allowScreenshots ? 'text-amber-400' : 'text-slate-400'}`}>
+                            <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Exam Screenshots</div>
+                            <div className="flex justify-between mt-auto gap-1 items-end">
+                                <div className={`text-[9px] font-bold leading-tight ${allowScreenshots ? 'text-amber-400' : 'text-slate-400'}`}>
                                     {allowScreenshots ? 'ALLOWED (WARNING)' : 'BLOCKED (SECURE)'}
                                 </div>
                                 <button
                                     onClick={toggleScreenshotStatus}
                                     disabled={updatingScreenshots}
-                                    className={`relative inline-flex h-4 w-7 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${allowScreenshots ? 'bg-amber-500' : 'bg-slate-700'}`}
+                                    className={`relative inline-flex h-3.5 w-6 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${allowScreenshots ? 'bg-amber-500' : 'bg-slate-700'}`}
                                 >
-                                    <span className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${allowScreenshots ? 'translate-x-3' : 'translate-x-0'}`} />
+                                    <span className={`pointer-events-none inline-block h-2.5 w-2.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${allowScreenshots ? 'translate-x-2.5' : 'translate-x-0'}`} />
                                 </button>
                             </div>
                         </div>
 
                         {/* Proctoring Toggle */}
                         <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-4 flex flex-col justify-between shadow-xl group hover:bg-white/[0.08] transition-all min-h-[110px]">
-                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Strict Proctoring</div>
-                            <div className="flex items-center justify-between mt-auto gap-2">
-                                <div className={`text-[11px] font-bold ${proctoringAutoSubmit ? 'text-red-400' : 'text-slate-400'}`}>
+                            <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Strict Proctoring</div>
+                            <div className="flex justify-between mt-auto gap-1 items-end">
+                                <div className={`text-[9px] font-bold leading-tight ${proctoringAutoSubmit ? 'text-red-400' : 'text-slate-400'}`}>
                                     {proctoringAutoSubmit ? 'ENABLED (STRICT)' : 'DISABLED (OPEN)'}
                                 </div>
                                 <button
                                     onClick={toggleProctoringStatus}
                                     disabled={updatingProctoring}
-                                    className={`relative inline-flex h-4 w-7 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${proctoringAutoSubmit ? 'bg-red-500' : 'bg-slate-700'}`}
+                                    className={`relative inline-flex h-3.5 w-6 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${proctoringAutoSubmit ? 'bg-red-500' : 'bg-slate-700'}`}
                                 >
-                                    <span className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${proctoringAutoSubmit ? 'translate-x-3' : 'translate-x-0'}`} />
+                                    <span className={`pointer-events-none inline-block h-2.5 w-2.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${proctoringAutoSubmit ? 'translate-x-2.5' : 'translate-x-0'}`} />
                                 </button>
                             </div>
                         </div>
 
                         {/* Full Screen Mode Toggle */}
                         <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-4 flex flex-col justify-between shadow-xl group hover:bg-white/[0.08] transition-all min-h-[110px]">
-                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Full Screen Mode</div>
-                            <div className="flex items-center justify-between mt-auto gap-2">
-                                <div className={`text-[11px] font-bold ${enforceFullScreen ? 'text-purple-400' : 'text-slate-400'}`}>
+                            <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Full Screen Mode</div>
+                            <div className="flex justify-between mt-auto gap-1 items-end">
+                                <div className={`text-[9px] font-bold leading-tight ${enforceFullScreen ? 'text-purple-400' : 'text-slate-400'}`}>
                                     {enforceFullScreen ? 'STRICT (ENFORCED)' : 'OPTIONAL (RELAXED)'}
                                 </div>
                                 <button
                                     onClick={toggleFullScreenStatus}
                                     disabled={updatingFullScreen}
-                                    className={`relative inline-flex h-4 w-7 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${enforceFullScreen ? 'bg-purple-500' : 'bg-slate-700'}`}
+                                    className={`relative inline-flex h-3.5 w-6 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${enforceFullScreen ? 'bg-purple-500' : 'bg-slate-700'}`}
                                 >
-                                    <span className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${enforceFullScreen ? 'translate-x-3' : 'translate-x-0'}`} />
+                                    <span className={`pointer-events-none inline-block h-2.5 w-2.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${enforceFullScreen ? 'translate-x-2.5' : 'translate-x-0'}`} />
                                 </button>
                             </div>
                         </div>
 
                         {/* Shuffle Toggle */}
                         <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-4 flex flex-col justify-between shadow-xl group hover:bg-white/[0.08] transition-all min-h-[110px]">
-                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Shuffle Questions</div>
-                            <div className="flex items-center justify-between mt-auto gap-2">
-                                <div className={`text-[11px] font-bold ${shuffleQuestions ? 'text-indigo-400' : 'text-slate-400'}`}>
+                            <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Shuffle Questions</div>
+                            <div className="flex justify-between mt-auto gap-1 items-end">
+                                <div className={`text-[9px] font-bold leading-tight ${shuffleQuestions ? 'text-indigo-400' : 'text-slate-400'}`}>
                                     {shuffleQuestions ? 'ENABLED (RANDOM)' : 'DISABLED (ORDERED)'}
                                 </div>
                                 <button
                                     onClick={toggleShuffleStatus}
                                     disabled={updatingShuffle}
-                                    className={`relative inline-flex h-4 w-7 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${shuffleQuestions ? 'bg-indigo-500' : 'bg-slate-700'}`}
+                                    className={`relative inline-flex h-3.5 w-6 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${shuffleQuestions ? 'bg-indigo-500' : 'bg-slate-700'}`}
                                 >
-                                    <span className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${shuffleQuestions ? 'translate-x-3' : 'translate-x-0'}`} />
+                                    <span className={`pointer-events-none inline-block h-2.5 w-2.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${shuffleQuestions ? 'translate-x-2.5' : 'translate-x-0'}`} />
                                 </button>
                             </div>
                         </div>
 
                         {/* Developer Mode Toggle */}
                         <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-4 flex flex-col justify-between shadow-xl group hover:bg-white/[0.08] transition-all min-h-[110px]">
-                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Developer Mode</div>
-                            <div className="flex items-center justify-between mt-auto gap-2">
-                                <div className={`text-[11px] font-bold ${allowInspect ? 'text-pink-400' : 'text-slate-400'}`}>
+                            <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Developer Mode</div>
+                            <div className="flex justify-between mt-auto gap-1 items-end">
+                                <div className={`text-[9px] font-bold leading-tight ${allowInspect ? 'text-pink-400' : 'text-slate-400'}`}>
                                     {allowInspect ? 'ENABLED (DEV)' : 'DISABLED'}
                                 </div>
                                 <button
                                     onClick={toggleInspectStatus}
                                     disabled={updatingInspect}
-                                    className={`relative inline-flex h-4 w-7 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${allowInspect ? 'bg-pink-500' : 'bg-slate-700'}`}
+                                    className={`relative inline-flex h-3.5 w-6 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${allowInspect ? 'bg-pink-500' : 'bg-slate-700'}`}
                                 >
-                                    <span className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${allowInspect ? 'translate-x-3' : 'translate-x-0'}`} />
+                                    <span className={`pointer-events-none inline-block h-2.5 w-2.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${allowInspect ? 'translate-x-2.5' : 'translate-x-0'}`} />
                                 </button>
                             </div>
                         </div>
                         <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-4 flex flex-col justify-between shadow-xl group hover:bg-white/[0.08] transition-all min-h-[110px]">
-                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Aspirant Site Status</div>
-                            <div className="flex items-center justify-between mt-auto gap-2">
-                                <div className={`text-[11px] font-bold ${siteStatus ? 'text-emerald-400' : 'text-red-400'}`}>
+                            <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Aspirant Site Status</div>
+                            <div className="flex justify-between mt-auto gap-1 items-end">
+                                <div className={`text-[9px] font-bold leading-tight ${siteStatus ? 'text-emerald-400' : 'text-red-400'}`}>
                                     {siteStatus ? 'ACTIVE & ONLINE' : 'OFFLINE / DISABLED'}
                                 </div>
                                 <button
                                     onClick={toggleSiteStatus}
                                     disabled={updatingSite}
-                                    className={`relative inline-flex h-4 w-7 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${siteStatus ? 'bg-emerald-500' : 'bg-slate-700'}`}
+                                    className={`relative inline-flex h-3.5 w-6 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${siteStatus ? 'bg-emerald-500' : 'bg-slate-700'}`}
                                 >
-                                    <span className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${siteStatus ? 'translate-x-3' : 'translate-x-0'}`} />
+                                    <span className={`pointer-events-none inline-block h-2.5 w-2.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${siteStatus ? 'translate-x-2.5' : 'translate-x-0'}`} />
                                 </button>
                             </div>
                         </div>
@@ -639,7 +639,7 @@ export default function ManageCriteria() {
                                             onClick={() => setEditForm(prev => ({ ...prev, allow_multiple_attempts: !prev.allow_multiple_attempts }))}
                                             className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${editForm.allow_multiple_attempts ? 'bg-amber-500' : 'bg-slate-700'}`}
                                         >
-                                            <span className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${editForm.allow_multiple_attempts ? 'translate-x-5' : 'translate-x-0'}`} />
+                                            <span className={`pointer-events-none inline-block h-2.5 w-2.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${editForm.allow_multiple_attempts ? 'translate-x-5' : 'translate-x-0'}`} />
                                         </button>
                                     </div>
                                     <div className="flex gap-2 justify-end pt-2">
@@ -773,7 +773,7 @@ export default function ManageCriteria() {
                                                 onClick={() => setEditForm(prev => ({ ...prev, allow_multiple_attempts: !prev.allow_multiple_attempts }))}
                                                 className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${editForm.allow_multiple_attempts ? 'bg-amber-500' : 'bg-slate-700'}`}
                                             >
-                                                <span className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${editForm.allow_multiple_attempts ? 'translate-x-5' : 'translate-x-0'}`} />
+                                                <span className={`pointer-events-none inline-block h-2.5 w-2.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${editForm.allow_multiple_attempts ? 'translate-x-5' : 'translate-x-0'}`} />
                                             </button>
                                         </div>
                                         <div className="flex gap-2 justify-end pt-2">
@@ -816,7 +816,7 @@ export default function ManageCriteria() {
 
                                         {c.allow_multiple_attempts && (
                                             <div className="mb-3">
-                                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-widest rounded">
+                                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[9px] font-black uppercase tracking-widest rounded">
                                                     <AlertCircle size={10} /> Office Mode Active
                                                 </span>
                                             </div>
