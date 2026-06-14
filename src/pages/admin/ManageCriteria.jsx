@@ -409,17 +409,17 @@ export default function ManageCriteria() {
                     <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 lg:grid-cols-3 gap-3 mt-4">
                         {/* Screenshots Toggle */}
                         <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-4 flex flex-col justify-between shadow-xl group hover:bg-white/[0.08] transition-all min-h-[110px]">
-                            <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Exam Screenshots</div>
+                            <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Screenshot Block</div>
                             <div className="flex justify-between mt-auto gap-1 items-end">
-                                <div className={`text-[9px] font-bold leading-tight ${allowScreenshots ? 'text-amber-400' : 'text-slate-400'}`}>
-                                    {allowScreenshots ? 'ALLOWED (WARNING)' : 'BLOCKED (SECURE)'}
+                                <div className={`text-[9px] font-bold leading-tight ${!allowScreenshots ? 'text-amber-400' : 'text-slate-400'}`}>
+                                    {!allowScreenshots ? 'ENABLED (SECURE)' : 'DISABLED (ALLOW)'}
                                 </div>
                                 <button
                                     onClick={toggleScreenshotStatus}
                                     disabled={updatingScreenshots}
-                                    className={`relative inline-flex h-3.5 w-6 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${allowScreenshots ? 'bg-amber-500' : 'bg-slate-700'}`}
+                                    className={`relative inline-flex h-3.5 w-6 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${!allowScreenshots ? 'bg-amber-500' : 'bg-slate-700'}`}
                                 >
-                                    <span className={`pointer-events-none inline-block h-2.5 w-2.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${allowScreenshots ? 'translate-x-2.5' : 'translate-x-0'}`} />
+                                    <span className={`pointer-events-none inline-block h-2.5 w-2.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${!allowScreenshots ? 'translate-x-2.5' : 'translate-x-0'}`} />
                                 </button>
                             </div>
                         </div>
@@ -477,17 +477,17 @@ export default function ManageCriteria() {
 
                         {/* Developer Mode Toggle */}
                         <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-4 flex flex-col justify-between shadow-xl group hover:bg-white/[0.08] transition-all min-h-[110px]">
-                            <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Developer Mode</div>
+                            <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Dev Tools Block</div>
                             <div className="flex justify-between mt-auto gap-1 items-end">
-                                <div className={`text-[9px] font-bold leading-tight ${allowInspect ? 'text-pink-400' : 'text-slate-400'}`}>
-                                    {allowInspect ? 'ENABLED (DEV)' : 'DISABLED'}
+                                <div className={`text-[9px] font-bold leading-tight ${!allowInspect ? 'text-pink-400' : 'text-slate-400'}`}>
+                                    {!allowInspect ? 'ENABLED (SECURE)' : 'DISABLED (ALLOW)'}
                                 </div>
                                 <button
                                     onClick={toggleInspectStatus}
                                     disabled={updatingInspect}
-                                    className={`relative inline-flex h-3.5 w-6 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${allowInspect ? 'bg-pink-500' : 'bg-slate-700'}`}
+                                    className={`relative inline-flex h-3.5 w-6 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${!allowInspect ? 'bg-pink-500' : 'bg-slate-700'}`}
                                 >
-                                    <span className={`pointer-events-none inline-block h-2.5 w-2.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${allowInspect ? 'translate-x-2.5' : 'translate-x-0'}`} />
+                                    <span className={`pointer-events-none inline-block h-2.5 w-2.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${!allowInspect ? 'translate-x-2.5' : 'translate-x-0'}`} />
                                 </button>
                             </div>
                         </div>
