@@ -12,7 +12,8 @@ async function runLoadTest(numUsers) {
     console.log(`\n🚀 Starting Load Test for ${numUsers} concurrent users...`);
 
     // 1. Get Active Drive
-    const { data: drives } = await supabase.from('scheduled_interviews').select('*').eq('is_active', true);
+    // 1. Get Active Drive (Most Recent)
+    const { data: drives } = await supabase.from('scheduled_interviews').select('*').eq('is_active', true).order('created_at', { ascending: false });
     if (!drives || drives.length === 0) {
         console.error("❌ No active drive found! Please create and activate a drive from the Admin Panel first.");
         return;
