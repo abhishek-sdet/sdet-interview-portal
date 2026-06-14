@@ -210,18 +210,23 @@ export default function AdminResults() {
             // 1. Get all interview IDs
             const interviewIds = filteredResults.map(r => r.id);
 
-            // 2. Fetch all answers with questions in batches
-            const { data: allAnswers, error: answersError } = await supabase
-                .from('answers')
-                .select(`
-                    interview_id,
-                    selected_answer,
-                    is_correct,
-                    questions(question_text, correct_answer, category)
-                `)
-                .in('interview_id', interviewIds);
+            // 2. Fetch all answers with questions in batches to avoid URL length limits
+            let allAnswers = [];
+            for (let i = 0; i < interviewIds.length; i += 100) {
+                const chunk = interviewIds.slice(i, i + 100);
+                const { data: chunkAnswers, error: chunkError } = await supabase
+                    .from('answers')
+                    .select(`
+                        interview_id,
+                        selected_answer,
+                        is_correct,
+                        questions(question_text, correct_answer, category)
+                    `)
+                    .in('interview_id', chunk);
 
-            if (answersError) throw answersError;
+                if (chunkError) throw chunkError;
+                if (chunkAnswers) allAnswers = [...allAnswers, ...chunkAnswers];
+            }
 
             // 3. Group answers by interview
             const answersByInterview = {};
@@ -457,20 +462,27 @@ export default function AdminResults() {
             // but cascading is usually enabled. We'll just delete candidates, which should wipe the interviews.
             // Let's delete both explicitly to be 100% sure.
             
-            const { error: interviewError } = await supabase
-                .from('interviews')
-                .delete()
-                .in('id', idsToDelete);
+            // Batch delete to avoid URL length limit (Bad Request 400)
+            for (let i = 0; i < idsToDelete.length; i += 100) {
+                const chunk = idsToDelete.slice(i, i + 100);
+                const { error: interviewError } = await supabase
+                    .from('interviews')
+                    .delete()
+                    .in('id', chunk);
 
-            if (interviewError) throw interviewError;
+                if (interviewError) throw interviewError;
+            }
 
             if (candidateIdsToDelete.length > 0) {
-                const { error: candidateError } = await supabase
-                    .from('candidates')
-                    .delete()
-                    .in('id', candidateIdsToDelete);
+                for (let i = 0; i < candidateIdsToDelete.length; i += 100) {
+                    const chunk = candidateIdsToDelete.slice(i, i + 100);
+                    const { error: candidateError } = await supabase
+                        .from('candidates')
+                        .delete()
+                        .in('id', chunk);
 
-                if (candidateError) throw candidateError;
+                    if (candidateError) throw candidateError;
+                }
             }
 
             toast.success(`Successfully reset ${filteredResults.length} records!`);
