@@ -406,7 +406,7 @@ export default function ManageCriteria() {
                         <p className="text-slate-500 text-sm mt-1">Manage exam formats, cutoffs, and time limits</p>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-4 mt-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 lg:grid-cols-3 gap-3 mt-4">
                         {/* Screenshots Toggle */}
                         <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-5 flex flex-col justify-between shadow-xl group hover:bg-white/[0.08] transition-all min-h-[110px]">
                             <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Exam Screenshots</div>
@@ -480,7 +480,7 @@ export default function ManageCriteria() {
                             <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed mb-3">Developer Mode</div>
                             <div className="flex items-center justify-between mt-auto gap-2">
                                 <div className={`text-[11px] font-bold ${allowInspect ? 'text-pink-400' : 'text-slate-400'}`}>
-                                    {allowInspect ? 'ALLOWED (TESTING)' : 'BLOCKED (SECURE)'}
+                                    {allowInspect ? 'ENABLED (DEV)' : 'DISABLED'}
                                 </div>
                                 <button
                                     onClick={toggleInspectStatus}
