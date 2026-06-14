@@ -46,6 +46,14 @@ export default function AccessGuard() {
     // Global Anti-Cheat Hook
     useEffect(() => {
         const handleKeyDown = async (e) => {
+            // Screen Blackout logic to defeat Snipping Tool
+            if (!securitySettings.allowScreenshots) {
+                if (e.key === 'PrintScreen' || e.key === 'Meta' || (e.metaKey && e.shiftKey)) {
+                    document.body.style.filter = 'blur(20px) grayscale(100%)';
+                    document.body.style.opacity = '0.05';
+                }
+            }
+
             // Block Inspect tools (F12, Ctrl+Shift+I/J/C, Ctrl+U)
             if (!securitySettings.allowInspect) {
                 if (
@@ -73,11 +81,34 @@ export default function AccessGuard() {
         };
 
         const handleKeyUp = async (e) => {
-            if (!securitySettings.allowScreenshots && (e.key === 'PrintScreen' || e.key === 'Meta')) {
-                try {
-                    await navigator.clipboard.writeText("Screenshots are strictly prohibited.");
-                    toast.error("Screenshots are not allowed!");
-                } catch (err) {}
+            if (!securitySettings.allowScreenshots) {
+                // Restore screen after blackout
+                if (e.key === 'PrintScreen' || e.key === 'Meta' || e.key === 'Shift') {
+                    document.body.style.filter = 'none';
+                    document.body.style.opacity = '1';
+                }
+
+                if (e.key === 'PrintScreen' || e.key === 'Meta') {
+                    try {
+                        await navigator.clipboard.writeText("Screenshots are strictly prohibited.");
+                        toast.error("Screenshots are not allowed!");
+                    } catch (err) {}
+                }
+            }
+        };
+
+        const handleWindowBlur = () => {
+            if (!securitySettings.allowScreenshots) {
+                // When snipping tool opens, it steals focus. We instantly blur the app.
+                document.body.style.filter = 'blur(30px) grayscale(100%)';
+                document.body.style.opacity = '0';
+            }
+        };
+
+        const handleWindowFocus = () => {
+            if (!securitySettings.allowScreenshots) {
+                document.body.style.filter = 'none';
+                document.body.style.opacity = '1';
             }
         };
 
@@ -89,12 +120,19 @@ export default function AccessGuard() {
 
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
+        window.addEventListener('blur', handleWindowBlur);
+        window.addEventListener('focus', handleWindowFocus);
         document.addEventListener('contextmenu', disableContextMenu);
 
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
+            window.removeEventListener('blur', handleWindowBlur);
+            window.removeEventListener('focus', handleWindowFocus);
             document.removeEventListener('contextmenu', disableContextMenu);
+            // Cleanup styles
+            document.body.style.filter = 'none';
+            document.body.style.opacity = '1';
         };
     }, [securitySettings]);
 
