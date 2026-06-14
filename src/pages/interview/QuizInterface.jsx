@@ -93,8 +93,35 @@ export default function QuizInterface() {
 
     // Anti-Cheating: Screenshot, Copy/Paste, and Context Menu Protection
     useEffect(() => {
+        const handleKeyDown = async (e) => {
+            // Block Inspect tools (F12, Ctrl+Shift+I/J/C, Ctrl+U)
+            if (!allowInspect) {
+                if (
+                    e.key === 'F12' ||
+                    (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
+                    (e.metaKey && e.altKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
+                    (e.ctrlKey && e.key.toLowerCase() === 'u') ||
+                    (e.metaKey && e.key.toLowerCase() === 'u')
+                ) {
+                    e.preventDefault();
+                    toast.error("Developer tools are disabled during the assessment.");
+                }
+            }
+
+            // Block Screenshots on macOS (Cmd+Shift+3/4/5)
+            if (!allowScreenshots) {
+                if (e.metaKey && e.shiftKey && ['3', '4', '5'].includes(e.key)) {
+                    e.preventDefault();
+                    try {
+                        await navigator.clipboard.writeText("Screenshots are strictly prohibited.");
+                        toast.error("Screenshots are not allowed!");
+                    } catch (err) {}
+                }
+            }
+        };
+
         const handleKeyUp = async (e) => {
-            if (e.key === 'PrintScreen' || e.key === 'Meta') { // Catch PrintScreen or Win/Cmd key patterns
+            if (!allowScreenshots && (e.key === 'PrintScreen' || e.key === 'Meta')) { // Catch PrintScreen or Win/Cmd key patterns
                 try {
                     await navigator.clipboard.writeText("Screenshots are strictly prohibited during the assessment.");
                     toast.error("Screenshots are not allowed! This action has been flagged.");
@@ -113,9 +140,13 @@ export default function QuizInterface() {
         };
 
         const disableContextMenu = (e) => {
-            if (!allowInspect) e.preventDefault();
+            if (!allowInspect) {
+                e.preventDefault();
+                toast.error("Right-click is disabled.");
+            }
         };
 
+        window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
         document.addEventListener('copy', disableCopyPaste);
         document.addEventListener('cut', disableCopyPaste);
@@ -123,13 +154,14 @@ export default function QuizInterface() {
         document.addEventListener('contextmenu', disableContextMenu);
 
         return () => {
+            window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
             document.removeEventListener('copy', disableCopyPaste);
             document.removeEventListener('cut', disableCopyPaste);
             document.removeEventListener('paste', disableCopyPaste);
             document.removeEventListener('contextmenu', disableContextMenu);
         };
-    }, [allowInspect]);
+    }, [allowInspect, allowScreenshots]);
 
     useEffect(() => {
         setMounted(true);
