@@ -3,6 +3,8 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { accessControl } from '@/lib/accessControl';
 import AccessDenied from '@/components/admin/AccessDenied';
 import { Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'react-hot-toast';
 
 /**
  * AccessGuard wraps candidate-facing routes to ensure 
@@ -21,38 +23,80 @@ export default function AccessGuard() {
         checkAccess();
     }, [location.pathname]);
 
-    // Auto-scaling Hook removed in favor of pure CSS responsive design.
+    const [securitySettings, setSecuritySettings] = useState({ allowScreenshots: false, allowInspect: false });
 
-    // 2. Anti-Screenshot Hook
+    // Fetch Security Settings
     useEffect(() => {
-        const preventScreenshots = (e) => {
-            // Check for PrintScreen key or common screenshot shortcuts
-            // Note: e.key === 'PrintScreen' covers the PrtScn key.
-            // Mac shortcuts (Cmd+Shift+3/4) are harder to block at JS level, 
-            // but we can try to catch the key combinations.
-            if (
-                e.key === 'PrintScreen' ||
-                (e.ctrlKey && e.key === 'p') || // Ctrl+P (Print)
-                (e.metaKey && e.shiftKey && (e.key === '3' || e.key === '4' || e.key === '5')) || // Mac screenshot shortcuts
-                (e.metaKey && e.key === 'p') // Mac Print
-            ) {
-                e.preventDefault();
-                // Clear clipboard to corrupt snips if they rely on it
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText("Screenshots are disabled during the assessment.");
+        const fetchSettings = async () => {
+            try {
+                const { data } = await supabase.from('site_settings').select('allow_screenshots, allow_inspect').single();
+                if (data) {
+                    setSecuritySettings({
+                        allowScreenshots: data.allow_screenshots,
+                        allowInspect: data.allow_inspect
+                    });
                 }
-                console.warn("[SECURITY] Screenshot attempt detected and blocked.");
+            } catch (err) {
+                console.error("Failed to load security settings in AccessGuard", err);
+            }
+        };
+        fetchSettings();
+    }, []);
+
+    // Global Anti-Cheat Hook
+    useEffect(() => {
+        const handleKeyDown = async (e) => {
+            // Block Inspect tools (F12, Ctrl+Shift+I/J/C, Ctrl+U)
+            if (!securitySettings.allowInspect) {
+                if (
+                    e.key === 'F12' ||
+                    (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
+                    (e.metaKey && e.altKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
+                    (e.ctrlKey && e.key.toLowerCase() === 'u') ||
+                    (e.metaKey && e.key.toLowerCase() === 'u')
+                ) {
+                    e.preventDefault();
+                    toast.error("Developer tools are disabled.");
+                }
+            }
+
+            // Block Screenshots on macOS (Cmd+Shift+3/4/5)
+            if (!securitySettings.allowScreenshots) {
+                if (e.metaKey && e.shiftKey && ['3', '4', '5'].includes(e.key)) {
+                    e.preventDefault();
+                    try {
+                        await navigator.clipboard.writeText("Screenshots are strictly prohibited.");
+                        toast.error("Screenshots are not allowed!");
+                    } catch (err) {}
+                }
             }
         };
 
-        window.addEventListener('keydown', preventScreenshots, true);
-        window.addEventListener('keyup', preventScreenshots, true);
+        const handleKeyUp = async (e) => {
+            if (!securitySettings.allowScreenshots && (e.key === 'PrintScreen' || e.key === 'Meta')) {
+                try {
+                    await navigator.clipboard.writeText("Screenshots are strictly prohibited.");
+                    toast.error("Screenshots are not allowed!");
+                } catch (err) {}
+            }
+        };
+
+        const disableContextMenu = (e) => {
+            if (!securitySettings.allowInspect) {
+                e.preventDefault();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+        document.addEventListener('contextmenu', disableContextMenu);
 
         return () => {
-            window.removeEventListener('keydown', preventScreenshots, true);
-            window.removeEventListener('keyup', preventScreenshots, true);
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+            document.removeEventListener('contextmenu', disableContextMenu);
         };
-    }, []);
+    }, [securitySettings]);
 
     const checkAccess = async () => {
         try {
