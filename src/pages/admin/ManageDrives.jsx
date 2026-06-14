@@ -63,26 +63,32 @@ export default function ManageDrives() {
 
             if (drivesError) throw drivesError;
 
-            // 2. Fetch ALL interviews linked to these drives to calculate stats
-            const driveIds = drivesData.map(d => d.id);
+            // 2. Fetch ALL interviews to calculate stats
+            // Fallback for old data where scheduled_interview_id might be null
             const { data: interviewsData, error: interviewsError } = await supabase
                 .from('interviews')
                 .select(`
                     id,
                     scheduled_interview_id,
+                    started_at,
                     status,
                     score,
                     total_questions,
                     criteria_id,
                     criteria(name, passing_percentage)
-                `)
-                .in('scheduled_interview_id', driveIds);
+                `);
 
             if (interviewsError) throw interviewsError;
 
             // 3. Aggregate stats per drive
             const drivesWithStats = drivesData.map(drive => {
-                const driveInterviews = interviewsData.filter(i => i.scheduled_interview_id === drive.id);
+                const driveInterviews = interviewsData.filter(i => {
+                    if (i.scheduled_interview_id === drive.id) return true;
+                    if (!i.scheduled_interview_id && i.started_at) {
+                        return i.started_at.startsWith(drive.scheduled_date);
+                    }
+                    return false;
+                });
 
                 const fresherInterviews = driveInterviews.filter(i => i.criteria?.name?.toLowerCase().includes('fresher'));
                 const expInterviews = driveInterviews.filter(i => i.criteria?.name?.toLowerCase().includes('experienced'));

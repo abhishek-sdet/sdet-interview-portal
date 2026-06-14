@@ -133,7 +133,12 @@ export default function AdminResults() {
 
             // Apply drive filter
             if (driveFilter !== 'all') {
-                query = query.eq('scheduled_interview_id', driveFilter);
+                const driveToMatch = drives.find(d => d.id === driveFilter);
+                if (driveToMatch) {
+                    query = query.or(`scheduled_interview_id.eq.${driveFilter},and(scheduled_interview_id.is.null,started_at.gte.${driveToMatch.scheduled_date}T00:00:00,started_at.lte.${driveToMatch.scheduled_date}T23:59:59)`);
+                } else {
+                    query = query.eq('scheduled_interview_id', driveFilter);
+                }
             }
 
             // Apply date filter (only if not filtering by specific drive)
@@ -666,7 +671,13 @@ export default function AdminResults() {
                     <div className="space-y-4">
                         {/* Group logic: Filter results by drive and render groups */}
                         {drives.filter(drive => driveFilter === 'all' || drive.id === driveFilter).map(drive => {
-                            const driveResults = filteredResults.filter(r => r.scheduled_interview_id === drive.id);
+                            const driveResults = filteredResults.filter(r => {
+                                if (r.scheduled_interview_id === drive.id) return true;
+                                if (!r.scheduled_interview_id && r.started_at) {
+                                    return r.started_at.startsWith(drive.scheduled_date);
+                                }
+                                return false;
+                            });
                             if (driveResults.length === 0 && searchTerm) return null; // Hide empty groups during search
                             
                             const isExpanded = !!expandedDrives[drive.id];
