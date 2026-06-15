@@ -410,18 +410,30 @@ export default function AdminResults() {
         try {
             console.log('[DELETE] Attempting to delete candidate and interview for:', result.candidates?.email);
 
-            // Deleting the candidate will cascade and delete the interview
-            const { error } = await supabase
-                .from('candidates')
-                .delete()
-                .eq('id', result.candidate_id);
+            let error;
+            
+            if (result.candidate_id) {
+                // Deleting the candidate will cascade and delete the interview
+                const { error: err } = await supabase
+                    .from('candidates')
+                    .delete()
+                    .eq('id', result.candidate_id);
+                error = err;
+            } else {
+                // If there's no candidate_id, delete the interview record directly
+                const { error: err } = await supabase
+                    .from('interviews')
+                    .delete()
+                    .eq('id', result.id);
+                error = err;
+            }
 
             if (error) {
                 console.error('[DELETE] Supabase error:', error);
                 throw error;
             }
 
-            console.log('[DELETE] Candidate and interview deleted successfully');
+            console.log('[DELETE] Record deleted successfully');
             toast.success('Record deleted successfully');
             fetchResults(); // Refresh list
         } catch (err) {
