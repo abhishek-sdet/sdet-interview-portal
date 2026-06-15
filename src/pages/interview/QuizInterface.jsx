@@ -361,9 +361,10 @@ export default function QuizInterface() {
                 let violation = false;
                 let reason = '';
 
-                // Check 1: Fullscreen enforcement
+                // Check 1: Fullscreen enforcement (only if supported by browser)
+                const isFullscreenSupported = document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled || document.msFullscreenEnabled;
                 const currentFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
-                if (enforceFullScreen && !currentFullscreen) {
+                if (enforceFullScreen && isFullscreenSupported && !currentFullscreen) {
                     violation = true;
                     reason = 'Fullscreen exited (Interval Check)';
                 }
@@ -375,10 +376,15 @@ export default function QuizInterface() {
                 }
 
                 if (violation) {
-                    console.warn(`[PROCTOR] VIOLATION: ${reason}`);
-                    setTabSwitchWarnings(prev => prev + 1);
-                    setProctorCountdown(30);
-                    setShowProctorWarning(true);
+                    const now = Date.now();
+                    // Debounce interval warnings to prevent rapid loops if fullscreen is failing to engage
+                    if (now - lastWarningTimeRef.current > 3000) {
+                        console.warn(`[PROCTOR] VIOLATION: ${reason}`);
+                        setTabSwitchWarnings(prev => prev + 1);
+                        setProctorCountdown(30);
+                        setShowProctorWarning(true);
+                        lastWarningTimeRef.current = now;
+                    }
                 }
                 
                 setHeartbeat(prev => (prev + 1) % 10);
@@ -455,10 +461,15 @@ export default function QuizInterface() {
 
             if (document.hidden || !document.hasFocus()) {
                 if (!showProctorWarning) {
-                    console.log('[PROCTOR] Focus lost detected by listener.');
-                    setTabSwitchWarnings(prev => prev + 1);
-                    setProctorCountdown(30);
-                    setShowProctorWarning(true);
+                    // Debounce focus loss to prevent rapid double-triggers
+                    const now = Date.now();
+                    if (now - lastWarningTimeRef.current > 2000) {
+                        console.log('[PROCTOR] Focus lost detected by listener.');
+                        setTabSwitchWarnings(prev => prev + 1);
+                        setProctorCountdown(30);
+                        setShowProctorWarning(true);
+                        lastWarningTimeRef.current = now;
+                    }
                 }
             }
         };
@@ -540,17 +551,20 @@ export default function QuizInterface() {
             const isPrintScreen = ['PrintScreen', 'Snapshot', 'PrntSt', 'SysRq'].includes(e.key) || 
                                  ['PrintScreen', 'Snapshot'].includes(e.code);
             
-            if (!allowScreenshots && isPrintScreen) {
-                console.warn('[PROCTOR] Screenshot attempt detected!');
-                e.preventDefault();
-                e.stopPropagation();
+            if (allowScreenshots) return true;
 
-                // Aggressive clipboard clearing
+            // 1. Blackout Screen on PrintScreen / Screenshot shortcuts
+            if (e.key === 'PrintScreen' || e.key === 'Snapshot' || e.key === 'PrntSt' || e.key === 'SysRq' || 
+                (e.metaKey && e.shiftKey && (e.key === 's' || e.key === 'S' || e.key === '3' || e.key === '4' || e.key === '5'))) {
+                
+                e.preventDefault();
+                
                 if (navigator.clipboard && navigator.clipboard.writeText) {
                     navigator.clipboard.writeText('Screenshots are strictly prohibited.').catch(() => {});
                 }
 
                 if (!showProctorWarning) {
+                    setTabSwitchWarnings(prev => prev + 1); // Increment warning for screenshots
                     setProctorCountdown(30);
                     setShowProctorWarning(true);
                 }
