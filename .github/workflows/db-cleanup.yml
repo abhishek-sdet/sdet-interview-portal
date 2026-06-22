@@ -1,0 +1,102 @@
+name: 🧹 Database Cleanup
+
+on:
+  schedule:
+    # Every Sunday at 01:00 UTC (6:30 AM IST) — runs after keep-alive
+    - cron: '0 1 * * 0'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Cleanup mode'
+        required: true
+        default: 'dry-run'
+        type: choice
+        options:
+          - dry-run
+          - execute
+          - report
+      abandoned_days:
+        description: 'Delete abandoned interviews older than N days'
+        required: false
+        default: '30'
+      orphan_days:
+        description: 'Delete orphan candidates older than N days'
+        required: false
+        default: '7'
+      cleanup_completed:
+        description: 'Also delete old COMPLETED interviews? (true/false)'
+        required: false
+        default: 'false'
+      completed_days:
+        description: 'Delete completed interviews older than N days (if above is true)'
+        required: false
+        default: '90'
+
+jobs:
+  cleanup:
+    name: 🗑️ Clean Up Old Data
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      # ── Storage report (always runs first) ──────────────────────────────────
+      - name: 📊 Storage Report (Before)
+        env:
+          VITE_SUPABASE_URL:      ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/db-cleanup.cjs --report
+
+      # ── Scheduled run: always execute (no manual input needed) ──────────────
+      - name: 🧹 Run Cleanup (Scheduled - Auto Execute)
+        if: github.event_name == 'schedule'
+        env:
+          VITE_SUPABASE_URL:         ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY:    ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          CLEANUP_ABANDONED_DAYS:    '30'
+          CLEANUP_ORPHAN_DAYS:       '7'
+          CLEANUP_COMPLETED:         'false'
+          CLEANUP_COMPLETED_DAYS:    '90'
+        run: node scripts/db-cleanup.cjs --execute
+
+      # ── Manual run: use input parameters ────────────────────────────────────
+      - name: 🧹 Run Cleanup (Manual)
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          VITE_SUPABASE_URL:         ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY:    ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          CLEANUP_ABANDONED_DAYS:    ${{ github.event.inputs.abandoned_days }}
+          CLEANUP_ORPHAN_DAYS:       ${{ github.event.inputs.orphan_days }}
+          CLEANUP_COMPLETED:         ${{ github.event.inputs.cleanup_completed }}
+          CLEANUP_COMPLETED_DAYS:    ${{ github.event.inputs.completed_days }}
+        run: |
+          MODE="${{ github.event.inputs.mode }}"
+          if [ "$MODE" = "execute" ]; then
+            node scripts/db-cleanup.cjs --execute
+          elif [ "$MODE" = "report" ]; then
+            node scripts/db-cleanup.cjs --report
+          else
+            node scripts/db-cleanup.cjs
+          fi
+
+      # ── Storage report after cleanup ─────────────────────────────────────────
+      - name: 📊 Storage Report (After)
+        if: always()
+        env:
+          VITE_SUPABASE_URL:      ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/db-cleanup.js --report

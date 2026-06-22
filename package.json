@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "db:report": "node scripts/db-cleanup.cjs --report",
+    "db:cleanup": "node scripts/db-cleanup.cjs",
+    "db:cleanup:execute": "node scripts/db-cleanup.cjs --execute"
   },
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^5.0.1",
