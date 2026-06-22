@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
     LogOut, LayoutDashboard, Upload, FileText, List,
     Settings, ShieldCheck, Calendar, ChevronLeft, ChevronRight,
-    Menu, X, Bell
+    Menu, X, Bell, HardDrive
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -15,6 +15,7 @@ const navItems = [
     { path: '/admin/access', label: 'Access Control', icon: ShieldCheck, color: 'amber' },
     { path: '/admin/drives', label: 'Drives', icon: Calendar, color: 'emerald' },
     { path: '/admin/results', label: 'Results', icon: FileText, color: 'rose' },
+    { path: '/admin/storage', label: 'Storage', icon: HardDrive, color: 'teal' },
 ];
 
 const colorAccent = {
@@ -25,6 +26,7 @@ const colorAccent = {
     amber:  { bg: 'bg-amber-500/15',  text: 'text-amber-400',  border: 'border-amber-500/30',  activeBg: 'bg-amber-500/20' },
     emerald:{ bg: 'bg-emerald-500/15',text: 'text-emerald-400',border: 'border-emerald-500/30',activeBg: 'bg-emerald-500/20' },
     rose:   { bg: 'bg-rose-500/15',   text: 'text-rose-400',   border: 'border-rose-500/30',   activeBg: 'bg-rose-500/20' },
+    teal:   { bg: 'bg-teal-500/15',   text: 'text-teal-400',   border: 'border-teal-500/30',   activeBg: 'bg-teal-500/20' },
 };
 
 export default function SimpleLayout({ children }) {

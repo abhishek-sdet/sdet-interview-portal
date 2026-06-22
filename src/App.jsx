@@ -22,6 +22,7 @@ import AdminResults from './pages/admin/AdminResults';
 import ManageCriteria from './pages/admin/ManageCriteria';
 import ManageAccess from './pages/admin/ManageAccess';
 import ManageDrives from './pages/admin/ManageDrives';
+import StorageManager from './pages/admin/StorageManager';
 
 // Results Dashboard
 import HRDashboard from './pages/dashboard/HRDashboard';
@@ -56,6 +57,7 @@ function App() {
                         <Route path="/admin/access" element={<ManageAccess />} />
                         <Route path="/admin/drives" element={<ManageDrives />} />
                         <Route path="/admin/results" element={<AdminResults />} />
+                        <Route path="/admin/storage" element={<StorageManager />} />
 
                         {/* Results Dashboard Route */}
                         {/* HR Dashboard Route (Public/Read-Only) */}
