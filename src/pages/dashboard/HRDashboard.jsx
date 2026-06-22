@@ -22,6 +22,30 @@ export default function HRDashboard() {
     const [drives, setDrives] = useState([]);
     const [activeTab, setActiveTab] = useState('fresher');
     const [selectedImage, setSelectedImage] = useState(null);
+    const [fetchingPhoto, setFetchingPhoto] = useState(false);
+
+    const handleViewPhoto = async (interviewId) => {
+        if (fetchingPhoto) return;
+        try {
+            setFetchingPhoto(true);
+            const { data, error } = await supabase
+                .from('interview_photos')
+                .select('photo')
+                .eq('interview_id', interviewId)
+                .maybeSingle();
+            
+            if (error) throw error;
+            if (data?.photo) {
+                setSelectedImage(data.photo);
+            } else {
+                alert('No photo captured for this candidate.');
+            }
+        } catch (err) {
+            console.error('Error fetching candidate photo:', err);
+        } finally {
+            setFetchingPhoto(false);
+        }
+    };
 
     // Keep ref in sync with state
     useEffect(() => {
@@ -468,18 +492,13 @@ export default function HRDashboard() {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div 
-                                                            className="w-8 h-8 rounded-full overflow-hidden bg-slate-800 flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
-                                                            onClick={() => item.metadata?.initial_photo && setSelectedImage(item.metadata.initial_photo)}
-                                                        >
-                                                            {item.metadata?.initial_photo ? (
-                                                                <img src={item.metadata.initial_photo} alt={item.candidates?.full_name} className="w-full h-full object-cover" />
-                                                            ) : (
-                                                                <div className="w-full h-full flex items-center justify-center text-xs font-bold text-white bg-slate-700">
-                                                                    {item.candidates?.full_name?.substring(0, 2).toUpperCase() || 'U'}
-                                                                </div>
-                                                            )}
-                                                        </div>
+                                                         <div 
+                                                             className="w-8 h-8 rounded-full overflow-hidden bg-slate-800 flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all flex items-center justify-center text-xs font-bold text-white"
+                                                             onClick={() => handleViewPhoto(item.id)}
+                                                             title="Click to view candidate identity photo"
+                                                         >
+                                                             {item.candidates?.full_name?.substring(0, 2).toUpperCase() || 'U'}
+                                                         </div>
                                                         <div className="flex flex-col">
                                                             <span className="font-bold text-sm tracking-tight">{item.candidates?.full_name}</span>
                                                             <span className="text-[10px] font-mono text-slate-500">Score: {item.score}/{item.total_questions}</span>

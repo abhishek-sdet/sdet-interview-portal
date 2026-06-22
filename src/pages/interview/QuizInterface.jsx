@@ -709,7 +709,7 @@ export default function QuizInterface() {
 
             let query = supabase
                 .from('questions')
-                .select('id, criteria_id, question_text, options, difficulty, points, is_active, created_at, updated_at, category, set_name, marks, section, subsection, option_a, option_b, option_c, option_d, correct_option, order_index, type, language, test_cases')
+                .select('id, criteria_id, question_text, options, difficulty, points, is_active, created_at, updated_at, category, set_name, marks, section, subsection, option_a, option_b, option_c, option_d, order_index, type, language, test_cases')
                 .eq('criteria_id', criteriaId)
                 .eq('is_active', true);
 
@@ -1303,79 +1303,10 @@ export default function QuizInterface() {
             const criteriaId = localStorage.getItem('criteriaId');
             const deviceId = accessControl.getDeviceId();
 
-            let passingPercentage = 70;
-            if (criteriaId) {
-                const { data: criteriaData, error: criteriaError } = await supabase
-                    .from('criteria')
-                    .select('passing_percentage')
-                    .eq('id', criteriaId)
-                    .single();
-
-                if (!criteriaError && criteriaData) {
-                    passingPercentage = criteriaData.passing_percentage;
-                }
-            }
-
-            let correctCount = 0;
-            const answerRecords = [];
-
-            // Fetch correct answers securely at submission time
-            const questionIds = questions.map(q => q.id);
-            const { data: correctAnswersData, error: answersFetchError } = await supabase
-                .from('questions')
-                .select('id, correct_answer')
-                .in('id', questionIds);
-
-            if (answersFetchError) throw answersFetchError;
-
-            const correctAnswersMap = {};
-            if (correctAnswersData) {
-                correctAnswersData.forEach(q => {
-                    correctAnswersMap[q.id] = q.correct_answer;
-                });
-            }
-
-            questions.forEach((question) => {
-                const selectedAnswer = currentAnswers[question.id];
-                const normalize = (str) => {
-                    if (str === null || str === undefined) return '';
-                    return String(str).replace(/\u00A0/g, ' ').trim().toLowerCase();
-                };
-
-                const safeSelected = normalize(selectedAnswer);
-                const safeCorrect = normalize(correctAnswersMap[question.id]);
-                const isCorrect = safeSelected !== '' && safeSelected === safeCorrect;
-
-                if (isCorrect) correctCount++;
-
-                answerRecords.push({
-                    interview_id: interviewId,
-                    question_id: question.id,
-                    selected_answer: selectedAnswer || null,
-                    is_correct: isCorrect
-                });
-            });
-
-            const totalQuestions = totalExamQuestions > 0 ? totalExamQuestions : questions.length;
-            const percentage = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0;
-            const passed = percentage >= passingPercentage;
-
-            // 1. Delete existing answers if this is a retry (to avoid unique constraint errors if any records were partially saved)
-            // Note: This assumes we want to overwrite. If using a transaction-like approach, we'd do this.
-            await supabase.from('answers').delete().eq('interview_id', interviewId);
-
-            // 2. Insert answers
-            const { error: answersError } = await supabase
-                .from('answers')
-                .insert(answerRecords);
-
-            if (answersError) throw answersError;
-
-            // 3. Update interview
+            // Match the retrieval logic in fetchQuestions for consistency
             const configStr = localStorage.getItem('examConfig');
             const config = configStr ? JSON.parse(configStr) : null;
             
-            // Match the retrieval logic in fetchQuestions for consistency
             const rawSetVal = config?.set || localStorage.getItem('selectedSet');
             const questionSet = (!rawSetVal || rawSetVal === 'undefined' || rawSetVal === 'null') ? 'Set' : rawSetVal;
             
@@ -1394,49 +1325,34 @@ export default function QuizInterface() {
                 fullSetInfo = null; // Don't update if we have no info
             }
 
-            const updatePayload = {
-                status: 'completed',
-                completed_at: new Date().toISOString(),
-                score: correctCount,
-                total_questions: totalQuestions,
-                percentage: percentage,
-                passed: passed,
-                device_id: deviceId // Ensure device_id is recorded on submission for reattempt check
-            };
+            // Build answers array for RPC
+            const answerRecords = questions.map((question) => ({
+                question_id: question.id,
+                selected_answer: currentAnswers[question.id] || null
+            }));
 
-            if (fullSetInfo) updatePayload.question_set = fullSetInfo;
+            // Grade and submit quiz securely on the server via RPC
+            const { data: rpcData, error: rpcError } = await supabase.rpc('submit_and_grade_quiz', {
+                p_interview_id: interviewId,
+                p_answers: answerRecords,
+                p_device_id: deviceId,
+                p_question_set: fullSetInfo,
+                p_auto_submitted: autoSubmit,
+                p_auto_submit_reason: reason
+            });
+
+            if (rpcError) throw rpcError;
             
-            // PRESERVE METADATA: Fetch existing metadata and merge to avoid wiping the identity photo
-            try {
-                const { data: currentInterview } = await supabase
-                    .from('interviews')
-                    .select('metadata')
-                    .eq('id', interviewId)
-                    .single();
-                
-                const existingMeta = currentInterview?.metadata || {};
-                const newMeta = autoSubmit 
-                    ? { ...existingMeta, auto_submitted: true, reason: reason }
-                    : existingMeta;
-                
-                updatePayload.metadata = newMeta;
-            } catch (metaErr) {
-                console.warn('[SUBMIT] Could not fetch existing metadata for merge', metaErr);
-                if (autoSubmit) updatePayload.metadata = { auto_submitted: true, reason: reason };
+            const result = rpcData && rpcData.length > 0 ? rpcData[0] : null;
+            if (!result || !result.success) {
+                throw new Error(result?.error_message || 'Grading failed. Please try again.');
             }
 
-            const { error: updateError } = await supabase
-                .from('interviews')
-                .update(updatePayload)
-                .eq('id', interviewId);
-
-            if (updateError) throw updateError;
-
             // SUCCESS: Store results and clear state
-            localStorage.setItem('score', correctCount);
-            localStorage.setItem('totalQuestions', totalQuestions);
-            localStorage.setItem('percentage', percentage.toFixed(2));
-            localStorage.setItem('passed', passed);
+            localStorage.setItem('score', result.score);
+            localStorage.setItem('totalQuestions', result.total_questions);
+            localStorage.setItem('percentage', Number(result.percentage).toFixed(2));
+            localStorage.setItem('passed', result.passed);
 
             const storageKey = `quiz_state_${interviewId}`;
             localStorage.removeItem(storageKey);

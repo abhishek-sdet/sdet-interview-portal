@@ -18,6 +18,30 @@ export default function AdminDashboard() {
     });
     const [loading, setLoading] = useState(true);
     const [selectedImage, setSelectedImage] = useState(null);
+    const [fetchingPhoto, setFetchingPhoto] = useState(false);
+
+    const handleViewPhoto = async (interviewId) => {
+        if (fetchingPhoto) return;
+        try {
+            setFetchingPhoto(true);
+            const { data, error } = await supabase
+                .from('interview_photos')
+                .select('photo')
+                .eq('interview_id', interviewId)
+                .maybeSingle();
+            
+            if (error) throw error;
+            if (data?.photo) {
+                setSelectedImage(data.photo);
+            } else {
+                alert('No photo captured for this candidate.');
+            }
+        } catch (err) {
+            console.error('Error fetching candidate photo:', err);
+        } finally {
+            setFetchingPhoto(false);
+        }
+    };
 
     useEffect(() => { fetchTodayStats(); }, []);
 
@@ -201,17 +225,14 @@ export default function AdminDashboard() {
                                             : 0;
                                         return (
                                             <div key={activity.id} className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors">
-                                                {/* Avatar */}
-                                                <div 
-                                                    className={`flex-shrink-0 w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-xs font-black cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all ${activity.passed ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'}`}
-                                                    onClick={() => activity.metadata?.initial_photo && setSelectedImage(activity.metadata.initial_photo)}
-                                                >
-                                                    {activity.metadata?.initial_photo ? (
-                                                        <img src={activity.metadata.initial_photo} alt={name} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        initials
-                                                    )}
-                                                </div>
+                                                 {/* Avatar */}
+                                                 <div 
+                                                     className={`flex-shrink-0 w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-[10px] font-black cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all ${activity.passed ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/15 text-red-400 border border-red-500/20'}`}
+                                                     onClick={() => handleViewPhoto(activity.id)}
+                                                     title="Click to view candidate identity photo"
+                                                 >
+                                                     {initials}
+                                                 </div>
                                                 {/* Name + Criteria */}
                                                 <div className="flex-1 min-w-0">
                                                     <div className="text-sm font-semibold text-white truncate">{name}</div>

@@ -171,7 +171,6 @@ export default function CriteriaSelection() {
                         ip_address: ipAddress,
                         status: 'in_progress',
                         metadata: {
-                            initial_photo: capturedImage,
                             captured_at: new Date().toISOString()
                         }
                     }
@@ -180,6 +179,25 @@ export default function CriteriaSelection() {
                 .single();
 
             if (insertError) throw insertError;
+
+            // Save candidate photo in the separate interview_photos table to prevent egress overage
+            if (capturedImage) {
+                try {
+                    const { error: photoError } = await supabase
+                        .from('interview_photos')
+                        .insert([
+                            {
+                                interview_id: data.id,
+                                photo: capturedImage
+                            }
+                        ]);
+                    if (photoError) {
+                        console.error('[PROCTOR] Failed to save candidate photo to interview_photos:', photoError);
+                    }
+                } catch (photoErr) {
+                    console.error('[PROCTOR] Photo save exception:', photoErr);
+                }
+            }
 
             // Cleanup identity photo from localStorage after successful persistence
             localStorage.removeItem('pending_identity_photo');

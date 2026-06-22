@@ -246,6 +246,24 @@ export default function AdminResults() {
                 if (chunkAnswers) allAnswers = [...allAnswers, ...chunkAnswers];
             }
 
+            // 2.b Fetch candidate photos in batches from the separate table to prevent egress overage
+            let allPhotos = [];
+            for (let i = 0; i < interviewIds.length; i += 100) {
+                const chunk = interviewIds.slice(i, i + 100);
+                const { data: chunkPhotos, error: photoFetchError } = await supabase
+                    .from('interview_photos')
+                    .select('interview_id, photo')
+                    .in('interview_id', chunk);
+
+                if (photoFetchError) throw photoFetchError;
+                if (chunkPhotos) allPhotos = [...allPhotos, ...chunkPhotos];
+            }
+
+            const photosMap = {};
+            allPhotos.forEach(p => {
+                photosMap[p.interview_id] = p.photo;
+            });
+
             // 3. Group answers by interview
             const answersByInterview = {};
             allAnswers.forEach(ans => {
@@ -269,11 +287,9 @@ export default function AdminResults() {
             }
             const headers = [...baseHeaders, ...answerHeaders];
 
-            // 6. Build Rows — include photo
+            // 6. Build Rows — include photo from separate table map
             const rows = filteredResults.map(r => {
-                const rawMeta = r.metadata;
-                const meta = typeof rawMeta === 'string' ? JSON.parse(rawMeta) : (rawMeta || {});
-                const photo = meta.initial_photo || '';
+                const photo = photosMap[r.id] || '';
 
                 const baseData = [
                     `"${photo}"`,  // Photo as base64 — can be viewed in browser or Excel
@@ -358,6 +374,24 @@ export default function AdminResults() {
                 if (chunkAnswers) allAnswers = [...allAnswers, ...chunkAnswers];
             }
 
+            // Fetch candidate photos in batches from the separate table to prevent egress overage
+            let allPhotos = [];
+            for (let i = 0; i < interviewIds.length; i += 100) {
+                const chunk = interviewIds.slice(i, i + 100);
+                const { data: chunkPhotos, error: photoFetchError } = await supabase
+                    .from('interview_photos')
+                    .select('interview_id, photo')
+                    .in('interview_id', chunk);
+
+                if (photoFetchError) throw photoFetchError;
+                if (chunkPhotos) allPhotos = [...allPhotos, ...chunkPhotos];
+            }
+
+            const photosMap = {};
+            allPhotos.forEach(p => {
+                photosMap[p.interview_id] = p.photo;
+            });
+
             const answersByInterview = {};
             allAnswers.forEach(ans => {
                 if (!answersByInterview[ans.interview_id]) answersByInterview[ans.interview_id] = [];
@@ -377,9 +411,7 @@ export default function AdminResults() {
             const wsData = [headers];
 
             filteredResults.forEach((r, idx) => {
-                const rawMeta = r.metadata;
-                const meta = typeof rawMeta === 'string' ? JSON.parse(rawMeta) : (rawMeta || {});
-                const photo = meta.initial_photo || null;
+                const photo = photosMap[r.id] || null;
                 const pct = r.total_questions ? ((r.score / r.total_questions) * 100).toFixed(1) : '0';
 
                 const baseRow = [
@@ -440,9 +472,7 @@ export default function AdminResults() {
             // Each row: Candidate Name | Photo (base64 as hyperlink text for viewing)
             const photoSheetData = [['#', 'Name', 'Email', 'Photo (Base64 Data URL)']];
             filteredResults.forEach((r, idx) => {
-                const rawMeta = r.metadata;
-                const meta = typeof rawMeta === 'string' ? JSON.parse(rawMeta) : (rawMeta || {});
-                const photo = meta.initial_photo || 'No photo captured';
+                const photo = photosMap[r.id] || 'No photo captured';
                 photoSheetData.push([
                     idx + 1,
                     r.candidates?.full_name || 'N/A',
@@ -458,10 +488,7 @@ export default function AdminResults() {
             // Download
             const fileName = `results_with_photos_${new Date().toISOString().split('T')[0]}.xlsx`;
             XLSX.writeFile(wb, fileName);
-            const photosCount = filteredResults.filter(r => {
-                const m = typeof r.metadata === 'string' ? JSON.parse(r.metadata || '{}') : (r.metadata || {});
-                return !!m.initial_photo;
-            }).length;
+            const photosCount = filteredResults.filter(r => !!photosMap[r.id]).length;
             toast.success(`✅ Excel exported! ${photosCount}/${filteredResults.length} candidates have photos.`, { id: toastId });
         } catch (err) {
             console.error('Excel Export Error:', err);
@@ -764,6 +791,24 @@ export default function AdminResults() {
 
             if (error) throw error;
             setResponseData(data || []);
+
+            // Dynamically fetch candidate photo from interview_photos table on selection
+            const { data: photoData } = await supabase
+                .from('interview_photos')
+                .select('photo')
+                .eq('interview_id', interview.id)
+                .maybeSingle();
+            
+            if (photoData?.photo) {
+                // Set the fetched photo on the selected interview metadata
+                setSelectedInterview(prev => prev ? {
+                    ...prev,
+                    metadata: {
+                        ...prev.metadata,
+                        initial_photo: photoData.photo
+                    }
+                } : null);
+            }
         } catch (err) {
             console.error('Error fetching responses:', err);
             toast.error('Failed to load candidate responses');
@@ -957,31 +1002,30 @@ export default function AdminResults() {
                                                                         </td>
                                                                         <td className="px-6 py-4 text-center">
                                                                             {(() => {
-                                                                                // Defense-in-depth: Ensure metadata is an object if stringified
-                                                                                const rawMeta = result.metadata;
-                                                                                const meta = typeof rawMeta === 'string' ? JSON.parse(rawMeta) : (rawMeta || {});
-                                                                                const photo = meta.initial_photo;
-
-                                                                                if (photo && photo.startsWith('data:image')) {
-                                                                                    return (
-                                                                                        <div className="relative inline-block group/photo">
-                                                                                            <img 
-                                                                                                src={photo} 
-                                                                                                alt="Identity" 
-                                                                                                className="w-10 h-10 rounded-lg object-cover border border-white/10 group-hover/photo:border-brand-blue transition-all cursor-zoom-in"
-                                                                                                onClick={(e) => {
-                                                                                                    e.stopPropagation();
-                                                                                                    setZoomPhotoUrl(photo);
-                                                                                                }}
-                                                                                            />
-                                                                                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[#0f172a] shadow-lg"></div>
-                                                                                        </div>
-                                                                                    );
-                                                                                }
                                                                                 return (
-                                                                                    <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-slate-600">
-                                                                                        <XCircle size={16} title="No verification photo found" />
-                                                                                    </div>
+                                                                                    <button 
+                                                                                        onClick={async (e) => {
+                                                                                            e.stopPropagation();
+                                                                                            try {
+                                                                                                const { data, error } = await supabase
+                                                                                                    .from('interview_photos')
+                                                                                                    .select('photo')
+                                                                                                    .eq('interview_id', result.id)
+                                                                                                    .maybeSingle();
+                                                                                                if (!error && data?.photo) {
+                                                                                                    setZoomPhotoUrl(data.photo);
+                                                                                                } else {
+                                                                                                    toast.error('No verification photo available.');
+                                                                                                }
+                                                                                            } catch (err) {
+                                                                                                console.error(err);
+                                                                                            }
+                                                                                        }}
+                                                                                        className="w-10 h-10 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 flex items-center justify-center text-blue-400 hover:text-white transition-all mx-auto"
+                                                                                        title="Click to view verification photo"
+                                                                                    >
+                                                                                        <Camera size={16} />
+                                                                                    </button>
                                                                                 );
                                                                             })()}
                                                                         </td>
