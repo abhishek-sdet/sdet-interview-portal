@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowRight, Clock, AlertCircle, CheckCircle2, ShieldAlert, BookOpen, FileEdit, Camera, RefreshCw, ShieldCheck, Zap } from 'lucide-react';
+import { compressImageWithStats } from '@/utils/imageCompressor';
 
 export default function ExamRules() {
     const navigate = useNavigate();
@@ -53,7 +54,7 @@ export default function ExamRules() {
         }
     };
 
-    const capturePhoto = () => {
+    const capturePhoto = async () => {
         if (!videoRef.current || !canvasRef.current) return;
         
         const video = videoRef.current;
@@ -68,16 +69,32 @@ export default function ExamRules() {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        // Capture at original quality first
+        const rawDataUrl = canvas.toDataURL('image/jpeg', 0.8);
         
         // Final sanity check: dataUrl should not be empty or too short
-        if (!dataUrl || dataUrl.length < 1000) {
+        if (!rawDataUrl || rawDataUrl.length < 1000) {
             console.error('Captured image data is invalid or too small');
             return;
         }
 
-        setCapturedImage(dataUrl);
-        localStorage.setItem('pending_identity_photo', dataUrl);
+        // ── AUTO-COMPRESS: Reduce to ~70% smaller before saving ──
+        let finalDataUrl = rawDataUrl;
+        try {
+            const { compressed, originalKB, compressedKB, reductionPct } = await compressImageWithStats(rawDataUrl, {
+                maxWidth:  480,   // Enough for ID verification
+                maxHeight: 360,
+                quality:   0.35,  // ~65-75% file size reduction
+                format:    'image/jpeg',
+            });
+            finalDataUrl = compressed;
+            console.log(`[Photo] Compressed: ${originalKB}KB → ${compressedKB}KB (${reductionPct}% saved)`);
+        } catch (compressErr) {
+            console.warn('[Photo] Compression failed, using original:', compressErr.message);
+        }
+
+        setCapturedImage(finalDataUrl);
+        localStorage.setItem('pending_identity_photo', finalDataUrl);
         
         // Stop the stream
         if (stream) {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SimpleLayout from '@/components/admin/SimpleLayout';
 import { supabase } from '@/lib/supabase';
-import { Search, Download, CheckCircle2, XCircle, Calendar, Filter, Trash2, AlertTriangle, Eye, X, RotateCcw, Camera } from 'lucide-react';
+import { Search, Download, CheckCircle2, XCircle, Calendar, Filter, Trash2, AlertTriangle, Eye, X, RotateCcw, Camera, FileSpreadsheet } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { cleanQuestionText } from '@/utils/questionHelpers';
 
@@ -222,7 +222,7 @@ export default function AdminResults() {
         if (filteredResults.length === 0) return;
         
         setIsExporting(true);
-        const toastId = toast.loading('Exporting detailed CSV...');
+        const toastId = toast.loading('Exporting detailed CSV with photos...');
 
         try {
             // 1. Get all interview IDs
@@ -261,17 +261,22 @@ export default function AdminResults() {
                 if (answers.length > maxQuestions) maxQuestions = answers.length;
             });
 
-            // 5. Build Headers
-            const baseHeaders = ['Name', 'Email', 'Phone', 'Drive', 'Criteria', 'Set', 'Score', 'Total', 'Percentage', 'Status', 'Fabricated', 'Date'];
+            // 5. Build Headers — Photo column added
+            const baseHeaders = ['Photo (Base64)', 'Name', 'Email', 'Phone', 'Drive', 'Criteria', 'Set', 'Score', 'Total', 'Percentage', 'Status', 'Fabricated', 'Date'];
             const answerHeaders = [];
             for (let i = 1; i <= maxQuestions; i++) {
                 answerHeaders.push(`Q${i} Text`, `Q${i} Selected`, `Q${i} Correct`, `Q${i} Result`);
             }
             const headers = [...baseHeaders, ...answerHeaders];
 
-            // 6. Build Rows
+            // 6. Build Rows — include photo
             const rows = filteredResults.map(r => {
+                const rawMeta = r.metadata;
+                const meta = typeof rawMeta === 'string' ? JSON.parse(rawMeta) : (rawMeta || {});
+                const photo = meta.initial_photo || '';
+
                 const baseData = [
+                    `"${photo}"`,  // Photo as base64 — can be viewed in browser or Excel
                     `"${r.candidates?.full_name || 'N/A'}"`,
                     `"${r.candidates?.email || 'N/A'}"`,
                     `"${r.candidates?.phone || 'N/A'}"`,
@@ -289,7 +294,6 @@ export default function AdminResults() {
                 const candidateAnswers = answersByInterview[r.id] || [];
                 const answerData = [];
                 
-                // Add answer details for each question
                 for (let i = 0; i < maxQuestions; i++) {
                     const ans = candidateAnswers[i];
                     if (ans) {
@@ -308,16 +312,160 @@ export default function AdminResults() {
             });
 
             const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `detailed_results_${new Date().toISOString().split('T')[0]}.csv`;
+            a.download = `results_with_photos_${new Date().toISOString().split('T')[0]}.csv`;
             a.click();
-            toast.success('CSV exported with detailed responses!', { id: toastId });
+            window.URL.revokeObjectURL(url);
+            toast.success('✅ CSV exported with photo column!', { id: toastId });
         } catch (err) {
             console.error('Export Error:', err);
-            toast.error('Failed to export detailed CSV', { id: toastId });
+            toast.error('Failed to export CSV', { id: toastId });
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    // ── Excel Export with Embedded Photos ────────────────────────────────────
+    const exportToExcelWithPhotos = async () => {
+        if (filteredResults.length === 0) return;
+
+        setIsExporting(true);
+        const toastId = toast.loading('Preparing Excel with candidate photos...');
+
+        try {
+            // Dynamically load SheetJS (xlsx)
+            let XLSX;
+            try {
+                XLSX = await import('xlsx');
+            } catch {
+                // fallback: xlsx not installed
+                toast.error('xlsx package not found. Run: npm install xlsx', { id: toastId });
+                return;
+            }
+
+            // Fetch answers
+            const interviewIds = filteredResults.map(r => r.id);
+            let allAnswers = [];
+            for (let i = 0; i < interviewIds.length; i += 100) {
+                const chunk = interviewIds.slice(i, i + 100);
+                const { data: chunkAnswers } = await supabase
+                    .from('answers')
+                    .select('interview_id, selected_answer, is_correct, questions(question_text, correct_answer, category)')
+                    .in('interview_id', chunk);
+                if (chunkAnswers) allAnswers = [...allAnswers, ...chunkAnswers];
+            }
+
+            const answersByInterview = {};
+            allAnswers.forEach(ans => {
+                if (!answersByInterview[ans.interview_id]) answersByInterview[ans.interview_id] = [];
+                answersByInterview[ans.interview_id].push(ans);
+            });
+
+            let maxQuestions = 0;
+            Object.values(answersByInterview).forEach(a => { if (a.length > maxQuestions) maxQuestions = a.length; });
+
+            // Build worksheet data (array of arrays)
+            const questionHeaders = [];
+            for (let i = 1; i <= maxQuestions; i++) {
+                questionHeaders.push(`Q${i} Text`, `Q${i} Selected`, `Q${i} Correct`, `Q${i} Result`);
+            }
+
+            const headers = ['#', 'Photo Link', 'Name', 'Email', 'Phone', 'Drive', 'Criteria', 'Score', 'Total', 'Percentage', 'Status', 'Date', ...questionHeaders];
+            const wsData = [headers];
+
+            filteredResults.forEach((r, idx) => {
+                const rawMeta = r.metadata;
+                const meta = typeof rawMeta === 'string' ? JSON.parse(rawMeta) : (rawMeta || {});
+                const photo = meta.initial_photo || null;
+                const pct = r.total_questions ? ((r.score / r.total_questions) * 100).toFixed(1) : '0';
+
+                const baseRow = [
+                    idx + 1,
+                    photo ? '[Photo Available - See Below]' : 'No Photo',
+                    r.candidates?.full_name || 'N/A',
+                    r.candidates?.email || 'N/A',
+                    r.candidates?.phone || 'N/A',
+                    r.scheduled_interviews?.description || 'N/A',
+                    r.criteria?.name || 'N/A',
+                    r.score || 0,
+                    r.total_questions || 0,
+                    parseFloat(pct),
+                    r.passed ? 'PASSED' : 'FAILED',
+                    r.completed_at ? new Date(r.completed_at).toLocaleString('en-IN') : new Date(r.started_at).toLocaleString('en-IN'),
+                ];
+
+                const candidateAnswers = answersByInterview[r.id] || [];
+                for (let i = 0; i < maxQuestions; i++) {
+                    const ans = candidateAnswers[i];
+                    if (ans) {
+                        baseRow.push(
+                            ans.questions?.question_text || '',
+                            ans.selected_answer || 'N/A',
+                            ans.questions?.correct_answer || 'N/A',
+                            ans.is_correct ? 'CORRECT' : 'WRONG'
+                        );
+                    } else {
+                        baseRow.push('', '', '', '');
+                    }
+                }
+                wsData.push(baseRow);
+            });
+
+            // Create workbook + worksheet
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+            // Column widths
+            ws['!cols'] = [
+                { wch: 4  },   // #
+                { wch: 20 },   // Photo Link
+                { wch: 22 },   // Name
+                { wch: 28 },   // Email
+                { wch: 14 },   // Phone
+                { wch: 22 },   // Drive
+                { wch: 14 },   // Criteria
+                { wch: 8  },   // Score
+                { wch: 8  },   // Total
+                { wch: 12 },   // Pct
+                { wch: 10 },   // Status
+                { wch: 22 },   // Date
+            ];
+
+            XLSX.utils.book_append_sheet(wb, ws, 'Results');
+
+            // ── Second sheet: Photos ────────────────────────────
+            // Each row: Candidate Name | Photo (base64 as hyperlink text for viewing)
+            const photoSheetData = [['#', 'Name', 'Email', 'Photo (Base64 Data URL)']];
+            filteredResults.forEach((r, idx) => {
+                const rawMeta = r.metadata;
+                const meta = typeof rawMeta === 'string' ? JSON.parse(rawMeta) : (rawMeta || {});
+                const photo = meta.initial_photo || 'No photo captured';
+                photoSheetData.push([
+                    idx + 1,
+                    r.candidates?.full_name || 'N/A',
+                    r.candidates?.email || 'N/A',
+                    photo,
+                ]);
+            });
+
+            const wsPhotos = XLSX.utils.aoa_to_sheet(photoSheetData);
+            wsPhotos['!cols'] = [{ wch: 4 }, { wch: 22 }, { wch: 28 }, { wch: 80 }];
+            XLSX.utils.book_append_sheet(wb, wsPhotos, 'Photos (Base64)');
+
+            // Download
+            const fileName = `results_with_photos_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            const photosCount = filteredResults.filter(r => {
+                const m = typeof r.metadata === 'string' ? JSON.parse(r.metadata || '{}') : (r.metadata || {});
+                return !!m.initial_photo;
+            }).length;
+            toast.success(`✅ Excel exported! ${photosCount}/${filteredResults.length} candidates have photos.`, { id: toastId });
+        } catch (err) {
+            console.error('Excel Export Error:', err);
+            toast.error('Excel export failed: ' + err.message, { id: toastId });
         } finally {
             setIsExporting(false);
         }
@@ -656,7 +804,16 @@ export default function AdminResults() {
                             className="flex items-center gap-2 px-4 py-2 bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 hover:border-green-500/40 text-green-400 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Download size={18} />
-                            {isExporting ? 'Exporting...' : 'Export CSV'}
+                            {isExporting ? 'Exporting...' : 'CSV'}
+                        </button>
+                        <button
+                            onClick={exportToExcelWithPhotos}
+                            disabled={filteredResults.length === 0 || isExporting}
+                            className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 text-emerald-400 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Export Excel with candidate photos"
+                        >
+                            <FileSpreadsheet size={18} />
+                            {isExporting ? 'Exporting...' : 'Excel + Photos'}
                         </button>
                     </div>
                 </div>
