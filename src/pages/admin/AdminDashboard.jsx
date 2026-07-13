@@ -4,7 +4,7 @@ import SimpleLayout from '@/components/admin/SimpleLayout';
 import { supabase } from '@/lib/supabase';
 import {
     Users, CheckCircle2, TrendingUp, Upload, FileText,
-    Calendar, ArrowRight, Activity, Clock, Award, BarChart3, XCircle
+    Calendar, ArrowRight, Activity, Clock, Award, BarChart3, XCircle, Database
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -112,6 +112,7 @@ export default function AdminDashboard() {
     ];
 
     const quickActions = [
+        { label: 'Storage Manager', desc: 'Manage DB & Backups', icon: Database, path: '/admin/storage', gradient: 'from-red-600/20 to-orange-600/10', border: 'border-red-500/20 hover:border-red-500/40', iconBg: 'bg-red-500/15', iconColor: 'text-red-400' },
         { label: 'Upload Questions', desc: 'Import from Word document', icon: Upload, path: '/admin/upload', gradient: 'from-blue-600/20 to-cyan-600/10', border: 'border-blue-500/20 hover:border-blue-500/40', iconBg: 'bg-blue-500/15', iconColor: 'text-blue-400' },
         { label: 'View Results', desc: 'Scores & performance', icon: FileText, path: '/admin/results', gradient: 'from-purple-600/20 to-violet-600/10', border: 'border-purple-500/20 hover:border-purple-500/40', iconBg: 'bg-purple-500/15', iconColor: 'text-purple-400' },
         { label: 'Manage Drives', desc: 'Organize interview batches', icon: Calendar, path: '/admin/drives', gradient: 'from-emerald-600/20 to-teal-600/10', border: 'border-emerald-500/20 hover:border-emerald-500/40', iconBg: 'bg-emerald-500/15', iconColor: 'text-emerald-400' },

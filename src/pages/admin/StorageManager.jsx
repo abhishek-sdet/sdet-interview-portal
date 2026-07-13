@@ -164,6 +164,13 @@ function DriveRow({ drive, onDownload, onDelete, isDeleting, isDownloading }) {
 
 // ─── Delete Confirm Modal ─────────────────────────────────────────────────────
 function DeleteModal({ drive, onConfirm, onCancel, isDeleting }) {
+    const [password, setPassword] = useState('');
+    
+    // Reset password when modal opens/closes
+    useEffect(() => {
+        setPassword('');
+    }, [drive]);
+
     if (!drive) return null;
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -178,7 +185,7 @@ function DeleteModal({ drive, onConfirm, onCancel, isDeleting }) {
                         <p className="text-slate-500 text-sm">This cannot be undone</p>
                     </div>
                 </div>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-5">
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-4">
                     <p className="text-white font-bold text-sm">{drive.description}</p>
                     <p className="text-slate-400 text-xs mt-1">{formatDate(drive.scheduled_date)}</p>
                     <div className="flex gap-4 mt-3">
@@ -186,17 +193,33 @@ function DeleteModal({ drive, onConfirm, onCancel, isDeleting }) {
                         <span className="text-xs text-red-400 font-bold">{drive.answer_count} answers will be deleted</span>
                     </div>
                 </div>
-                <p className="text-amber-400 text-xs mb-5 flex items-start gap-2">
+                <p className="text-amber-400 text-xs mb-4 flex items-start gap-2">
                     <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
                     Please download the data first before deleting. Deleted data cannot be recovered.
                 </p>
+                <div className="mb-5">
+                    <label className="block text-slate-400 text-xs font-bold mb-1.5">Enter Admin Password to Confirm</label>
+                    <input 
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Password"
+                        className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 transition-all"
+                    />
+                </div>
                 <div className="flex gap-3">
                     <button onClick={onCancel} className="flex-1 px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl text-sm font-bold transition-all">
                         Cancel
                     </button>
                     <button
-                        onClick={onConfirm}
-                        disabled={isDeleting}
+                        onClick={() => {
+                            if (password === 'Johri@3980') {
+                                onConfirm();
+                            } else {
+                                toast.error('Incorrect password!');
+                            }
+                        }}
+                        disabled={isDeleting || !password}
                         className="flex-1 px-4 py-2.5 bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-400 rounded-xl text-sm font-bold transition-all disabled:opacity-50"
                     >
                         {isDeleting ? 'Deleting...' : '🗑️ Yes, Delete'}
