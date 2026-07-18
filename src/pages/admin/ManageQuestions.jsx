@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import SimpleLayout from '@/components/admin/SimpleLayout';
 import ConfirmModal from '@/components/ConfirmModal';
 import { supabase } from '@/lib/supabase';
-import { Search, Trash2, Edit2, Save, X, Filter, AlertCircle, CheckCircle, ChevronDown, ChevronRight, PlusCircle, FolderOpen, Code, Brain, ListTodo, BookOpen, Download } from 'lucide-react';
+import { Search, Trash2, Edit2, Save, X, Filter, AlertCircle, CheckCircle, ChevronDown, PlusCircle, FolderOpen, Code, Brain, ListTodo, BookOpen, Download } from 'lucide-react';
 import FormattedQuestionText from '@/components/FormattedQuestionText';
 
 export default function ManageQuestions() {

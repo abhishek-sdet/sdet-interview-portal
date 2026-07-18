@@ -86,7 +86,8 @@ async function keepAlive() {
       process.exit(0);
     } catch (error) {
       if (pool) {
-        try { await pool.end(); } catch (e) {}
+        // Best-effort cleanup — the connection already failed, nothing to do if closing it fails too.
+        try { await pool.end(); } catch { /* noop */ }
       }
       
       console.error(`❌ ERROR: Heartbeat failed on attempt ${attempt}.`);

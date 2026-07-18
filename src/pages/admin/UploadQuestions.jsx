@@ -568,11 +568,11 @@ export default function UploadQuestions() {
                         <li className="font-semibold text-white">For Word (.docx) and Text (.txt) Files:</li>
                         <li>• Questions should be numbered (1. 2. 3. or 1) 2) 3))</li>
                         <li>Ensure options are clearly marked with A), B), C), D)</li>
-                        <li>Ensure the correct answer is marked with "Answer: "</li>
+                        <li>Ensure the correct answer is marked with &quot;Answer: &quot;</li>
                         <br/>
                         <li className="font-semibold text-white">For Excel (.xlsx) Files:</li>
                         <li>Use the following columns: Category, Question, Option A, Option B, Option C, Option D, Answer</li>
-                        <li>Category represents the section (e.g. "Testing Fundamentals", "Java", etc.)</li>
+                        <li>Category represents the section (e.g. &quot;Testing Fundamentals&quot;, &quot;Java&quot;, etc.)</li>
                         <li>Answer should be the option letter (A, B, C, or D)</li>
                     </ul>
                 </div>

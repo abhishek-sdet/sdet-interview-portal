@@ -71,15 +71,18 @@ export const accessControl = {
                 };
             }
 
-            // Fetch allowed list
-            const { data: allowedList, error } = await supabase
-                .from('admin_access_control')
-                .select('*');
+            // Ask the server for a yes/no verdict only — the raw allow-list
+            // (valid IPs/device IDs) is never sent to the client, so it can't
+            // be read out of the network tab and replayed from another device.
+            const { data: verdictRows, error } = await supabase
+                .rpc('check_access_allowed', { p_ip: publicIp, p_device_id: deviceId });
 
             if (error) throw error;
 
+            const verdict = verdictRows?.[0];
+
             // If no restrictions are set, block access for security (Strict Mode)
-            if (!allowedList || allowedList.length === 0) {
+            if (!verdict || !verdict.has_restrictions) {
                 return {
                     allowed: false,
                     reason: 'No authorized sources configured for the Interview Portal.',
@@ -88,17 +91,7 @@ export const accessControl = {
                 };
             }
 
-            // Check IP
-            const isIpAllowed = allowedList.some(item => item.type === 'ip' && item.value === publicIp);
-
-            // Check Device
-            const isDeviceAllowed = allowedList.some(item => item.type === 'device' && item.value === deviceId);
-
-            // STRICT MODE: For aspirants, we might want to require IP match even if device is known
-            // For now, either is sufficient as per current business logic, 
-            // but we ensure IP is available for verification.
-
-            if (isIpAllowed || isDeviceAllowed) {
+            if (verdict.allowed) {
                 return { allowed: true, reason: null, ip: publicIp, deviceId };
             }
 

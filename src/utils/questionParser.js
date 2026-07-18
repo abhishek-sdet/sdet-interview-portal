@@ -13,7 +13,7 @@ export function preprocessDocumentText(text) {
     // Add newline before option letters (A., B., C., D. or a. b. c. d. or A) B) etc)
     // Avoid splitting string concatenations or code text like + " " + (c == d) by requiring option to be at a clean line-boundary or after a whitespace block
     // Ensure the preceding char is not an operator like +, -, *, /, =, &, |, or quotes.
-    text = text.replace(/([^a-zA-Z0-9\+\-\*\/="'"\n\s])\s+([A-Da-d][\.)\]])\s+/g, '$1\n$2 ');
+    text = text.replace(/([^a-zA-Z0-9+\-*/="'"\n\s])\s+([A-Da-d][.)\]])\s+/g, '$1\n$2 ');
 
     // Case 2: "Answer:" or "Ans:" pattern - robustly handle any prefix (emojis, etc.)
     // Expanded to handle Correct Option, Correct Answer, Answer Key, and multiple separators (-, ., ), :)
@@ -47,7 +47,7 @@ export function detectSections(text) {
         const sectionMatch = line.match(/^(?:\[.+\]|Section\s+[\w\s:\-–—]+|[A-Z][A-Za-z\s]+(?:Questions?|Based|MCQ|Type)|\W*(?:JAVA|Python|Java|PYTHON|MISCELLANEOUS|General|Aptitude|Technical|Logical|Grammar|Computer|Verbal)\b.*)/i);
 
         // Additional check: line should be relatively short (section headers) and not start with a number
-        const looksLikeSection = sectionMatch && line.length < 150 && !line.match(/^\d+[\.)]/)
+        const looksLikeSection = sectionMatch && line.length < 150 && !line.match(/^\d+[.)]/)
 
             ;
 
@@ -171,10 +171,6 @@ export function parseQuestionsInSection(section, importData) {
         // Simple heuristic: look for option markers like "A.", "a)", or "(A)"
         // Improved: Allow markers to be preceded by space OR punctuation (like ?) OR start of line
         // This handles "What?A. Option"
-        const firstOptionMatch = text.match(/(?:[\s\t]+|(?<=[?!.)\s]|^))([A-Da-d])[\.)\]]/);
-        // Note: JS lookbehind support varies, but in Node 20 it works. 
-        // Safer: match delimiters in group 1
-
         // Safer Regex: Match (Delimiter)(Marker)
         // Delimiter: Space, Tab, ?, !, ., ), or Start of String
         // But we must be careful with Start of String.
@@ -182,7 +178,7 @@ export function parseQuestionsInSection(section, importData) {
 
         // Regex to find markers: 
         // Must be preceded by boundary-like char
-        const markerRegex = /(?:^|[\s\t?!.)])([A-Da-d])[\.)\]]/g;
+        const markerRegex = /(?:^|[\s\t?!.)])([A-Da-d])[.)\]]/g;
 
         // Find all matches
         const matches = [...text.matchAll(markerRegex)];
@@ -193,27 +189,13 @@ export function parseQuestionsInSection(section, importData) {
         // However, we must ensure it's not part of a word (e.g. "U.S.A.").
         // The preceding char check helps.
 
-        const firstMatch = matches[0];
-        // text before match is Question
-        // But firstMatch[0] includes the delimiter!
-        // If delimiter is punctuation '?', it belongs to Question.
-        // If delimiter is space, it belongs to neither (or question).
-
-        // Correct splitting point:
-        const splitIndex = firstMatch.index + firstMatch[0].length - 2; // -2 to keep letter and dot/paren in option part?
-        // match[0] is " A." (length 3) or "?A." (length 3).
-        // Marker is "A." (length 2).
-        // Delimiter is length 1.
-        // So split at index + 1.
-
         // Let's refine capturing.
-        // Regex: /([?!.)\s]|^)([A-Da-d][\.)\]])/
-        const preciseMatch = text.match(/([?!.)\s]|^)([A-Da-d][\.)\]])/);
+        // Regex: /([?!.)\s]|^)([A-Da-d][.)\]])/
+        const preciseMatch = text.match(/([?!.)\s]|^)([A-Da-d][.)\]])/);
 
         if (!preciseMatch) return { qText: text, foundOptions: [], foundAnswer: '' };
 
         const delimiter = preciseMatch[1];
-        const marker = preciseMatch[2];
         const matchIndex = preciseMatch.index;
 
         // Question text includes the delimiter
@@ -233,12 +215,8 @@ export function parseQuestionsInSection(section, importData) {
 
         // Regex for subsequent markers: must be preceded by space or punctuation
         // e.g. "Option A text B. Option B"
-        // Split by /[\s\t]+[A-Da-d][\.)\]]/ ? 
+        // Split by /[\s\t]+[A-Da-d][.)\]]/ ? 
         // User text might be "Option?B. Option".
-
-        // Let's iterate using regex
-        const contentRegex = /([?!.)\s]|^)([A-Da-d][\.)\]])/g;
-        // This is getting complex.
 
         // Simpler fallback: Split by " A. ", " B. " etc if possible, else rely on smart regex
         // Let's proceed with finding next markers based on typical patterns
@@ -247,7 +225,7 @@ export function parseQuestionsInSection(section, importData) {
         // Let's update it to respect delimiters.
 
         // Re-implement using split with lookahead-like logic
-        const parts = remaining.split(/(?=(?:[\s\t]+|[?!.)])[A-Da-d][\.)\]])/);
+        const parts = remaining.split(/(?=(?:[\s\t]+|[?!.)])[A-Da-d][.)\]])/);
         // This splits BEFORE the delimiter.
         // "A. Opt?B. Opt" -> "A. Opt", "?B. Opt"
         // But loop below expects "B. Opt".
@@ -269,11 +247,11 @@ export function parseQuestionsInSection(section, importData) {
                 cleanP = cleanP.trim();
                 if (!cleanP) return;
 
-                const markerMatch = cleanP.match(/^([A-Da-d])[\.)\]]/);
+                const markerMatch = cleanP.match(/^([A-Da-d])[.)\]]/);
                 if (markerMatch) {
                     // Check for Answer at end
                     let content = cleanP.substring(markerMatch[0].length).trim();
-                    const ansMatch = content.match(/(?:Correct\s+Answer|Correct\s+Option|Answer\s+Key|Correct|Answer|Ans|Ans\.?)[\s:\-\)\.]+(?:\(?)\s*([A-Da-d])/i);
+                    const ansMatch = content.match(/(?:Correct\s+Answer|Correct\s+Option|Answer\s+Key|Correct|Answer|Ans|Ans\.?)[\s:\-).]+(?:\(?)\s*([A-Da-d])/i);
                     if (ansMatch) {
                         foundAnswer = ansMatch[1].toUpperCase();
                         content = content.replace(ansMatch[0], '').trim();
@@ -411,13 +389,13 @@ export function parseQuestionsInSection(section, importData) {
 
         // 1. Detect Option (Priority check)
         // Refined regex: Ensure marker is at start of line and followed by specific delimiters
-        const optionMatch = line.match(/^([A-Da-d])[\.)\]\s]+(.+)/);
+        const optionMatch = line.match(/^([A-Da-d])[.)\]\s]+(.+)/);
         // Special case: if line is just "A. OptionText" with no space after dot, mammoth might have merged it. 
         // regex above handles "[.)]\s+" so maybe make space optional if dot/paren is present
-        const robustOptionMatch = line.match(/^([A-Da-d])[\.)\]]\s*(.+)/);
+        const robustOptionMatch = line.match(/^([A-Da-d])[.)\]]\s*(.+)/);
         const finalOptionMatch = optionMatch || robustOptionMatch;
 
-        const answerMatch = line.match(/^(?:[^a-zA-Z0-9]*)(?:Correct\s+Answer|Correct\s+Option|Answer\s+Key|Answer|Ans|Ans\.?)[\s:\-\)\.]+(?:\(?)\s*([A-Da-d])/i);
+        const answerMatch = line.match(/^(?:[^a-zA-Z0-9]*)(?:Correct\s+Answer|Correct\s+Option|Answer\s+Key|Answer|Ans|Ans\.?)[\s:\-).]+(?:\(?)\s*([A-Da-d])/i);
 
         // 2. Detect Question Start
         // Unified Regex to handle all valid formats:
@@ -428,11 +406,11 @@ export function parseQuestionsInSection(section, importData) {
         // ^(?:Q\.?|#)?   -> Optional Prefix (Q, Q., #)
         // \s*            -> Optional indentation
         // (\d+)          -> Capture Digits (Group 1)
-        // (?:[\.)]|\s)   -> Separator: Dot OR Closing Paren OR Space
+        // (?:[.)]|\s)   -> Separator: Dot OR Closing Paren OR Space
         // \s*            -> Optional space after separator
         // (.*)           -> Capture Rest of Line (Group 2)
 
-        const numberedMatch = line.match(/^(?:Q\.?|#)?\s*(\d+)(?:[\.)]|\s|$)\s*(.*)/i);
+        const numberedMatch = line.match(/^(?:Q\.?|#)?\s*(\d+)(?:[.)]|\s|$)\s*(.*)/i);
         const questionPrefixMatch = line.match(/^Question\s*:\s*(.*)/i);
 
         if ((numberedMatch || questionPrefixMatch) && !finalOptionMatch && !answerMatch) {
@@ -460,7 +438,6 @@ export function parseQuestionsInSection(section, importData) {
 
         // 3. Handle Options
         if (finalOptionMatch) {
-            const marker = finalOptionMatch[1].toUpperCase();
             const text = finalOptionMatch[2].trim();
 
             // RETROACTIVE DETECTION:

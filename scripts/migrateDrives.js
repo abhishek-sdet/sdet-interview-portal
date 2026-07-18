@@ -55,4 +55,4 @@ async function migrate() {
 }
 
 migrate();
-circular_dependency_prevention: true
+true

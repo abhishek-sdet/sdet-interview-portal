@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { showToast } from '@/components/Toast';
 import GPTWBadge from '@/components/GPTWBadge';
-import { Loader2, ArrowRight, ArrowLeft, Clock, CheckCircle2, Circle, AlertCircle, Code, Sparkles, ShieldAlert, Lock, ShieldCheck, Zap, Flag } from 'lucide-react';
+import { Loader2, ArrowRight, ArrowLeft, Clock, CheckCircle2, AlertCircle, Sparkles, ShieldAlert, Lock, ShieldCheck, Zap, Flag } from 'lucide-react';
 import { accessControl } from '@/lib/accessControl';
 import QuizSubmissionModal from '@/components/QuizSubmissionModal';
 import QuestionStatusMap from '@/components/QuestionStatusMap';
@@ -104,7 +104,7 @@ export default function QuizInterface() {
                     (e.metaKey && e.key.toLowerCase() === 'u')
                 ) {
                     e.preventDefault();
-                    toast.error("Developer tools are disabled during the assessment.");
+                    showToast.error("Developer tools are disabled during the assessment.");
                 }
             }
 
@@ -114,8 +114,8 @@ export default function QuizInterface() {
                     e.preventDefault();
                     try {
                         await navigator.clipboard.writeText("Screenshots are strictly prohibited.");
-                        toast.error("Screenshots are not allowed!");
-                    } catch (err) {}
+                        showToast.error("Screenshots are not allowed!");
+                    } catch { /* clipboard write can fail silently, not user-facing */ }
                 }
             }
         };
@@ -124,7 +124,7 @@ export default function QuizInterface() {
             if (!allowScreenshots && (e.key === 'PrintScreen' || e.key === 'Meta')) { // Catch PrintScreen or Win/Cmd key patterns
                 try {
                     await navigator.clipboard.writeText("Screenshots are strictly prohibited during the assessment.");
-                    toast.error("Screenshots are not allowed! This action has been flagged.");
+                    showToast.error("Screenshots are not allowed! This action has been flagged.");
                 } catch (err) {
                     console.error("Failed to clear clipboard", err);
                 }
@@ -133,16 +133,16 @@ export default function QuizInterface() {
 
         const disableCopyPaste = async (e) => {
             e.preventDefault();
-            toast.error("Copy/Paste is disabled during the assessment.");
+            showToast.error("Copy/Paste is disabled during the assessment.");
             try {
                 await navigator.clipboard.writeText("Copy/Paste is strictly prohibited during the assessment.");
-            } catch (err) {}
+            } catch { /* clipboard write can fail silently, not user-facing */ }
         };
 
         const disableContextMenu = (e) => {
             if (!allowInspect) {
                 e.preventDefault();
-                toast.error("Right-click is disabled.");
+                showToast.error("Right-click is disabled.");
             }
         };
 
@@ -506,6 +506,7 @@ export default function QuizInterface() {
             if (!proctoringStrict || allowInspect) return;
  
             const start = performance.now();
+            // eslint-disable-next-line no-debugger -- intentional: timing delay across this line detects an open DevTools pause
             debugger;
             const end = performance.now();
  
@@ -1446,7 +1447,7 @@ export default function QuizInterface() {
                             Choose Your Specialization
                         </h1>
                         <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-                            You've completed the general assessment. Now, select your primary programming language for the final technical questions.
+                            You&apos;ve completed the general assessment. Now, select your primary programming language for the final technical questions.
                         </p>
                     </div>
 

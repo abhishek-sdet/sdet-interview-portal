@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'react-hot-toast';
 import AppSignature from '@/components/AppSignature';
 import AccessGuard from '@/components/AccessGuard';
+import AdminGuard from '@/components/admin/AdminGuard';
 
 // Interview Portal Pages
 import LandingPage from './pages/interview/LandingPage';
@@ -50,18 +51,19 @@ function App() {
 
                         {/* Admin Portal Routes (New Simple Version) */}
                         <Route path="/admin/login" element={<AdminLogin />} />
-                        <Route path="/admin" element={<AdminDashboard />} />
-                        <Route path="/admin/upload" element={<UploadQuestions />} />
-                        <Route path="/admin/questions" element={<ManageQuestions />} />
-                        <Route path="/admin/criteria" element={<ManageCriteria />} />
-                        <Route path="/admin/access" element={<ManageAccess />} />
-                        <Route path="/admin/drives" element={<ManageDrives />} />
-                        <Route path="/admin/results" element={<AdminResults />} />
-                        <Route path="/admin/storage" element={<StorageManager />} />
+                        <Route element={<AdminGuard />}>
+                            <Route path="/admin" element={<AdminDashboard />} />
+                            <Route path="/admin/upload" element={<UploadQuestions />} />
+                            <Route path="/admin/questions" element={<ManageQuestions />} />
+                            <Route path="/admin/criteria" element={<ManageCriteria />} />
+                            <Route path="/admin/access" element={<ManageAccess />} />
+                            <Route path="/admin/drives" element={<ManageDrives />} />
+                            <Route path="/admin/results" element={<AdminResults />} />
+                            <Route path="/admin/storage" element={<StorageManager />} />
 
-                        {/* Results Dashboard Route */}
-                        {/* HR Dashboard Route (Public/Read-Only) */}
-                        <Route path="/dashboard" element={<HRDashboard />} />
+                            {/* HR Dashboard Route — now requires admin login (was previously public) */}
+                            <Route path="/dashboard" element={<HRDashboard />} />
+                        </Route>
 
                         {/* Fallback */}
                         <Route path="*" element={<Navigate to="/" replace />} />

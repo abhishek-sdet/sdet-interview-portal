@@ -31,6 +31,10 @@ on:
         description: 'Delete completed interviews older than N days (if above is true)'
         required: false
         default: '90'
+      photo_days:
+        description: 'Delete candidate photos older than N days (interview record is kept)'
+        required: false
+        default: '45'
 
 jobs:
   cleanup:
@@ -69,6 +73,7 @@ jobs:
           CLEANUP_ORPHAN_DAYS:       '7'
           CLEANUP_COMPLETED:         'false'
           CLEANUP_COMPLETED_DAYS:    '90'
+          CLEANUP_PHOTO_DAYS:        '45'
         run: node scripts/db-cleanup.cjs --execute
 
       # ── Manual run: use input parameters ────────────────────────────────────
@@ -82,6 +87,7 @@ jobs:
           CLEANUP_ORPHAN_DAYS:       ${{ github.event.inputs.orphan_days }}
           CLEANUP_COMPLETED:         ${{ github.event.inputs.cleanup_completed }}
           CLEANUP_COMPLETED_DAYS:    ${{ github.event.inputs.completed_days }}
+          CLEANUP_PHOTO_DAYS:        ${{ github.event.inputs.photo_days }}
         run: |
           MODE="${{ github.event.inputs.mode }}"
           if [ "$MODE" = "execute" ]; then

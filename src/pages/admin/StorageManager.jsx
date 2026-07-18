@@ -622,7 +622,7 @@ export default function StorageManager() {
                                 </li>
                                 <li className="flex items-start gap-2">
                                     <span className="text-emerald-400 font-bold flex-shrink-0">2.</span>
-                                    Always <span className="text-cyan-400 font-bold mx-1">Download</span> a drive's data before deleting — it can't be recovered.
+                                    Always <span className="text-cyan-400 font-bold mx-1">Download</span> a drive&apos;s data before deleting — it can&apos;t be recovered.
                                 </li>
                                 <li className="flex items-start gap-2">
                                     <span className="text-emerald-400 font-bold flex-shrink-0">3.</span>

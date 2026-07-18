@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Sun, Moon, Search, BarChart3, TrendingUp, Calendar, CheckCircle, XCircle, Users, LayoutDashboard, Database, Activity, Briefcase, GraduationCap } from 'lucide-react';
+import { Sun, Moon, Search, Calendar, CheckCircle, XCircle, Users, LayoutDashboard, Database, Activity, Briefcase, GraduationCap } from 'lucide-react';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement, Filler } from 'chart.js';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import AppSignature from '@/components/AppSignature';

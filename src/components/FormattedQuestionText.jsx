@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { Code2, ChevronRight, X } from 'lucide-react';
+import { Code2, ChevronRight } from 'lucide-react';
 
 /**
  * Interactive Code Block Component

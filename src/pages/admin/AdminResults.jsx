@@ -1318,7 +1318,7 @@ export default function AdminResults() {
                                                     ? 'bg-green-500/10 border border-green-500/20'
                                                     : 'bg-red-500/10 border border-red-500/20'
                                                     }`}>
-                                                    <span className="text-slate-400 block mb-0.5">Candidate's Answer</span>
+                                                    <span className="text-slate-400 block mb-0.5">Candidate&apos;s Answer</span>
                                                     <span className={`font-semibold ${answer.is_correct ? 'text-green-300' : 'text-red-300'
                                                         }`}>
                                                         {answer.selected_answer || <em className="opacity-50">Not answered</em>}

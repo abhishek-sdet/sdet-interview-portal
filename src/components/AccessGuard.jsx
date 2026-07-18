@@ -75,7 +75,7 @@ export default function AccessGuard() {
                     try {
                         await navigator.clipboard.writeText("Screenshots are strictly prohibited.");
                         toast.error("Screenshots are not allowed!");
-                    } catch (err) {}
+                    } catch { /* clipboard write can fail silently, not user-facing */ }
                 }
             }
         };
@@ -92,7 +92,7 @@ export default function AccessGuard() {
                     try {
                         await navigator.clipboard.writeText("Screenshots are strictly prohibited.");
                         toast.error("Screenshots are not allowed!");
-                    } catch (err) {}
+                    } catch { /* clipboard write can fail silently, not user-facing */ }
                 }
             }
         };

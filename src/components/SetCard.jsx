@@ -168,7 +168,7 @@ export default function SetCard({
                     {questions.length === 0 ? (
                         <div className="p-8 text-center text-gray-400">
                             <p>No questions in this set yet.</p>
-                            <p className="text-sm mt-2">Use "Bulk Upload" or "Add Question" to get started.</p>
+                            <p className="text-sm mt-2">Use &quot;Bulk Upload&quot; or &quot;Add Question&quot; to get started.</p>
                         </div>
                     ) : (
                         <div className="divide-y divide-white/5">
@@ -192,7 +192,7 @@ export default function SetCard({
                     <div className="bg-slate-800 border border-white/10 rounded-xl p-6 max-w-md w-full mx-4">
                         <h3 className="text-xl font-bold text-white mb-2">Delete Set?</h3>
                         <p className="text-gray-300 mb-4">
-                            Are you sure you want to delete <span className="font-semibold text-white">"{name}"</span>?
+                            Are you sure you want to delete <span className="font-semibold text-white">&quot;{name}&quot;</span>?
                         </p>
                         <p className="text-red-400 text-sm mb-6">
                             This will permanently delete {questions.length} question{questions.length !== 1 ? 's' : ''}. This action cannot be undone.

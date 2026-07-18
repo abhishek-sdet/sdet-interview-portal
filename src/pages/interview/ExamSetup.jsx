@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
 import { Layers, ArrowRight, CheckCircle2, Code2, BookOpen } from 'lucide-react';
 
 export default function ExamSetup() {

@@ -4,8 +4,6 @@ import { supabase } from '@/lib/supabase';
 import GPTWBadge from '@/components/GPTWBadge';
 import { ArrowRight, CheckCircle2, ShieldCheck, Mail, Phone, User, Loader2 } from 'lucide-react';
 import { accessControl } from '@/lib/accessControl';
-import { getHardwareId } from '@/lib/fingerprint';
-import AccessDenied from '@/components/admin/AccessDenied';
 
 // World Class Landing Page
 export default function LandingPage() {

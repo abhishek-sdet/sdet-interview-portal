@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
     LogOut, LayoutDashboard, Upload, FileText, List,
-    Settings, ShieldCheck, Calendar, ChevronLeft, ChevronRight,
-    Menu, X, Bell, HardDrive
+    Settings, ShieldCheck, Calendar,
+    Menu, HardDrive
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
