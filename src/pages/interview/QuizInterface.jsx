@@ -81,6 +81,7 @@ export default function QuizInterface() {
     const databaseQuestionsRef = useRef([]);
     const javascriptQuestionsRef = useRef([]);
     const lastWarningTimeRef = useRef(0); // For debouncing tab switches
+    const focusLossTimerRef = useRef(null); // Grace-period timer before a focus loss counts as a violation
     const criteriaNameRef = useRef(''); // Added to track criteria name for formatting
 
     // Track visited questions for accurate "Skipped" status without hopping bugs
@@ -470,23 +471,35 @@ export default function QuizInterface() {
             // ONLY trigger tab-switch security warning visual if STRICT proctoring is enabled.
             if (!proctoringStrict) return;
 
-            if (document.hidden || !document.hasFocus()) {
-                if (!showProctorWarning) {
-                    // Debounce focus loss to prevent rapid double-triggers
-                    const now = Date.now();
-                    if (now - lastWarningTimeRef.current > 2000) {
-                        console.log('[PROCTOR] Focus lost detected by listener.');
-                        setTabSwitchWarnings(prev => prev + 1);
-                        setProctorCountdown(30);
-                        setShowProctorWarning(true);
-                        lastWarningTimeRef.current = now;
+            if ((document.hidden || !document.hasFocus()) && !showProctorWarning && !focusLossTimerRef.current) {
+                // Grace period before counting this as a real violation. A desktop
+                // notification (Teams, Windows toast, etc.) can momentarily steal window
+                // focus without the candidate actually switching away — those blips
+                // resolve within a few hundred ms. A genuine tab/window switch stays away
+                // much longer, so only count it if focus is still gone once this fires.
+                focusLossTimerRef.current = setTimeout(() => {
+                    focusLossTimerRef.current = null;
+                    if (document.hidden || !document.hasFocus()) {
+                        const now = Date.now();
+                        if (now - lastWarningTimeRef.current > 2000) {
+                            console.log('[PROCTOR] Focus lost detected by listener.');
+                            setTabSwitchWarnings(prev => prev + 1);
+                            setProctorCountdown(30);
+                            setShowProctorWarning(true);
+                            lastWarningTimeRef.current = now;
+                        }
                     }
-                }
+                }, 1200);
             }
         };
 
         const handleFocusGain = () => {
-            // Focus returned
+            // Focus returned before the grace period elapsed — a brief blip (e.g. a
+            // notification), not a real tab switch, so cancel the pending warning.
+            if (focusLossTimerRef.current) {
+                clearTimeout(focusLossTimerRef.current);
+                focusLossTimerRef.current = null;
+            }
         };
 
         document.addEventListener('visibilitychange', handleFocusLoss);
@@ -497,6 +510,10 @@ export default function QuizInterface() {
             document.removeEventListener('visibilitychange', handleFocusLoss);
             window.removeEventListener('blur', handleFocusLoss);
             window.removeEventListener('focus', handleFocusGain);
+            if (focusLossTimerRef.current) {
+                clearTimeout(focusLossTimerRef.current);
+                focusLossTimerRef.current = null;
+            }
         };
     }, [submitting, showSpecialization, showProctorWarning, tabSwitchWarnings, proctoringStrict, enforceFullScreen, loading]);
 
