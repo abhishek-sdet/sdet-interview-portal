@@ -75,6 +75,7 @@ export default function QuizInterface() {
     // Refs to hold cached questions needed for the second phase
     const generalQuestionsRef = useRef([]);
     const skipSpecializationRef = useRef(false);
+    const maxWarningsSubmitTriggeredRef = useRef(false);
     const javaQuestionsRef = useRef([]);
     const pythonQuestionsRef = useRef([]);
     const databaseQuestionsRef = useRef([]);
@@ -501,7 +502,14 @@ export default function QuizInterface() {
 
     // Check for 3 warnings to auto-submit
     useEffect(() => {
-        if (tabSwitchWarnings >= 3 && !submitting && proctoringStrict) {
+        // Only ever trigger this once. Without this guard, a failed submission
+        // resets `submitting` back to false, which re-satisfies this condition
+        // and re-fires the toast + handleSubmit on every render — spamming the
+        // "Maximum security warnings" toast and hammering the submit RPC in a
+        // loop instead of leaving retries to the "Submission Failed" screen's
+        // manual Retry button.
+        if (tabSwitchWarnings >= 3 && !submitting && proctoringStrict && !maxWarningsSubmitTriggeredRef.current) {
+            maxWarningsSubmitTriggeredRef.current = true;
             console.log('[PROCTOR] Maximum warnings exceeded. Auto-submitting.');
             showToast.error("Maximum security warnings exceeded. Exam Auto-Submitted.");
             handleSubmit(true, 'max_warnings');
