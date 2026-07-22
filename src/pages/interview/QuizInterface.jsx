@@ -898,6 +898,21 @@ export default function QuizInterface() {
             const isShuffleEnabled = siteSettings?.shuffle_questions || false;
             setShuffleQuestions(isShuffleEnabled);
 
+            if (isShuffleEnabled) {
+                // Also shuffle each question's answer options, not just question order.
+                // Safe to do in place: grading (submit_and_grade_quiz) compares the selected
+                // answer TEXT to correct_answer TEXT, never by option position/index, so
+                // reordering `options` here can't affect scoring. `uniqueData`'s objects are
+                // the same references filtered into generalQs/electiveQs below and into the
+                // specialization pools later, so shuffling once here covers every question
+                // the candidate can end up seeing.
+                uniqueData.forEach(q => {
+                    if (Array.isArray(q.options)) {
+                        q.options = shuffleArray([...q.options]);
+                    }
+                });
+            }
+
             const selectQuestions = (arr, count) => isShuffleEnabled ? shuffleArray([...arr]).slice(0, count) : arr.slice(0, count);
 
             const isCodingQuestion = (q) => {
