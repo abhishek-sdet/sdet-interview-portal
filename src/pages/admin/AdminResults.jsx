@@ -27,6 +27,7 @@ export default function AdminResults() {
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [reattemptConfirm, setReattemptConfirm] = useState(null);
     const [deletingId, setDeletingId] = useState(null);
+    const [deleteTarget, setDeleteTarget] = useState(null);
     const [resettingId, setResettingId] = useState(null);
     const [expandedDrives, setExpandedDrives] = useState({}); // Track expanded drive IDs
 
@@ -610,6 +611,7 @@ export default function AdminResults() {
 
             console.log('[DELETE] Record deleted successfully');
             toast.success('Record deleted successfully');
+            setDeleteTarget(null);
             fetchResults(); // Refresh list
         } catch (err) {
             console.error('[DELETE] Error deleting record:', err);
@@ -1078,7 +1080,7 @@ export default function AdminResults() {
                                                                             <div className="flex items-center justify-center gap-2">
                                                                                 <button onClick={() => handleAllowReattempt(result)} disabled={resettingId === result.id} className="p-2 text-slate-400 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-all"><RotateCcw size={16} /></button>
                                                                                 <button onClick={() => fetchCandidateResponses(result)} className="p-2 text-slate-400 hover:text-brand-blue hover:bg-brand-blue/10 rounded-lg transition-all"><Eye size={16} /></button>
-                                                                                <button onClick={() => handleDeleteInterview(result)} disabled={deletingId === result.id} className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"><Trash2 size={16} /></button>
+                                                                                <button onClick={() => setDeleteTarget(result)} disabled={deletingId === result.id} className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"><Trash2 size={16} /></button>
                                                                             </div>
                                                                         </td>
                                                                     </tr>
@@ -1168,6 +1170,34 @@ export default function AdminResults() {
                                     className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors border border-red-500/20"
                                 >
                                     Yes, Delete {filteredResults.length} Records
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {/* Single Record Delete Confirmation Modal */}
+                {deleteTarget && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <div className="bg-[#1a1b2e] rounded-xl p-6 w-full max-w-md border border-white/10 shadow-2xl">
+                            <h3 className="text-xl font-bold text-white mb-4">Delete Record</h3>
+                            <p className="text-gray-400 mb-6">
+                                Are you sure you want to permanently delete the record for{' '}
+                                <span className="text-white font-bold">{deleteTarget.candidates?.full_name || deleteTarget.candidates?.email || 'this candidate'}</span>?
+                                This action cannot be undone.
+                            </p>
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    onClick={() => setDeleteTarget(null)}
+                                    className="px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => handleDeleteInterview(deleteTarget)}
+                                    disabled={deletingId === deleteTarget.id}
+                                    className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors border border-red-500/20 disabled:opacity-50"
+                                >
+                                    Yes, Delete
                                 </button>
                             </div>
                         </div>

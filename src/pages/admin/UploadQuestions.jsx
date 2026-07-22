@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import SimpleLayout from '@/components/admin/SimpleLayout';
 import { supabase } from '@/lib/supabase';
 import { Upload, FileText, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import * as XLSX from 'xlsx';
 import mammoth from 'mammoth';
 import { preprocessDocumentText, detectSections, parseQuestionsInSection } from '@/utils/questionParser';
 
@@ -118,6 +117,7 @@ export default function UploadQuestions() {
 
             if (file.name.endsWith('.xlsx')) {
                 console.log('📄 Parsing Excel file...');
+                const XLSX = await import('xlsx');
                 const arrayBuffer = await file.arrayBuffer();
                 const workbook = XLSX.read(arrayBuffer, { type: 'array' });
                 

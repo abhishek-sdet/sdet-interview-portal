@@ -152,13 +152,19 @@ export default function ManageDrives() {
             if (criteriaError) throw criteriaError;
             setCriteria(criteriaData || []);
 
-            if (criteriaData?.length > 0 && !formData.criteria_id) {
-                const firstCrit = criteriaData[0];
-                setFormData(prev => ({ 
-                    ...prev, 
-                    criteria_id: firstCrit.id,
-                    time_limit_minutes: firstCrit.timer_duration || 45
-                }));
+            if (criteriaData?.length > 0) {
+                // Use the functional updater so this never overwrites a criteria the admin
+                // already picked, regardless of how stale the `formData` closure is (this
+                // runs from a polling interval / realtime subscription set up once on mount).
+                setFormData(prev => {
+                    if (prev.criteria_id) return prev;
+                    const firstCrit = criteriaData[0];
+                    return {
+                        ...prev,
+                        criteria_id: firstCrit.id,
+                        time_limit_minutes: firstCrit.timer_duration || 45
+                    };
+                });
             }
         } catch (error) {
             console.error('Error fetching data:', error);

@@ -27,3 +27,8 @@ dist-ssr
 .env
 .env.local
 .env.production
+
+# DB backups/dumps — contain real candidate PII, never commit these
+backup.sql
+*.dump
+*.bak.sql

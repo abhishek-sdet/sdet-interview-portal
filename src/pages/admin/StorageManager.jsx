@@ -164,14 +164,15 @@ function DriveRow({ drive, onDownload, onDelete, isDeleting, isDownloading }) {
 
 // ─── Delete Confirm Modal ─────────────────────────────────────────────────────
 function DeleteModal({ drive, onConfirm, onCancel, isDeleting }) {
-    const [password, setPassword] = useState('');
-    
-    // Reset password when modal opens/closes
+    const [confirmText, setConfirmText] = useState('');
+
+    // Reset confirmation text when modal opens/closes
     useEffect(() => {
-        setPassword('');
+        setConfirmText('');
     }, [drive]);
 
     if (!drive) return null;
+    const isConfirmed = confirmText.trim().toUpperCase() === 'DELETE';
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onCancel} />
@@ -198,12 +199,14 @@ function DeleteModal({ drive, onConfirm, onCancel, isDeleting }) {
                     Please download the data first before deleting. Deleted data cannot be recovered.
                 </p>
                 <div className="mb-5">
-                    <label className="block text-slate-400 text-xs font-bold mb-1.5">Enter Admin Password to Confirm</label>
-                    <input 
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Password"
+                    <label className="block text-slate-400 text-xs font-bold mb-1.5">
+                        Type <span className="text-red-400 font-mono">DELETE</span> to confirm
+                    </label>
+                    <input
+                        type="text"
+                        value={confirmText}
+                        onChange={(e) => setConfirmText(e.target.value)}
+                        placeholder="DELETE"
                         className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 transition-all"
                     />
                 </div>
@@ -213,13 +216,13 @@ function DeleteModal({ drive, onConfirm, onCancel, isDeleting }) {
                     </button>
                     <button
                         onClick={() => {
-                            if (password === 'Johri@3980') {
+                            if (isConfirmed) {
                                 onConfirm();
                             } else {
-                                toast.error('Incorrect password!');
+                                toast.error('Type DELETE to confirm.');
                             }
                         }}
-                        disabled={isDeleting || !password}
+                        disabled={isDeleting || !isConfirmed}
                         className="flex-1 px-4 py-2.5 bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-400 rounded-xl text-sm font-bold transition-all disabled:opacity-50"
                     >
                         {isDeleting ? 'Deleting...' : '🗑️ Yes, Delete'}

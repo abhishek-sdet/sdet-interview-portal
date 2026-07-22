@@ -216,7 +216,7 @@ export default function ManageCriteria() {
             const { error } = await supabase
                 .from('site_settings')
                 .update({ is_site_active: newStatus })
-                .eq('id', (await supabase.from('site_settings').select('id').single()).data.id);
+                .eq('id', siteSettingsId);
 
             if (error) throw error;
             setSiteStatus(newStatus);

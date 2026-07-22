@@ -74,6 +74,7 @@ export default function QuizInterface() {
 
     // Refs to hold cached questions needed for the second phase
     const generalQuestionsRef = useRef([]);
+    const skipSpecializationRef = useRef(false);
     const javaQuestionsRef = useRef([]);
     const pythonQuestionsRef = useRef([]);
     const databaseQuestionsRef = useRef([]);
@@ -171,7 +172,7 @@ export default function QuizInterface() {
             if (!intId) {
                 console.warn('[SESSION] No interviewId found in storage. Redirecting.');
                 navigate('/');
-                return;
+                return false;
             }
 
             // Verify the interview exists and is NOT results-locked
@@ -185,62 +186,71 @@ export default function QuizInterface() {
                 console.error('[SESSION] Invalid or missing interview record.', error);
                 localStorage.removeItem('interviewId');
                 navigate('/');
+                return false;
             } else if (data.status === 'completed') {
                 console.warn('[SESSION] Interview already completed. Redirecting to home.');
                 navigate('/');
+                return false;
             }
+            return true;
         };
 
-        checkSession();
-        const interviewId = localStorage.getItem('interviewId');
-        const criteriaId = localStorage.getItem('criteriaId');
+        const init = async () => {
+            const sessionOk = await checkSession();
+            if (!sessionOk) return;
 
-        console.log('[INIT] Interview ID:', interviewId);
-        console.log('[INIT] Criteria ID:', criteriaId);
+            const interviewId = localStorage.getItem('interviewId');
+            const criteriaId = localStorage.getItem('criteriaId');
 
-        if (!interviewId || !criteriaId) {
-            console.error('[INIT ERROR] Missing session data:', { interviewId, criteriaId });
-            setError('Session expired. Please start the interview again.');
-            setTimeout(() => navigate('/'), 2000);
-            return;
-        }
+            console.log('[INIT] Interview ID:', interviewId);
+            console.log('[INIT] Criteria ID:', criteriaId);
 
-        // --- RESTORE STATE FROM LOCAL STORAGE ---
-        const storageKey = `quiz_state_${interviewId}`;
-        const savedStateString = localStorage.getItem(storageKey);
-
-        if (savedStateString) {
-            try {
-                const savedState = JSON.parse(savedStateString);
-                console.log('[INIT] Found saved quiz state:', savedState);
-
-                // Restore basic state
-                if (savedState.answers) setAnswers(savedState.answers);
-                if (savedState.currentIndex) setCurrentIndex(savedState.currentIndex);
-                if (savedState.tabSwitchWarnings) setTabSwitchWarnings(savedState.tabSwitchWarnings);
-                if (savedState.answeredQuestions) setAnsweredQuestions(new Set(savedState.answeredQuestions));
-
-                // Restore specialization
-                if (savedState.specialization) {
-                    setSpecialization(savedState.specialization);
-                    setShowSpecialization(false); // Ensure selection UI is hidden if already selected
-                } else if (savedState.showSpecialization) {
-                    setShowSpecialization(true);
-                }
-
-                // Questions are tricky - we need to fetch them first, then apply correct subset
-                // For now, we rely on fetchQuestions to rebuild the question list based on criteria/specialization logic
-                // But we must ensure the timer considers the saved time
-
-                fetchQuestions(criteriaId, savedState.timeRemaining, savedState.specialization);
-                return; // fetchQuestions will handle the rest
-            } catch (err) {
-                console.error('[INIT] Failed to parse saved state:', err);
-                localStorage.removeItem(storageKey); // Clear corrupted state
+            if (!interviewId || !criteriaId) {
+                console.error('[INIT ERROR] Missing session data:', { interviewId, criteriaId });
+                setError('Session expired. Please start the interview again.');
+                setTimeout(() => navigate('/'), 2000);
+                return;
             }
-        }
 
-        fetchQuestions(criteriaId);
+            // --- RESTORE STATE FROM LOCAL STORAGE ---
+            const storageKey = `quiz_state_${interviewId}`;
+            const savedStateString = localStorage.getItem(storageKey);
+
+            if (savedStateString) {
+                try {
+                    const savedState = JSON.parse(savedStateString);
+                    console.log('[INIT] Found saved quiz state:', savedState);
+
+                    // Restore basic state
+                    if (savedState.answers) setAnswers(savedState.answers);
+                    if (savedState.currentIndex) setCurrentIndex(savedState.currentIndex);
+                    if (savedState.tabSwitchWarnings) setTabSwitchWarnings(savedState.tabSwitchWarnings);
+                    if (savedState.answeredQuestions) setAnsweredQuestions(new Set(savedState.answeredQuestions));
+
+                    // Restore specialization
+                    if (savedState.specialization) {
+                        setSpecialization(savedState.specialization);
+                        setShowSpecialization(false); // Ensure selection UI is hidden if already selected
+                    } else if (savedState.showSpecialization) {
+                        setShowSpecialization(true);
+                    }
+
+                    // Questions are tricky - we need to fetch them first, then apply correct subset
+                    // For now, we rely on fetchQuestions to rebuild the question list based on criteria/specialization logic
+                    // But we must ensure the timer considers the saved time
+
+                    fetchQuestions(criteriaId, savedState.timeRemaining, savedState.specialization);
+                    return; // fetchQuestions will handle the rest
+                } catch (err) {
+                    console.error('[INIT] Failed to parse saved state:', err);
+                    localStorage.removeItem(storageKey); // Clear corrupted state
+                }
+            }
+
+            fetchQuestions(criteriaId);
+        };
+
+        init();
     }, [navigate]);
 
     // NEW: Independent Security Settings Fetch with Retry logic
@@ -714,11 +724,6 @@ export default function QuizInterface() {
                 .eq('criteria_id', criteriaId)
                 .eq('is_active', true);
 
-            // REMOVED strict category filter here to ensure we fetch Elective questions too (which might not have a category)
-            // if (selectedSet) {
-            //     query = query.eq('category', selectedSet); 
-            // }
-
             const { data, error: fetchError } = await query.order('created_at');
 
             if (fetchError) throw fetchError;
@@ -732,6 +737,12 @@ export default function QuizInterface() {
             let uniqueData = Array.from(
                 new Map(data.map(q => [(q.question_text || '').trim().toLowerCase(), q])).values()
             );
+
+            // Scope to the candidate's assigned Set: keep questions tagged for this set,
+            // plus any question with no category (elective/general questions aren't set-scoped).
+            if (selectedSet) {
+                uniqueData = uniqueData.filter(q => !q.category || q.category === selectedSet);
+            }
 
             // FLEXIBLE MAPPING FOR LEGACY UPLOADS
             uniqueData = uniqueData.map(q => {
@@ -933,6 +944,7 @@ export default function QuizInterface() {
             // We skip if we already have enough general questions (>= expectedGeneralTotal + elective) or if it's functional assessment
             const totalExpected = expectedGeneralTotal + moduleCounts.elective;
             const skipSpecialization = generalQuestionsRef.current.length >= totalExpected;
+            skipSpecializationRef.current = skipSpecialization;
 
             // For backward compatibility with old specialization flow, store by subject
             if (selectedSubject && !skipSpecialization) {
@@ -1187,7 +1199,7 @@ export default function QuizInterface() {
 
     const handleNext = () => {
         const isEndOfGeneral = currentIndex === generalQuestionsRef.current.length - 1;
-        const skipSpecialization = generalQuestionsRef.current.length >= 30 || specialization === 'General';
+        const skipSpecialization = skipSpecializationRef.current || specialization === 'General';
 
         if (isEndOfGeneral && !specialization && !skipSpecialization) {
             // Trigger Specialization Selection
@@ -1263,11 +1275,16 @@ export default function QuizInterface() {
         }
     };
 
-    const handleReview = () => {
-        // Find first unanswered question
-        const firstUnansweredIdx = questions.findIndex(q => !answers[q.id]);
-        if (firstUnansweredIdx !== -1) {
-            setCurrentIndex(firstUnansweredIdx);
+    const handleReview = (idx) => {
+        if (typeof idx === 'number') {
+            // Jump to the specific question clicked in the submission modal's grid
+            handleMapQuestionSelect(idx);
+        } else {
+            // No specific question given (e.g. "Back to Review" button) - go to first unanswered
+            const firstUnansweredIdx = questions.findIndex(q => !answers[q.id]);
+            if (firstUnansweredIdx !== -1) {
+                setCurrentIndex(firstUnansweredIdx);
+            }
         }
         setShowSubmitModal(false);
     };
@@ -2110,6 +2127,8 @@ export default function QuizInterface() {
                 questions={questions}
                 answers={answers}
                 totalExpectedQuestions={totalExamQuestions > 0 ? totalExamQuestions : questions.length}
+                visitedQuestions={visitedQuestions}
+                flaggedQuestions={flaggedQuestions}
             />
 
             {/* Proctor Violation Modal */}

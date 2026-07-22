@@ -177,7 +177,9 @@ export default function ManageQuestions() {
                     option_c: editingQuestion.options[2] || '',
                     option_d: editingQuestion.options[3] || '',
                     correct_option: editingQuestion.correct_option,
-                    correct_answer: editingQuestion.options[editingQuestion.correct_option.charCodeAt(0) - 65] || '',
+                    correct_answer: (editingQuestion.correct_option
+                        ? editingQuestion.options[editingQuestion.correct_option.charCodeAt(0) - 65]
+                        : null) || '',
                     section: editingQuestion.section,
                     subsection: editingQuestion.subsection
                 })
@@ -1057,7 +1059,7 @@ export default function ManageQuestions() {
                                                 {/* Mobile delete (right side of tab bar) */}
                                                 <div className="ml-auto flex-shrink-0 flex items-center pr-1">
                                                     <button
-                                                        onClick={() => handleDeleteSetClick(set.criteriaId, set.setName)}
+                                                        onClick={() => handleDeleteSetClick(set.criteriaId, set.criteriaName)}
                                                         className="sm:hidden flex items-center gap-1 px-2 py-1.5 text-red-400 hover:text-red-300 text-[10px] font-bold transition-colors"
                                                     >
                                                         <Trash2 size={11} /> Delete

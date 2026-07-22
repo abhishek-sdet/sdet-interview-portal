@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowRight, Clock, AlertCircle, CheckCircle2, ShieldAlert, BookOpen, FileEdit, Camera, RefreshCw, ShieldCheck, Zap } from 'lucide-react';
 import { compressImageWithStats } from '@/utils/imageCompressor';
+import { supabase } from '@/lib/supabase';
 
 export default function ExamRules() {
     const navigate = useNavigate();
@@ -110,7 +111,7 @@ export default function ExamRules() {
         startCamera();
     };
 
-    const handleContinue = () => {
+    const handleContinue = async () => {
         if (step === 'rules') {
             setStep('biometric');
             startCamera();
@@ -128,7 +129,23 @@ export default function ExamRules() {
         if (location.state?.resumeInterviewId) {
             localStorage.setItem('interviewId', location.state.resumeInterviewId);
             localStorage.setItem('criteriaId', location.state.resumeCriteriaId);
-            
+
+            // Persist the freshly captured identity photo against the existing interview
+            // (the normal flow saves this from CriteriaSelection.jsx, which this branch skips)
+            if (capturedImage) {
+                try {
+                    const { error: photoError } = await supabase
+                        .from('interview_photos')
+                        .upsert([
+                            { interview_id: location.state.resumeInterviewId, photo: capturedImage }
+                        ], { onConflict: 'interview_id' });
+                    if (photoError) console.error('[PROCTOR] Failed to save resumed candidate photo:', photoError);
+                } catch (photoErr) {
+                    console.error('[PROCTOR] Resumed photo save exception:', photoErr);
+                }
+            }
+            localStorage.removeItem('pending_identity_photo');
+
             navigate('/quiz', {
                 state: {
                     candidateData,

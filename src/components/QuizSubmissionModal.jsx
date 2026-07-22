@@ -8,7 +8,7 @@ import QuestionStatusMap from './QuestionStatusMap';
  * QuizSubmissionModal Component
  * Premium styled confirmation dialog with QUESTION GRID
  */
-export default function QuizSubmissionModal({ isOpen, onClose, onReview, onConfirm, questions = [], answers = {}, totalExpectedQuestions }) {
+export default function QuizSubmissionModal({ isOpen, onClose, onReview, onConfirm, questions = [], answers = {}, totalExpectedQuestions, visitedQuestions, flaggedQuestions }) {
     if (!isOpen) return null;
 
     // Calculate Stats
@@ -91,11 +91,9 @@ export default function QuizSubmissionModal({ isOpen, onClose, onReview, onConfi
                                     questions={questions}
                                     answers={answers}
                                     currentIndex={questions.length} // Force "past" state to show skipped as Red
-                                    onQuestionSelect={onReview ? (idx) => { onReview(idx); onClose(); } : undefined} // Allow clicking grid to navigate in review mode? Or keep it simple. User asked for "Back to Review" button.
-                                // Actually, if onReview is passed, let's just use it? Wait, handleReview finds the first unanswered. 
-                                // If the user clicks a specific number in the modal grid, they probably want to go THERE.
-                                // But handleReview (from parent) is simple "find first". 
-                                // Let's stick to the button request first. The grid shows status.
+                                    visitedQuestions={visitedQuestions}
+                                    flaggedQuestions={flaggedQuestions}
+                                    onQuestionSelect={onReview ? (idx) => { onReview(idx); onClose(); } : undefined}
                                 />
                             </div>
 

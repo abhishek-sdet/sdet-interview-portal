@@ -247,8 +247,8 @@ export default function HRDashboard() {
 
     // NEW: Heuristic to determine if the current view is for Internal Employees or a Fresher Drive
     const currentDrive = drives.find(d => d.id === driveFilter);
-    const isInternalAssessment = currentDrive?.description?.toLowerCase().includes('assessment') || 
-                               (currentDrive && !currentDrive.description.toLowerCase().includes('fresher'));
+    const isInternalAssessment = currentDrive?.description?.toLowerCase().includes('assessment') ||
+                               (currentDrive && !currentDrive.description?.toLowerCase().includes('fresher'));
     const isGlobalView = driveFilter === 'all' || !driveFilter;
 
     const current = theme === 'dark' ? tokens.dark : tokens.light;
@@ -432,7 +432,6 @@ export default function HRDashboard() {
                             >
                                 <option value="all">All Status</option>
                                 <option value="qualified">Qualified</option>
-                                <option value="qualified">Qualified</option>
                                 <option value="not_qualified">Not Qualified</option>
                             </select>
 
@@ -513,7 +512,7 @@ export default function HRDashboard() {
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan="5" className="px-6 py-20 text-center text-slate-500 italic opacity-50">No matching candidate records found</td>
+                                            <td colSpan="6" className="px-6 py-20 text-center text-slate-500 italic opacity-50">No matching candidate records found</td>
                                         </tr>
                                     )}
                                 </tbody>
