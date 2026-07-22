@@ -82,6 +82,7 @@ export default function QuizInterface() {
     const javascriptQuestionsRef = useRef([]);
     const lastWarningTimeRef = useRef(0); // For debouncing tab switches
     const focusLossTimerRef = useRef(null); // Grace-period timer before a focus loss counts as a violation
+    const hasEnteredFullscreenOnceRef = useRef(false); // Only treat "not fullscreen" as a violation after the candidate has actually entered it once
     const criteriaNameRef = useRef(''); // Added to track criteria name for formatting
 
     // Track visited questions for accurate "Skipped" status without hopping bugs
@@ -373,10 +374,14 @@ export default function QuizInterface() {
                 let violation = false;
                 let reason = '';
 
-                // Check 1: Fullscreen enforcement (only if supported by browser)
+                // Check 1: Fullscreen enforcement (only if supported by browser).
+                // Only counts once the candidate has actually entered fullscreen at least
+                // once — otherwise the pre-exam "Enter Secure Environment" gate screen
+                // (which requires a user click before fullscreen can even be requested)
+                // would itself get flagged as a violation before the candidate did anything.
                 const isFullscreenSupported = document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled || document.msFullscreenEnabled;
                 const currentFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
-                if (enforceFullScreen && isFullscreenSupported && !currentFullscreen) {
+                if (enforceFullScreen && isFullscreenSupported && !currentFullscreen && hasEnteredFullscreenOnceRef.current) {
                     violation = true;
                     reason = 'Fullscreen exited (Interval Check)';
                 }
@@ -439,6 +444,7 @@ export default function QuizInterface() {
         const syncFullscreen = () => {
             const current = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
             setIsActuallyFullscreen(current);
+            if (current) hasEnteredFullscreenOnceRef.current = true;
             console.log('[PROCTOR] Fullscreen sync:', current);
         };
 
