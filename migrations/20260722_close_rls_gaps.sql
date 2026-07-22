@@ -32,6 +32,11 @@
 --     the ON CONFLICT DO UPDATE path. Fix: add a recency-scoped UPDATE
 --     policy (same 14-day window as the rest of this table's policies) and
 --     make sure anon still has the table-level grants it needs.
+--  5. The explicit re-grant list in #3 missed `site_settings` — LandingPage,
+--     AccessGuard, and QuizInterface all read it as anon (site-active flag,
+--     screenshot/inspect/shuffle/fullscreen toggles). Without the grant those
+--     reads 401 and silently fall back to hardcoded defaults, so an admin's
+--     site-settings toggles stop having any effect. Fix: add it to the list.
 --
 -- NOT fixed here (needs a follow-up with its own testing pass, see chat):
 --   The "Public select recent candidates/interviews" policies allow a
@@ -72,7 +77,19 @@ GRANT SELECT ON public.candidates           TO anon;
 GRANT SELECT ON public.interviews           TO anon;
 GRANT SELECT ON public.answers              TO anon;
 GRANT SELECT ON public.interview_photos     TO anon;
--- questions keeps its column-scoped grant from 20260622_secure_grading_rpc_and_column_security.sql
+GRANT SELECT ON public.site_settings        TO anon;
+
+-- IMPORTANT: `REVOKE SELECT ON ALL TABLES ... FROM anon` above clears a role's
+-- SELECT privilege on a table entirely — including a previously-granted
+-- COLUMN-scoped grant. It does NOT leave the narrower grant in place. So the
+-- column-scoped grant from 20260622_secure_grading_rpc_and_column_security.sql
+-- (everything on `questions` except `correct_answer`) must be re-issued here,
+-- not just assumed to survive.
+GRANT SELECT (
+  id, criteria_id, question_text, options, difficulty, points, is_active,
+  created_at, updated_at, category, set_name, marks, section, subsection,
+  option_a, option_b, option_c, option_d, order_index, type, language, test_cases
+) ON public.questions TO anon;
 -- admin_access_control stays fully revoked from 20260718_security_hardening.sql
 
 -- ── 4. Let a resumed interview's re-captured photo actually save ───────────

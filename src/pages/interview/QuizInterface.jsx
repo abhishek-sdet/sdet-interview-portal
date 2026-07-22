@@ -708,23 +708,29 @@ export default function QuizInterface() {
                 cs_basics: 2,
                 grammar: 2,
                 javascript: 2,
+                database: 0,
                 elective: 7
             };
 
             if (rawModuleCounts) {
                 if (Array.isArray(rawModuleCounts)) {
-                    normalizedCounts = {};
+                    const fromArray = {};
                     rawModuleCounts.forEach(mod => {
-                        normalizedCounts[mod.id] = mod.count || 0;
+                        fromArray[mod.id] = mod.count || 0;
                     });
+                    // Merge over the defaults instead of replacing wholesale — a criteria
+                    // saved before a new module (e.g. "database") existed would otherwise
+                    // end up with that count as `undefined`, turning every downstream sum
+                    // that touches it into NaN.
+                    normalizedCounts = { ...normalizedCounts, ...fromArray };
                 } else {
-                    normalizedCounts = rawModuleCounts;
+                    normalizedCounts = { ...normalizedCounts, ...rawModuleCounts };
                 }
             }
 
             const moduleCounts = normalizedCounts;
 
-            const expectedGeneralTotal = moduleCounts.testing + moduleCounts.api + moduleCounts.logical + moduleCounts.agile + moduleCounts.cs_basics + moduleCounts.grammar + (moduleCounts.javascript || 0);
+            const expectedGeneralTotal = moduleCounts.testing + moduleCounts.api + moduleCounts.logical + moduleCounts.agile + moduleCounts.cs_basics + moduleCounts.grammar + (moduleCounts.javascript || 0) + (moduleCounts.database || 0);
 
             let query = supabase
                 .from('questions')
@@ -766,8 +772,15 @@ export default function QuizInterface() {
                 else if (mappedSub.includes('database') || mappedSub.includes('sql')) mappedSub = 'database';
                 else mappedSub = 'testing';
 
-                // Force general categories to be 'general' section
-                const isGeneralSub = ['testing', 'api', 'logical', 'agile', 'cs_basics', 'grammar', 'javascript'].includes(mappedSub);
+                // Force general categories to be 'general' section. "database" is only
+                // treated as a fixed general category (rather than an elective subject
+                // choice) for criteria that explicitly configured a database module
+                // count — otherwise criteria that use Database as a candidate-chosen
+                // elective (alongside Java/Python) keep working exactly as before.
+                const generalSubsections = moduleCounts.database
+                    ? ['testing', 'api', 'logical', 'agile', 'cs_basics', 'grammar', 'javascript', 'database']
+                    : ['testing', 'api', 'logical', 'agile', 'cs_basics', 'grammar', 'javascript'];
+                const isGeneralSub = generalSubsections.includes(mappedSub);
                 const section = isGeneralSub ? 'general' : (q.section || 'elective');
 
                 return { ...q, subsection: mappedSub, section };
@@ -891,7 +904,7 @@ export default function QuizInterface() {
             };
 
             let orderedGeneralQs = [];
-            const knownSubsections = ['testing', 'api', 'logical', 'agile', 'cs_basics', 'grammar', 'javascript'];
+            const knownSubsections = ['testing', 'api', 'logical', 'agile', 'cs_basics', 'grammar', 'javascript', 'database'];
             const hasSectionedQuestions = generalQs.some(q => knownSubsections.includes(q.subsection));
 
             if (hasSectionedQuestions) {
@@ -902,18 +915,19 @@ export default function QuizInterface() {
                 let csBasicsQs = selectQuestions(generalQs.filter(q => q.subsection === 'cs_basics'), moduleCounts.cs_basics);
                 let grammarQs = selectQuestions(generalQs.filter(q => q.subsection === 'grammar'), moduleCounts.grammar);
                 let javascriptQs = selectQuestions(generalQs.filter(q => q.subsection === 'javascript'), moduleCounts.javascript || 0);
+                let databaseQs = selectQuestions(generalQs.filter(q => q.subsection === 'database'), moduleCounts.database || 0);
 
                 // Pad missing questions if any category is short
-                let currentTotal = testingQs.length + apiQs.length + logicalQs.length + agileQs.length + csBasicsQs.length + grammarQs.length + javascriptQs.length;
+                let currentTotal = testingQs.length + apiQs.length + logicalQs.length + agileQs.length + csBasicsQs.length + grammarQs.length + javascriptQs.length + databaseQs.length;
                 if (currentTotal < expectedGeneralTotal) {
                     const missing = expectedGeneralTotal - currentTotal;
                     // Try to pad from testing first
                     const testingAvailable = generalQs.filter(q => q.subsection === 'testing' && !testingQs.includes(q));
                     const pad = selectQuestions(testingAvailable, missing);
                     testingQs = [...testingQs, ...pad];
-                    
+
                     // If still missing, pad from logical
-                    currentTotal = testingQs.length + apiQs.length + logicalQs.length + agileQs.length + csBasicsQs.length + grammarQs.length + javascriptQs.length;
+                    currentTotal = testingQs.length + apiQs.length + logicalQs.length + agileQs.length + csBasicsQs.length + grammarQs.length + javascriptQs.length + databaseQs.length;
                     if (currentTotal < expectedGeneralTotal) {
                         const missingMore = expectedGeneralTotal - currentTotal;
                         const logicalAvailable = generalQs.filter(q => q.subsection === 'logical' && !logicalQs.includes(q));
@@ -921,7 +935,7 @@ export default function QuizInterface() {
                         logicalQs = [...logicalQs, ...padMore];
                     }
                 }
-                
+
                 orderedGeneralQs = [
                     ...testingQs,
                     ...apiQs,
@@ -929,7 +943,8 @@ export default function QuizInterface() {
                     ...agileQs,
                     ...csBasicsQs,
                     ...grammarQs,
-                    ...javascriptQs
+                    ...javascriptQs,
+                    ...databaseQs
                 ];
 
                 console.log('[FETCH] Testing questions:', testingQs.length);
@@ -937,6 +952,7 @@ export default function QuizInterface() {
                 console.log('[FETCH] Logical questions:', logicalQs.length);
                 console.log('[FETCH] Agile questions:', agileQs.length);
                 console.log('[FETCH] CS Basics questions:', csBasicsQs.length);
+                console.log('[FETCH] Database questions:', databaseQs.length);
                 console.log('[FETCH] Grammar questions:', grammarQs.length);
             } else {
                 // Fallback for custom exams

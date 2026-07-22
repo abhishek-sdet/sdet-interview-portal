@@ -41,6 +41,7 @@ export default function ManageCriteria() {
             cs_basics: 2,
             grammar: 2,
             javascript: 2,
+            database: 0,
             elective: 7
         }
     });
@@ -249,15 +250,18 @@ export default function ManageCriteria() {
     };
 
     const normalizeModuleCounts = (counts) => {
-        if (!counts) return { testing: 10, api: 4, logical: 3, agile: 2, cs_basics: 2, grammar: 2, javascript: 2, elective: 7 };
+        const defaults = { testing: 10, api: 4, logical: 3, agile: 2, cs_basics: 2, grammar: 2, javascript: 2, database: 0, elective: 7 };
+        if (!counts) return defaults;
         if (Array.isArray(counts)) {
             const obj = {};
             counts.forEach(mod => {
                 obj[mod.id] = mod.count || 0;
             });
-            return obj;
+            // Merge over defaults so a criteria saved before a newer module (e.g.
+            // "database") existed doesn't end up with that field undefined.
+            return { ...defaults, ...obj };
         }
-        return counts;
+        return { ...defaults, ...counts };
     };
 
     const handleEdit = (c) => {
@@ -619,6 +623,10 @@ export default function ManageCriteria() {
                                                 <input type="number" value={editForm.module_counts.javascript || 0} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, javascript: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
                                             </div>
                                             <div>
+                                                <label className="text-[10px] text-slate-400 mb-1 block">Database</label>
+                                                <input type="number" value={editForm.module_counts.database || 0} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, database: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
+                                            </div>
+                                            <div>
                                                 <label className="text-[10px] text-slate-400 mb-1 block">Elective</label>
                                                 <input type="number" value={editForm.module_counts.elective} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, elective: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
                                             </div>
@@ -751,6 +759,10 @@ export default function ManageCriteria() {
                                                 <div>
                                                     <label className="text-[10px] text-slate-400 mb-1 block">JavaScript (JS)</label>
                                                     <input type="number" value={editForm.module_counts.javascript || 0} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, javascript: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] text-slate-400 mb-1 block">Database</label>
+                                                    <input type="number" value={editForm.module_counts.database || 0} onChange={(e) => setEditForm({ ...editForm, module_counts: { ...editForm.module_counts, database: parseInt(e.target.value) || 0 } })} className="w-full bg-[#0b101b] border border-slate-700 rounded-lg px-2 py-1.5 text-sm text-white focus:border-brand-blue" />
                                                 </div>
                                                 <div>
                                                     <label className="text-[10px] text-slate-400 mb-1 block">Elective</label>
