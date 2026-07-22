@@ -37,6 +37,19 @@
 --     screenshot/inspect/shuffle/fullscreen toggles). Without the grant those
 --     reads 401 and silently fall back to hardcoded defaults, so an admin's
 --     site-settings toggles stop having any effect. Fix: add it to the list.
+--  6. `answers` has had a table-level SELECT grant for anon this whole time,
+--     but no RLS policy ever allowed anon to actually SELECT from it (only
+--     "Anyone can submit answers" for INSERT, and an admin-only SELECT
+--     policy). This didn't error — RLS with no matching policy just returns
+--     zero rows — so QuizInterface.jsx's "don't repeat previously answered
+--     questions across attempts" feature has been silently doing nothing for
+--     every candidate. Fix: add a recency-scoped SELECT policy (same 14-day
+--     window as the rest of this file), joined through `interviews` since
+--     `answers` has no timestamp column of its own.
+--
+-- This whole file is idempotent (REVOKE/GRANT don't error if already applied,
+-- every CREATE POLICY is preceded by DROP POLICY IF EXISTS) — safe to re-run
+-- in full even if you already ran an earlier version of it.
 --
 -- NOT fixed here (needs a follow-up with its own testing pass, see chat):
 --   The "Public select recent candidates/interviews" policies allow a
@@ -99,7 +112,19 @@ DROP POLICY IF EXISTS "Anyone can update recent interview_photos" ON public.inte
 CREATE POLICY "Anyone can update recent interview_photos" ON public.interview_photos
   FOR UPDATE USING (created_at > NOW() - INTERVAL '14 days');
 
+-- ── 5. Let candidates actually read their own past answers (needed for the
+--       "don't repeat previously seen questions" dedup in QuizInterface.jsx) ─
+DROP POLICY IF EXISTS "Anyone can select recent answers" ON public.answers;
+CREATE POLICY "Anyone can select recent answers" ON public.answers
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM interviews
+      WHERE interviews.id = answers.interview_id
+        AND interviews.started_at > NOW() - INTERVAL '14 days'
+    )
+  );
+
 DO $$
 BEGIN
-  RAISE NOTICE 'RLS follow-up applied: interview score/status columns are now RPC-only, inactive questions/criteria are hidden again, the blanket anon SELECT grant has been narrowed, and resumed-interview photo re-uploads can now save.';
+  RAISE NOTICE 'RLS follow-up applied: interview score/status columns are now RPC-only, inactive questions/criteria are hidden again, the blanket anon SELECT grant has been narrowed, resumed-interview photo re-uploads can now save, and answers are now actually readable by anon (fixing the previously-answered-question dedup).';
 END $$;

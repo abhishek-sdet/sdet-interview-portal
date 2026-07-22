@@ -11,21 +11,18 @@ export default function SetSelection() {
     const [loading, setLoading] = useState(true);
     const [mounted, setMounted] = useState(false);
 
-    // Get previous state
+    // Get previous state, falling back to localStorage so a direct/bookmarked URL
+    // hit (no router state) still resolves the same candidate/criteria instead of
+    // silently querying with an undefined criteriaId.
     const candidateData = location.state?.candidateData;
-    const criteriaId = location.state?.criteriaId;
+    const criteriaId = location.state?.criteriaId || localStorage.getItem('criteriaId');
 
     useEffect(() => {
         setMounted(true);
-        if (!candidateData || !criteriaId) {
-            // Try localStorage fallback
-            const savedCandidateId = localStorage.getItem('candidateId');
-            const savedCriteriaId = localStorage.getItem('criteriaId');
-
-            if (!savedCandidateId || !savedCriteriaId) {
-                navigate('/');
-                return;
-            }
+        const savedCandidateId = localStorage.getItem('candidateId');
+        if ((!candidateData && !savedCandidateId) || !criteriaId) {
+            navigate('/');
+            return;
         }
 
         fetchSets();

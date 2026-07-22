@@ -24,7 +24,8 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql
-SECURITY DEFINER;
+SECURITY DEFINER
+SET search_path = public;
 
 -- Drop the trigger if it already exists so the script is idempotent
 DROP TRIGGER IF EXISTS reevaluate_passing_status_on_criteria_update ON criteria;

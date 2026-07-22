@@ -311,7 +311,7 @@ export default function ManageCriteria() {
             timer_duration: '',
             passing_percentage: '',
             allow_multiple_attempts: false,
-            module_counts: normalizeModuleCounts(criteria.metadata?.module_counts)
+            module_counts: normalizeModuleCounts(null)
         });
     };
 

@@ -83,6 +83,7 @@ export default function QuizInterface() {
     const lastWarningTimeRef = useRef(0); // For debouncing tab switches
     const focusLossTimerRef = useRef(null); // Grace-period timer before a focus loss counts as a violation
     const hasEnteredFullscreenOnceRef = useRef(false); // Only treat "not fullscreen" as a violation after the candidate has actually entered it once
+    const databaseIsGeneralCategoryRef = useRef(false); // True when this criteria's "database" questions were folded into the fixed general set (not offered as an elective choice)
     const criteriaNameRef = useRef(''); // Added to track criteria name for formatting
 
     // Track visited questions for accurate "Skipped" status without hopping bugs
@@ -369,16 +370,18 @@ export default function QuizInterface() {
                     return;
                 }
 
-                if (showProctorWarning) return; 
+                if (showProctorWarning) return;
+
+                // While fullscreen enforcement is on but the candidate hasn't entered
+                // fullscreen yet, they're still on the pre-exam "Enter Secure Environment"
+                // gate screen — no violation of any kind (fullscreen OR tab-switch) should
+                // count yet, since the secure session hasn't actually begun.
+                const gateNotYetPassed = enforceFullScreen && !hasEnteredFullscreenOnceRef.current;
 
                 let violation = false;
                 let reason = '';
 
                 // Check 1: Fullscreen enforcement (only if supported by browser).
-                // Only counts once the candidate has actually entered fullscreen at least
-                // once — otherwise the pre-exam "Enter Secure Environment" gate screen
-                // (which requires a user click before fullscreen can even be requested)
-                // would itself get flagged as a violation before the candidate did anything.
                 const isFullscreenSupported = document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled || document.msFullscreenEnabled;
                 const currentFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
                 if (enforceFullScreen && isFullscreenSupported && !currentFullscreen && hasEnteredFullscreenOnceRef.current) {
@@ -387,7 +390,7 @@ export default function QuizInterface() {
                 }
 
                 // Check 2: Tab switch / Window blur (Aligned with STRICT toggle)
-                if (proctoringStrict && (document.hidden || !document.hasFocus())) {
+                if (proctoringStrict && !gateNotYetPassed && (document.hidden || !document.hasFocus())) {
                     violation = true;
                     reason = `Focus Violation (Hidden: ${document.hidden}, Focus: ${document.hasFocus()})`;
                 }
@@ -752,6 +755,10 @@ export default function QuizInterface() {
             }
 
             const moduleCounts = normalizedCounts;
+            // When database is configured as a fixed general-category count, those
+            // questions get folded into the general set below and there's no separate
+            // "database" elective pool left — don't offer it as a specialization choice.
+            databaseIsGeneralCategoryRef.current = !!moduleCounts.database;
 
             const expectedGeneralTotal = moduleCounts.testing + moduleCounts.api + moduleCounts.logical + moduleCounts.agile + moduleCounts.cs_basics + moduleCounts.grammar + (moduleCounts.javascript || 0) + (moduleCounts.database || 0);
 
@@ -1574,31 +1581,36 @@ export default function QuizInterface() {
                                 </div>
                             </div>
                         </button>
-                        {/* Database Option */}
-                        <button
-                            onClick={() => handleSpecializationSelect('Database')}
-                            className="group relative p-1 rounded-[2rem] transition-all duration-500 hover:scale-[1.02]"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 opacity-20 group-hover:opacity-40 rounded-[2rem] blur-xl transition-opacity"></div>
-                            <div className="relative h-full bg-[#080c14]/80 backdrop-blur-xl border border-white/10 rounded-[1.9rem] p-10 flex flex-col items-center justify-center gap-6 overflow-hidden hover:border-green-500/50 transition-colors">
-                                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 flex items-center justify-center shadow-lg shadow-green-500/10 group-hover:scale-110 transition-transform duration-500 border border-white/5">
-                                    <div className="w-16 h-16">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-                                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-                                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
-                                        </svg>
+                        {/* Database Option — hidden when this criteria already folded database
+                            questions into the fixed general set (module_counts.database > 0);
+                            in that case there's no separate database elective pool left, so
+                            picking this would silently add zero questions. */}
+                        {!databaseIsGeneralCategoryRef.current && (
+                            <button
+                                onClick={() => handleSpecializationSelect('Database')}
+                                className="group relative p-1 rounded-[2rem] transition-all duration-500 hover:scale-[1.02]"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 opacity-20 group-hover:opacity-40 rounded-[2rem] blur-xl transition-opacity"></div>
+                                <div className="relative h-full bg-[#080c14]/80 backdrop-blur-xl border border-white/10 rounded-[1.9rem] p-10 flex flex-col items-center justify-center gap-6 overflow-hidden hover:border-green-500/50 transition-colors">
+                                    <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 flex items-center justify-center shadow-lg shadow-green-500/10 group-hover:scale-110 transition-transform duration-500 border border-white/5">
+                                        <div className="w-16 h-16">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                                                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                                                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-3xl font-bold text-white mb-2">Database</h3>
+                                        <p className="text-slate-400 text-sm">SQL & Data Modeling</p>
+                                    </div>
+                                    <div className="mt-4 px-6 py-2 rounded-full border border-green-500/30 text-green-400 text-sm font-bold tracking-widest uppercase group-hover:bg-green-500 group-hover:text-white transition-all">
+                                        Select Database
                                     </div>
                                 </div>
-                                <div>
-                                    <h3 className="text-3xl font-bold text-white mb-2">Database</h3>
-                                    <p className="text-slate-400 text-sm">SQL & Data Modeling</p>
-                                </div>
-                                <div className="mt-4 px-6 py-2 rounded-full border border-green-500/30 text-green-400 text-sm font-bold tracking-widest uppercase group-hover:bg-green-500 group-hover:text-white transition-all">
-                                    Select Database
-                                </div>
-                            </div>
-                        </button>
+                            </button>
+                        )}
                     </div>
                 </div>
 

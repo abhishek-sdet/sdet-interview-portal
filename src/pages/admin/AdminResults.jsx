@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SimpleLayout from '@/components/admin/SimpleLayout';
 import { supabase } from '@/lib/supabase';
@@ -15,6 +15,7 @@ export default function AdminResults() {
     const [dateFilter, setDateFilter] = useState('all');
     const [drives, setDrives] = useState([]);
     const [driveFilter, setDriveFilter] = useState('all');
+    const userChangedDriveFilterRef = useRef(false); // Tracks a manual pick so the periodic drive refetch never overrides it
 
     // Handle driveId from URL
     useEffect(() => {
@@ -195,9 +196,12 @@ export default function AdminResults() {
                 setDrives(data);
                 
                 // If no drive filter is active from URL, and we haven't manually selected one,
-                // default to the most recent one to keep focus on the latest batch
+                // default to the most recent one to keep focus on the latest batch.
+                // Gated on userChangedDriveFilterRef (not just `driveFilter === 'all'`) so
+                // explicitly picking "Select Drive" (which is also 'all') sticks instead of
+                // getting silently reset back to the latest drive on the next poll/realtime tick.
                 const params = new URLSearchParams(window.location.search);
-                if (!params.get('driveId') && driveFilter === 'all' && data.length > 0) {
+                if (!params.get('driveId') && driveFilter === 'all' && !userChangedDriveFilterRef.current && data.length > 0) {
                     setDriveFilter(data[0].id);
                 }
             }
@@ -900,7 +904,7 @@ export default function AdminResults() {
                         <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                         <select
                             value={driveFilter}
-                            onChange={(e) => setDriveFilter(e.target.value)}
+                            onChange={(e) => { userChangedDriveFilterRef.current = true; setDriveFilter(e.target.value); }}
                             className="pl-11 pr-8 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all appearance-none cursor-pointer max-w-[200px]"
                         >
                             <option value="all" className="bg-[#0b101b]">Select Drive</option>

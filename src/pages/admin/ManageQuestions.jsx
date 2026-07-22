@@ -222,6 +222,12 @@ export default function ManageQuestions() {
             });
         } catch (err) {
             console.error('Error deleting question:', err);
+            setShowDeleteConfirm(null);
+            setSuccessModal({
+                title: 'Error',
+                message: `Failed to delete question: ${err.message}`,
+                type: 'danger'
+            });
         }
     };
 
