@@ -1000,8 +1000,8 @@ export default function QuizInterface() {
                 console.log('[FETCH] Database questions:', databaseQs.length);
                 console.log('[FETCH] Grammar questions:', grammarQs.length);
             } else {
-                // Fallback for custom exams
-                orderedGeneralQs = generalQs.slice(0, expectedGeneralTotal + moduleCounts.elective);
+                // Fallback for custom exams: use all available questions rather than strict default limit
+                orderedGeneralQs = isShuffleEnabled ? shuffleArray([...generalQs]) : generalQs;
                 console.log('[FETCH] Fallback: using unsectioned generalQs directly.', orderedGeneralQs.length);
             }
 
