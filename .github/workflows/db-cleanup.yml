@@ -57,8 +57,7 @@ jobs:
       # ── Storage report (always runs first) ──────────────────────────────────
       - name: 📊 Storage Report (Before)
         env:
-          VITE_SUPABASE_URL:      ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/db-cleanup.cjs --report
 
@@ -66,8 +65,7 @@ jobs:
       - name: 🧹 Run Cleanup (Scheduled - Auto Execute)
         if: github.event_name == 'schedule'
         env:
-          VITE_SUPABASE_URL:         ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY:    ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           CLEANUP_ABANDONED_DAYS:    '30'
           CLEANUP_ORPHAN_DAYS:       '7'
@@ -80,8 +78,7 @@ jobs:
       - name: 🧹 Run Cleanup (Manual)
         if: github.event_name == 'workflow_dispatch'
         env:
-          VITE_SUPABASE_URL:         ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY:    ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           CLEANUP_ABANDONED_DAYS:    ${{ github.event.inputs.abandoned_days }}
           CLEANUP_ORPHAN_DAYS:       ${{ github.event.inputs.orphan_days }}
@@ -102,7 +99,6 @@ jobs:
       - name: 📊 Storage Report (After)
         if: always()
         env:
-          VITE_SUPABASE_URL:      ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/db-cleanup.cjs --report
